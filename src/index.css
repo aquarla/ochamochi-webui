@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: #111827;
+  color: #f3f4f6;
+}
+
+/* Custom emoji: Tailwind preflight が img を display:block にするのを上書き */
+img.custom-emoji {
+  display: inline !important;
+  height: 1.2em;
+  width: auto;
+  vertical-align: text-bottom;
+  margin: 0 0.05em;
+  object-fit: contain;
+}
+
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}

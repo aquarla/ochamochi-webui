@@ -1,0 +1,103 @@
+export interface CustomEmoji {
+  shortcode: string
+  url: string
+  static_url: string
+}
+
+export interface Account {
+  id: string
+  username: string
+  acct: string
+  display_name: string
+  avatar: string
+  avatar_static: string
+  url: string
+  note: string
+  followers_count: number
+  following_count: number
+  statuses_count: number
+  emojis: CustomEmoji[]
+}
+
+export interface MediaAttachment {
+  id: string
+  type: 'image' | 'video' | 'gifv' | 'audio' | 'unknown'
+  url: string
+  preview_url: string
+  description: string | null
+  meta: {
+    original?: { width: number; height: number }
+    small?: { width: number; height: number }
+  }
+}
+
+export interface Status {
+  id: string
+  created_at: string
+  content: string
+  visibility: 'public' | 'unlisted' | 'private' | 'direct'
+  sensitive: boolean
+  spoiler_text: string
+  url: string | null
+  uri: string
+  account: Account
+  reblog: Status | null
+  media_attachments: MediaAttachment[]
+  replies_count: number
+  reblogs_count: number
+  favourites_count: number
+  reblogged: boolean | null
+  favourited: boolean | null
+  bookmarked: boolean | null
+  language: string | null
+  in_reply_to_id: string | null
+  in_reply_to_account_id: string | null
+  mentions: Array<{ id: string; username: string; acct: string; url: string }>
+  tags: Array<{ name: string; url: string }>
+  emojis: CustomEmoji[]
+}
+
+export interface Application {
+  id: string
+  name: string
+  client_id: string
+  client_secret: string
+  redirect_uri: string
+  vapid_key?: string
+}
+
+export type ColumnType = 'home' | 'local' | 'public' | 'tag' | 'notifications'
+
+export type NotificationType =
+  | 'mention'
+  | 'reblog'
+  | 'favourite'
+  | 'follow'
+  | 'follow_request'
+  | 'poll'
+  | 'update'
+
+export interface MastodonNotification {
+  id: string
+  type: NotificationType
+  created_at: string
+  account: Account
+  status?: Status
+}
+
+export interface ColumnConfig {
+  id: string
+  type: ColumnType
+  tag?: string
+}
+
+export interface AuthState {
+  instanceUrl: string
+  accessToken: string
+  account: Account | null
+}
+
+export interface StreamEvent {
+  event: string
+  payload: string
+}
