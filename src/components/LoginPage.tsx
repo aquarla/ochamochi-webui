@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { registerApp, buildAuthUrl, saveApp } from '../services/auth'
 
 export function LoginPage() {
-  const [instanceUrl, setInstanceUrl] = useState('')
+  const [domain, setDomain] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -11,12 +11,7 @@ export function LoginPage() {
     setError(null)
     setLoading(true)
 
-    const normalizedUrl = instanceUrl.replace(/\/$/, '').trim()
-    if (!normalizedUrl.startsWith('https://') && !normalizedUrl.startsWith('http://')) {
-      setError('インスタンスURLはhttps://で始まる必要があります')
-      setLoading(false)
-      return
-    }
+    const normalizedUrl = `https://${domain.replace(/^https?:\/\//, '').replace(/\/$/, '').trim()}`
 
     try {
       const app = await registerApp(normalizedUrl)
@@ -38,24 +33,27 @@ export function LoginPage() {
       <div className="bg-gray-800 rounded-xl shadow-2xl p-8 w-full max-w-md">
         <h1 className="text-2xl font-bold text-white mb-2 text-center">Mastodon Multi-Column</h1>
         <p className="text-gray-400 text-center mb-8 text-sm">
-          インスタンスURLを入力してログインしてください
+          インスタンスのドメインを入力してログインしてください
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="instance" className="block text-sm font-medium text-gray-300 mb-1">
-              インスタンスURL
+              インスタンスのドメイン
             </label>
-            <input
-              id="instance"
-              type="url"
-              value={instanceUrl}
-              onChange={(e) => setInstanceUrl(e.target.value)}
-              placeholder="https://mastodon.social"
-              className="w-full bg-gray-700 text-white placeholder-gray-500 border border-gray-600 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-              disabled={loading}
-            />
+            <div className="flex items-center bg-gray-700 border border-gray-600 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent">
+              <span className="text-gray-400 pl-4 pr-1 select-none">https://</span>
+              <input
+                id="instance"
+                type="text"
+                value={domain}
+                onChange={(e) => setDomain(e.target.value)}
+                placeholder="mastodon.social"
+                className="flex-1 bg-transparent text-white placeholder-gray-500 px-2 py-2.5 focus:outline-none"
+                required
+                disabled={loading}
+              />
+            </div>
           </div>
 
           {error && (

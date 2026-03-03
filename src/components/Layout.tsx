@@ -65,7 +65,7 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
                 className="w-7 h-7 rounded-full bg-gray-700"
               />
               <button
-                onClick={auth.logout}
+                onClick={() => { if (window.confirm('ログアウトしますか？')) auth.logout() }}
                 className="text-gray-400 hover:text-white text-xs transition-colors"
               >
                 ログアウト
@@ -87,7 +87,7 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
       )}
 
       {/* Columns */}
-      <div className="flex flex-1 overflow-x-auto overflow-y-hidden">
+      <div className="flex flex-1 overflow-x-auto overflow-y-hidden gap-[10px] p-[10px]">
         {columns.length === 0 ? (
           <div className="flex-1 flex items-center justify-center text-gray-500">
             <div className="text-center">
