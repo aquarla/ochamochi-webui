@@ -10,18 +10,25 @@ function isOAuthCallback(): boolean {
   return window.location.pathname === '/oauth/callback' && window.location.search.includes('code=')
 }
 
+function accountKey(instanceUrl: string, accountId: string): string {
+  const host = new URL(instanceUrl).hostname
+  return `${host}_${accountId}`
+}
+
 export function App() {
   const auth = useAuth()
   const [columns, setColumns] = useState<ColumnConfig[]>([])
 
   useEffect(() => {
-    if (auth.isAuthenticated) {
-      setColumns(loadColumns())
+    if (auth.account && auth.instanceUrl) {
+      setColumns(loadColumns(accountKey(auth.instanceUrl, auth.account.id)))
     }
-  }, [auth.isAuthenticated])
+  }, [auth.account, auth.instanceUrl])
 
   const handleColumnsChange = (updated: ColumnConfig[]) => {
-    saveColumns(updated)
+    if (auth.account && auth.instanceUrl) {
+      saveColumns(updated, accountKey(auth.instanceUrl, auth.account.id))
+    }
     setColumns(updated)
   }
 

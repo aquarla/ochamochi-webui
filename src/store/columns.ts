@@ -1,44 +1,44 @@
 import type { ColumnConfig, ColumnType } from '../types'
 
-const STORAGE_KEY = 'mastodon_columns'
+function storageKey(accountKey: string): string {
+  return `mastodon_columns_${accountKey}`
+}
 
 function generateId(): string {
   return Math.random().toString(36).slice(2, 10)
 }
 
-const DEFAULT_COLUMNS: ColumnConfig[] = [
-  { id: generateId(), type: 'home' },
-  { id: generateId(), type: 'local' },
-  { id: generateId(), type: 'public' },
-]
+function defaultColumns(): ColumnConfig[] {
+  return [
+    { id: generateId(), type: 'home' },
+    { id: generateId(), type: 'local' },
+    { id: generateId(), type: 'public' },
+    { id: generateId(), type: 'notifications' },
+  ]
+}
 
-export function loadColumns(): ColumnConfig[] {
-  const raw = localStorage.getItem(STORAGE_KEY)
-  if (!raw) return DEFAULT_COLUMNS
+export function loadColumns(accountKey: string): ColumnConfig[] {
+  const raw = localStorage.getItem(storageKey(accountKey))
+  if (!raw) return defaultColumns()
   try {
     const parsed = JSON.parse(raw) as ColumnConfig[]
     if (Array.isArray(parsed) && parsed.length > 0) return parsed
-    return DEFAULT_COLUMNS
+    return defaultColumns()
   } catch {
-    return DEFAULT_COLUMNS
+    return defaultColumns()
   }
 }
 
-export function saveColumns(columns: ColumnConfig[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(columns))
+export function saveColumns(columns: ColumnConfig[], accountKey: string): void {
+  localStorage.setItem(storageKey(accountKey), JSON.stringify(columns))
 }
 
 export function addColumn(columns: ColumnConfig[], type: ColumnType, tag?: string): ColumnConfig[] {
-  const newColumn: ColumnConfig = { id: generateId(), type, tag }
-  const updated = [...columns, newColumn]
-  saveColumns(updated)
-  return updated
+  return [...columns, { id: generateId(), type, tag }]
 }
 
 export function removeColumn(columns: ColumnConfig[], id: string): ColumnConfig[] {
-  const updated = columns.filter((c) => c.id !== id)
-  saveColumns(updated)
-  return updated
+  return columns.filter((c) => c.id !== id)
 }
 
 export function getColumnLabel(col: ColumnConfig): string {
