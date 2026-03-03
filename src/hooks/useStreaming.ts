@@ -7,6 +7,7 @@ interface UseStreamingOptions {
   accessToken: string
   type: ColumnType
   tag?: string
+  onlyMedia?: boolean
   onNew: (status: Status) => void
   onDelete: (id: string) => void
 }
@@ -16,6 +17,7 @@ export function useStreaming({
   accessToken,
   type,
   tag,
+  onlyMedia,
   onNew,
   onDelete,
 }: UseStreamingOptions): void {
@@ -42,10 +44,10 @@ export function useStreaming({
       } else if (event.event === 'delete') {
         onDeleteRef.current(event.payload)
       }
-    })
+    }, undefined, onlyMedia)
 
     return () => {
       ws.close()
     }
-  }, [instanceUrl, accessToken, type, tag])
+  }, [instanceUrl, accessToken, type, tag, onlyMedia])
 }

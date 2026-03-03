@@ -89,6 +89,7 @@ export interface ColumnConfig {
   id: string
   type: ColumnType
   tag?: string
+  onlyMedia?: boolean
 }
 
 export interface AuthState {

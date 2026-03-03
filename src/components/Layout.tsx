@@ -25,6 +25,10 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
     onColumnsChange(removeColumn(columns, id))
   }
 
+  const handleUpdateColumn = (updated: ColumnConfig) => {
+    onColumnsChange(columns.map((c) => (c.id === updated.id ? updated : c)))
+  }
+
   return (
     <div className="flex flex-col h-screen bg-gray-900 overflow-hidden">
       {/* Header */}
@@ -117,6 +121,7 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
                 instanceUrl={auth.instanceUrl!}
                 accessToken={auth.accessToken!}
                 onRemove={handleRemoveColumn}
+                onUpdate={handleUpdateColumn}
               />
             )
           )

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useTimeline } from '../hooks/useTimeline'
 import { useStreaming } from '../hooks/useStreaming'
 import { getColumnLabel } from '../store/columns'
@@ -10,11 +10,12 @@ interface ColumnProps {
   instanceUrl: string
   accessToken: string
   onRemove: (id: string) => void
+  onUpdate: (column: ColumnConfig) => void
 }
 
-export function Column({ column, instanceUrl, accessToken, onRemove }: ColumnProps) {
+export function Column({ column, instanceUrl, accessToken, onRemove, onUpdate }: ColumnProps) {
   const supportsMediaFilter = column.type !== 'home'
-  const [onlyMedia, setOnlyMedia] = useState(false)
+  const onlyMedia = supportsMediaFilter ? (column.onlyMedia ?? false) : false
 
   const { statuses, loading, error, hasMore, loadMore, prependStatus, removeStatus, updateStatus } =
     useTimeline(instanceUrl, accessToken, column.type, column.tag, supportsMediaFilter ? onlyMedia : undefined)
@@ -24,6 +25,7 @@ export function Column({ column, instanceUrl, accessToken, onRemove }: ColumnPro
     accessToken,
     type: column.type,
     tag: column.tag,
+    onlyMedia: supportsMediaFilter ? onlyMedia : undefined,
     onNew: prependStatus,
     onDelete: removeStatus,
   })
@@ -55,7 +57,7 @@ export function Column({ column, instanceUrl, accessToken, onRemove }: ColumnPro
         <div className="flex items-center gap-1">
           {supportsMediaFilter && (
             <button
-              onClick={() => setOnlyMedia((v) => !v)}
+              onClick={() => onUpdate({ ...column, onlyMedia: !onlyMedia })}
               className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors ${
                 onlyMedia
                   ? 'bg-blue-600 text-white'
