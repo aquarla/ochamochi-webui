@@ -8,6 +8,7 @@ interface PostProps {
   status: Status
   instanceUrl: string
   accessToken: string
+  accountKey?: string
   onUpdate: (status: Status) => void
 }
 
@@ -25,7 +26,7 @@ function formatDate(dateStr: string): string {
   return `${diffDay}日前`
 }
 
-export function Post({ status, instanceUrl, accessToken, onUpdate }: PostProps) {
+export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate }: PostProps) {
   const [actionLoading, setActionLoading] = useState(false)
   const [replyOpen, setReplyOpen] = useState(false)
 
@@ -195,6 +196,7 @@ export function Post({ status, instanceUrl, accessToken, onUpdate }: PostProps) 
           <ComposeForm
             instanceUrl={instanceUrl}
             accessToken={accessToken}
+            accountKey={accountKey}
             inReplyToId={displayStatus.id}
             initialText={`@${displayStatus.account.acct} `}
             onComposed={() => setReplyOpen(false)}

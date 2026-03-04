@@ -30,14 +30,21 @@ export function OAuthCallback({ auth }: OAuthCallbackProps) {
       return
     }
 
+    const isAddingAccount = sessionStorage.getItem('mastodon_adding_account') === '1'
+
     exchangeCodeForToken(stored.instanceUrl, stored.clientId, stored.clientSecret, code)
       .then((accessToken) => {
+        sessionStorage.removeItem('mastodon_adding_account')
+        if (isAddingAccount) {
+          return auth.addAccount({ instanceUrl: stored.instanceUrl, accessToken })
+        }
         return auth.login({ instanceUrl: stored.instanceUrl, accessToken })
       })
       .then(() => {
         window.history.replaceState({}, '', '/')
       })
       .catch((e: unknown) => {
+        sessionStorage.removeItem('mastodon_adding_account')
         setError(e instanceof Error ? e.message : 'トークンの取得に失敗しました')
       })
   }, [auth])

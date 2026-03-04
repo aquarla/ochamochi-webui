@@ -1,4 +1,4 @@
-import type { Application } from '../types'
+import type { Application, Account } from '../types'
 
 const APP_NAME = 'Ochamochi Web'
 const SCOPES = 'read write follow'
@@ -57,12 +57,17 @@ export async function exchangeCodeForToken(
   return data.access_token
 }
 
-export const AUTH_STORAGE_KEY = 'mastodon_auth'
 export const APP_STORAGE_KEY = 'mastodon_app'
+export const ACCOUNTS_STORAGE_KEY = 'mastodon_accounts'
+export const ACTIVE_ACCOUNT_STORAGE_KEY = 'mastodon_active_account'
+export const LEGACY_AUTH_STORAGE_KEY = 'mastodon_auth'
 
-export interface StoredAuth {
+// accountKey = "{hostname}_{accountId}"  e.g. "mastodon.social_109123456"
+export interface StoredAccountEntry {
+  accountKey: string
   instanceUrl: string
   accessToken: string
+  account: Account
 }
 
 export interface StoredApp {
@@ -71,23 +76,42 @@ export interface StoredApp {
   clientSecret: string
 }
 
-export function saveAuth(auth: StoredAuth): void {
-  localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(auth))
-}
-
-export function loadAuth(): StoredAuth | null {
-  const raw = localStorage.getItem(AUTH_STORAGE_KEY)
-  if (!raw) return null
+export function loadAllAccounts(): Record<string, StoredAccountEntry> {
+  const raw = localStorage.getItem(ACCOUNTS_STORAGE_KEY)
+  if (!raw) return {}
   try {
-    return JSON.parse(raw) as StoredAuth
+    return JSON.parse(raw) as Record<string, StoredAccountEntry>
   } catch {
-    return null
+    return {}
   }
 }
 
-export function clearAuth(): void {
-  localStorage.removeItem(AUTH_STORAGE_KEY)
-  localStorage.removeItem(APP_STORAGE_KEY)
+export function saveAllAccounts(accounts: Record<string, StoredAccountEntry>): void {
+  localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(accounts))
+}
+
+export function loadActiveAccountKey(): string | null {
+  return localStorage.getItem(ACTIVE_ACCOUNT_STORAGE_KEY)
+}
+
+export function saveActiveAccountKey(key: string): void {
+  localStorage.setItem(ACTIVE_ACCOUNT_STORAGE_KEY, key)
+}
+
+export function removeAccountFromStorage(accountKey: string): void {
+  const accounts = loadAllAccounts()
+  delete accounts[accountKey]
+  saveAllAccounts(accounts)
+
+  const activeKey = loadActiveAccountKey()
+  if (activeKey === accountKey) {
+    const remaining = Object.keys(accounts)
+    if (remaining.length > 0) {
+      saveActiveAccountKey(remaining[0])
+    } else {
+      localStorage.removeItem(ACTIVE_ACCOUNT_STORAGE_KEY)
+    }
+  }
 }
 
 export function saveApp(app: StoredApp): void {

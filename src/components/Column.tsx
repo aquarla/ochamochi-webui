@@ -9,11 +9,12 @@ interface ColumnProps {
   column: ColumnConfig
   instanceUrl: string
   accessToken: string
+  accountKey?: string
   onRemove: (id: string) => void
   onUpdate: (column: ColumnConfig) => void
 }
 
-export function Column({ column, instanceUrl, accessToken, onRemove, onUpdate }: ColumnProps) {
+export function Column({ column, instanceUrl, accessToken, accountKey, onRemove, onUpdate }: ColumnProps) {
   const supportsMediaFilter = column.type !== 'home'
   const onlyMedia = supportsMediaFilter ? (column.onlyMedia ?? false) : false
 
@@ -100,6 +101,7 @@ export function Column({ column, instanceUrl, accessToken, onRemove, onUpdate }:
             status={status}
             instanceUrl={instanceUrl}
             accessToken={accessToken}
+            accountKey={accountKey}
             onUpdate={updateStatus}
           />
         ))}

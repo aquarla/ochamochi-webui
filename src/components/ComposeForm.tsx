@@ -4,6 +4,7 @@ import { MastodonClient } from '../services/mastodon'
 interface ComposeFormProps {
   instanceUrl: string
   accessToken: string
+  accountKey?: string
   onComposed?: () => void
   inReplyToId?: string
   initialText?: string
@@ -16,17 +17,21 @@ const VISIBILITY_KEY = 'mastodon_visibility'
 
 type Visibility = 'public' | 'unlisted' | 'private' | 'direct'
 
-function loadVisibility(): Visibility {
-  return (localStorage.getItem(VISIBILITY_KEY) as Visibility | null) ?? 'public'
+function visibilityStorageKey(accountKey?: string): string {
+  return accountKey ? `${VISIBILITY_KEY}_${accountKey}` : VISIBILITY_KEY
 }
 
-export function ComposeForm({ instanceUrl, accessToken, onComposed, inReplyToId, initialText, onCancel, inline }: ComposeFormProps) {
+function loadVisibility(accountKey?: string): Visibility {
+  return (localStorage.getItem(visibilityStorageKey(accountKey)) as Visibility | null) ?? 'public'
+}
+
+export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, inReplyToId, initialText, onCancel, inline }: ComposeFormProps) {
   const [text, setText] = useState(initialText ?? '')
-  const [visibility, setVisibility] = useState<Visibility>(loadVisibility)
+  const [visibility, setVisibility] = useState<Visibility>(() => loadVisibility(accountKey))
 
   const handleVisibilityChange = (v: Visibility) => {
     setVisibility(v)
-    localStorage.setItem(VISIBILITY_KEY, v)
+    localStorage.setItem(visibilityStorageKey(accountKey), v)
   }
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
