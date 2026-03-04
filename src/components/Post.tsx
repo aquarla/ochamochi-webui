@@ -244,19 +244,20 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
           </div>
         </div>
 
-        {replyOpen && (
-          <ComposeForm
-            instanceUrl={instanceUrl}
-            accessToken={accessToken}
-            accountKey={accountKey}
-            inReplyToId={displayStatus.id}
-            initialText={`@${displayStatus.account.acct} `}
-            onComposed={() => setReplyOpen(false)}
-            onCancel={() => setReplyOpen(false)}
-            inline
-          />
-        )}
       </div>
-    </article>
+
+    {replyOpen && (
+      <ComposeForm
+        instanceUrl={instanceUrl}
+        accessToken={accessToken}
+        accountKey={accountKey}
+        inReplyToId={displayStatus.id}
+        initialText={`@${displayStatus.account.acct} `}
+        onComposed={() => setReplyOpen(false)}
+        onCancel={() => setReplyOpen(false)}
+        inline
+      />
+    )}
+  </article>
   )
 }
