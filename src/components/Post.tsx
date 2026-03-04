@@ -3,6 +3,7 @@ import type { Status, Account } from '../types'
 import { MastodonClient } from '../services/mastodon'
 import { emojifyText, emojifyHtml } from '../utils/emojify'
 import { ComposeForm } from './ComposeForm'
+import { MediaGrid } from './MediaGrid'
 
 interface PostProps {
   status: Status
@@ -12,6 +13,7 @@ interface PostProps {
   onUpdate: (status: Status) => void
   onOpenDetail?: (status: Status) => void
   onOpenProfile?: (account: Account) => void
+  onAddTagColumn?: (tag: string) => void
   pinned?: boolean
 }
 
@@ -163,26 +165,10 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
                 dangerouslySetInnerHTML={{ __html: emojifyHtml(displayStatus.content, displayStatus.emojis) }}
               />
 
-              {displayStatus.media_attachments.length > 0 && (
-                <div className={`mt-2 grid gap-1 ${displayStatus.media_attachments.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                  {displayStatus.media_attachments.map((media) => (
-                    <div key={media.id} className="rounded overflow-hidden bg-gray-700">
-                      {media.type === 'image' ? (
-                        <img
-                          src={media.preview_url || media.url}
-                          alt={media.description ?? ''}
-                          className="w-full h-32 object-cover"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="h-32 flex items-center justify-center text-gray-400 text-xs">
-                          {media.type}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
+              <MediaGrid
+                attachments={displayStatus.media_attachments}
+                sensitive={displayStatus.sensitive}
+              />
             </>
           )}
 

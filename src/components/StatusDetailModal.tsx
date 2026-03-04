@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { MastodonClient } from '../services/mastodon'
 import { emojifyText, emojifyHtml } from '../utils/emojify'
+import { MediaGrid } from './MediaGrid'
 import type { Status, StatusContext, Account } from '../types'
 
 interface StatusDetailModalProps {
@@ -76,26 +77,11 @@ function StatusRow({ status, highlight, slim, onOpenProfile }: StatusRowProps) {
               className="text-gray-200 text-sm leading-relaxed prose prose-sm prose-invert max-w-none break-words [&_a]:text-blue-400 [&_a:hover]:text-blue-300 [&_p]:mb-1"
               dangerouslySetInnerHTML={{ __html: emojifyHtml(status.content, status.emojis) }}
             />
-            {status.media_attachments.length > 0 && (
-              <div className={`mt-2 grid gap-1 ${status.media_attachments.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                {status.media_attachments.map((media) => (
-                  <div key={media.id} className="rounded overflow-hidden bg-gray-700">
-                    {media.type === 'image' ? (
-                      <img
-                        src={media.url || media.preview_url}
-                        alt={media.description ?? ''}
-                        className="w-full max-h-64 object-contain bg-black"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="h-20 flex items-center justify-center text-gray-400 text-xs">
-                        {media.type}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+            <MediaGrid
+              attachments={status.media_attachments}
+              sensitive={status.sensitive}
+              thumbnailHeight="h-40"
+            />
           </>
         )}
 
