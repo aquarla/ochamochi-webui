@@ -211,6 +211,7 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
                 accountKey={auth.activeAccountKey ?? undefined}
                 onRemove={handleRemoveColumn}
                 onUpdate={handleUpdateColumn}
+                onAddTagColumn={(tag) => handleAddColumn('tag', tag)}
               />
             )
           )

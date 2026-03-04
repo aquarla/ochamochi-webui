@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import type { Status, Account } from '../types'
 import { MastodonClient } from '../services/mastodon'
 import { emojifyText, emojifyHtml } from '../utils/emojify'
@@ -31,7 +31,7 @@ function formatDate(dateStr: string): string {
   return `${diffDay}日前`
 }
 
-export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, onOpenDetail, onOpenProfile, pinned }: PostProps) {
+export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, onOpenDetail, onOpenProfile, onAddTagColumn, pinned }: PostProps) {
   const [actionLoading, setActionLoading] = useState(false)
   const [replyOpen, setReplyOpen] = useState(false)
 
@@ -39,6 +39,23 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
   const isReblog = !!status.reblog
   const hasCw = !!displayStatus.spoiler_text
   const [cwOpen, setCwOpen] = useState(false)
+
+  const contentRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const el = contentRef.current
+    if (!el || !onAddTagColumn) return
+    const handler = (e: MouseEvent) => {
+      const link = (e.target as HTMLElement).closest('a') as HTMLAnchorElement | null
+      if (!link) return
+      const m = link.href.match(/\/tags\/([^/?#]+)/)
+      if (!m) return
+      e.preventDefault()
+      onAddTagColumn(decodeURIComponent(m[1]))
+    }
+    el.addEventListener('click', handler)
+    return () => el.removeEventListener('click', handler)
+  }, [onAddTagColumn])
 
   const applyUpdate = (patch: Partial<typeof displayStatus>) => {
     const next = { ...displayStatus, ...patch }
@@ -161,6 +178,7 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
           {(!hasCw || cwOpen) && (
             <>
               <div
+                ref={contentRef}
                 className="text-gray-200 text-sm leading-relaxed prose prose-sm prose-invert max-w-none break-words [&_a]:text-blue-400 [&_a:hover]:text-blue-300 [&_p]:mb-1"
                 dangerouslySetInnerHTML={{ __html: emojifyHtml(displayStatus.content, displayStatus.emojis) }}
               />
