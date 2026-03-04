@@ -38,17 +38,27 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
   const hasCw = !!displayStatus.spoiler_text
   const [cwOpen, setCwOpen] = useState(false)
 
+  const applyUpdate = (patch: Partial<typeof displayStatus>) => {
+    const next = { ...displayStatus, ...patch }
+    onUpdate(isReblog ? { ...status, reblog: next } : { ...status, ...next })
+  }
+
   const handleFavourite = async () => {
     if (actionLoading) return
     setActionLoading(true)
+    const wasFavourited = displayStatus.favourited
+    applyUpdate({
+      favourited: !wasFavourited,
+      favourites_count: displayStatus.favourites_count + (wasFavourited ? -1 : 1),
+    })
     const client = new MastodonClient(instanceUrl, accessToken)
     try {
-      const updated = displayStatus.favourited
+      const updated = wasFavourited
         ? await client.unfavouriteStatus(displayStatus.id)
         : await client.favouriteStatus(displayStatus.id)
-      onUpdate({ ...status, reblog: isReblog ? updated : null, ...(isReblog ? {} : updated) })
+      onUpdate(isReblog ? { ...status, reblog: updated } : { ...status, ...updated })
     } catch {
-      // ignore
+      applyUpdate({ favourited: wasFavourited, favourites_count: displayStatus.favourites_count })
     } finally {
       setActionLoading(false)
     }
@@ -57,14 +67,22 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
   const handleReblog = async () => {
     if (actionLoading) return
     setActionLoading(true)
+    const wasReblogged = displayStatus.reblogged
+    applyUpdate({
+      reblogged: !wasReblogged,
+      reblogs_count: displayStatus.reblogs_count + (wasReblogged ? -1 : 1),
+    })
     const client = new MastodonClient(instanceUrl, accessToken)
     try {
-      const updated = displayStatus.reblogged
+      const updated = wasReblogged
         ? await client.unreblogStatus(displayStatus.id)
         : await client.reblogStatus(displayStatus.id)
-      onUpdate({ ...status, reblog: isReblog ? updated : null, ...(isReblog ? {} : updated) })
+      // reblogStatus returns the new reblog wrapper; the original is in updated.reblog
+      // unreblogStatus returns the original directly
+      const source = !wasReblogged && updated.reblog ? updated.reblog : updated
+      onUpdate(isReblog ? { ...status, reblog: source } : { ...status, ...source })
     } catch {
-      // ignore
+      applyUpdate({ reblogged: wasReblogged, reblogs_count: displayStatus.reblogs_count })
     } finally {
       setActionLoading(false)
     }
