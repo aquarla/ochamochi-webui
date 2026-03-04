@@ -4,6 +4,12 @@ export interface CustomEmoji {
   static_url: string
 }
 
+export interface AccountField {
+  name: string
+  value: string
+  verified_at: string | null
+}
+
 export interface Account {
   id: string
   username: string
@@ -11,12 +17,15 @@ export interface Account {
   display_name: string
   avatar: string
   avatar_static: string
+  header?: string
+  header_static?: string
   url: string
   note: string
   followers_count: number
   following_count: number
   statuses_count: number
   emojis: CustomEmoji[]
+  fields?: AccountField[]
 }
 
 export interface MediaAttachment {
@@ -96,6 +105,11 @@ export interface AuthState {
   instanceUrl: string
   accessToken: string
   account: Account | null
+}
+
+export interface StatusContext {
+  ancestors: Status[]
+  descendants: Status[]
 }
 
 export interface StreamEvent {

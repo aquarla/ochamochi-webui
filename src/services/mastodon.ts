@@ -1,4 +1,4 @@
-import type { Status, Account, MastodonNotification } from '../types'
+import type { Status, Account, MastodonNotification, StatusContext } from '../types'
 
 export class MastodonClient {
   constructor(
@@ -92,5 +92,25 @@ export class MastodonClient {
 
   async unfavouriteStatus(id: string): Promise<Status> {
     return this.request<Status>(`/api/v1/statuses/${id}/unfavourite`, { method: 'POST' })
+  }
+
+  async getStatusContext(id: string): Promise<StatusContext> {
+    return this.request<StatusContext>(`/api/v1/statuses/${id}/context`)
+  }
+
+  async getAccountById(id: string): Promise<Account> {
+    return this.request<Account>(`/api/v1/accounts/${id}`)
+  }
+
+  async getAccountStatuses(
+    id: string,
+    params: { max_id?: string; limit?: number; pinned?: boolean; exclude_replies?: boolean } = {},
+  ): Promise<Status[]> {
+    const qs = new URLSearchParams()
+    if (params.max_id) qs.set('max_id', params.max_id)
+    if (params.limit) qs.set('limit', String(params.limit))
+    if (params.pinned) qs.set('pinned', 'true')
+    if (params.exclude_replies !== undefined) qs.set('exclude_replies', String(params.exclude_replies))
+    return this.request<Status[]>(`/api/v1/accounts/${id}/statuses?${qs}`)
   }
 }

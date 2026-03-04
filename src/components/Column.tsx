@@ -1,9 +1,11 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTimeline } from '../hooks/useTimeline'
 import { useStreaming } from '../hooks/useStreaming'
 import { getColumnLabel } from '../store/columns'
 import { Post } from './Post'
-import type { ColumnConfig } from '../types'
+import { StatusDetailModal } from './StatusDetailModal'
+import { UserProfileModal } from './UserProfileModal'
+import type { ColumnConfig, Status, Account } from '../types'
 
 interface ColumnProps {
   column: ColumnConfig
@@ -15,6 +17,13 @@ interface ColumnProps {
 }
 
 export function Column({ column, instanceUrl, accessToken, accountKey, onRemove, onUpdate }: ColumnProps) {
+  const [detailStatus, setDetailStatus] = useState<Status | null>(null)
+  const [profileAccount, setProfileAccount] = useState<Account | null>(null)
+
+  const handleOpenProfile = (account: Account) => {
+    setDetailStatus(null)
+    setProfileAccount(account)
+  }
   const supportsMediaFilter = column.type !== 'home'
   const onlyMedia = supportsMediaFilter ? (column.onlyMedia ?? false) : false
 
@@ -103,6 +112,8 @@ export function Column({ column, instanceUrl, accessToken, accountKey, onRemove,
             accessToken={accessToken}
             accountKey={accountKey}
             onUpdate={updateStatus}
+            onOpenDetail={setDetailStatus}
+            onOpenProfile={handleOpenProfile}
           />
         ))}
 
@@ -116,6 +127,28 @@ export function Column({ column, instanceUrl, accessToken, accountKey, onRemove,
           <div className="p-3 text-gray-600 text-xs text-center">最後まで読み込みました</div>
         )}
       </div>
+
+      {detailStatus && (
+        <StatusDetailModal
+          status={detailStatus}
+          instanceUrl={instanceUrl}
+          accessToken={accessToken}
+          onClose={() => setDetailStatus(null)}
+          onOpenProfile={handleOpenProfile}
+        />
+      )}
+
+      {profileAccount && (
+        <UserProfileModal
+          account={profileAccount}
+          instanceUrl={instanceUrl}
+          accessToken={accessToken}
+          accountKey={accountKey}
+          onClose={() => setProfileAccount(null)}
+          onOpenDetail={(s) => { setProfileAccount(null); setDetailStatus(s) }}
+          onOpenProfile={handleOpenProfile}
+        />
+      )}
     </div>
   )
 }

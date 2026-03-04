@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Status } from '../types'
+import type { Status, Account } from '../types'
 import { MastodonClient } from '../services/mastodon'
 import { emojifyText, emojifyHtml } from '../utils/emojify'
 import { ComposeForm } from './ComposeForm'
@@ -10,6 +10,9 @@ interface PostProps {
   accessToken: string
   accountKey?: string
   onUpdate: (status: Status) => void
+  onOpenDetail?: (status: Status) => void
+  onOpenProfile?: (account: Account) => void
+  pinned?: boolean
 }
 
 function formatDate(dateStr: string): string {
@@ -26,7 +29,7 @@ function formatDate(dateStr: string): string {
   return `${diffDay}日前`
 }
 
-export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate }: PostProps) {
+export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, onOpenDetail, onOpenProfile, pinned }: PostProps) {
   const [actionLoading, setActionLoading] = useState(false)
   const [replyOpen, setReplyOpen] = useState(false)
 
@@ -69,6 +72,15 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate }:
 
   return (
     <article className="border-b border-gray-700 p-3 hover:bg-gray-750 transition-colors">
+      {pinned && (
+        <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
+          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z" />
+          </svg>
+          ピン止め
+        </p>
+      )}
+
       {isReblog && (
         <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -79,12 +91,17 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate }:
       )}
 
       <div className="flex gap-3">
-        <img
-          src={displayStatus.account.avatar_static}
-          alt={displayStatus.account.display_name || displayStatus.account.username}
-          className="w-10 h-10 rounded-full flex-shrink-0 bg-gray-700"
-          loading="lazy"
-        />
+        <button
+          onClick={() => onOpenProfile?.(displayStatus.account)}
+          className={`flex-shrink-0 rounded-full ${onOpenProfile ? 'cursor-pointer hover:opacity-80 transition-opacity' : 'cursor-default'}`}
+        >
+          <img
+            src={displayStatus.account.avatar_static}
+            alt={displayStatus.account.display_name || displayStatus.account.username}
+            className="w-10 h-10 rounded-full bg-gray-700"
+            loading="lazy"
+          />
+        </button>
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2 mb-1">
             <span
@@ -92,9 +109,18 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate }:
               dangerouslySetInnerHTML={{ __html: emojifyText(displayStatus.account.display_name || displayStatus.account.username, displayStatus.account.emojis) }}
             />
             <span className="text-gray-500 text-xs truncate">@{displayStatus.account.acct}</span>
-            <span className="text-gray-600 text-xs ml-auto flex-shrink-0">
-              {formatDate(displayStatus.created_at)}
-            </span>
+            {onOpenDetail ? (
+              <button
+                onClick={() => onOpenDetail(displayStatus)}
+                className="text-gray-600 text-xs ml-auto flex-shrink-0 hover:text-blue-400 transition-colors"
+              >
+                {formatDate(displayStatus.created_at)}
+              </button>
+            ) : (
+              <span className="text-gray-600 text-xs ml-auto flex-shrink-0">
+                {formatDate(displayStatus.created_at)}
+              </span>
+            )}
           </div>
 
           {hasCw && (
