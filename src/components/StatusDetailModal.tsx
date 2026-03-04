@@ -10,6 +10,8 @@ interface StatusDetailModalProps {
   accessToken: string
   onClose: () => void
   onOpenProfile?: (account: Account) => void
+  onDelete?: (id: string) => void
+  currentAccountId?: string
 }
 
 function formatDateFull(dateStr: string): string {
@@ -27,9 +29,11 @@ interface StatusRowProps {
   highlight?: boolean
   slim?: boolean
   onOpenProfile?: (account: Account) => void
+  onDelete?: (id: string) => void
+  isOwnPost?: boolean
 }
 
-function StatusRow({ status, highlight, slim, onOpenProfile }: StatusRowProps) {
+function StatusRow({ status, highlight, slim, onOpenProfile, onDelete, isOwnPost }: StatusRowProps) {
   const hasCw = !!status.spoiler_text
   const [cwOpen, setCwOpen] = useState(!hasCw)
 
@@ -85,27 +89,44 @@ function StatusRow({ status, highlight, slim, onOpenProfile }: StatusRowProps) {
           </>
         )}
 
-        {highlight && (
-          <div className="flex items-center gap-4 mt-2 text-gray-400 text-xs">
-            <span>{status.replies_count} 返信</span>
-            <span>{status.reblogs_count} ブースト</span>
-            <span>{status.favourites_count} お気に入り</span>
-            <a
-              href={status.url ?? status.uri}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="ml-auto hover:text-blue-400 transition-colors"
-            >
-              元の投稿を開く
-            </a>
+        <div className="flex items-center mt-2 gap-4 text-gray-400 text-xs">
+          {highlight && (
+            <>
+              <span>{status.replies_count} 返信</span>
+              <span>{status.reblogs_count} ブースト</span>
+              <span>{status.favourites_count} お気に入り</span>
+            </>
+          )}
+          <div className="flex items-center gap-2 ml-auto">
+            {isOwnPost && onDelete && (
+              <button
+                onClick={() => onDelete(status.id)}
+                className="hover:text-red-400 transition-colors"
+                title="削除"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            )}
+            {highlight && (
+              <a
+                href={status.url ?? status.uri}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-blue-400 transition-colors"
+              >
+                元の投稿を開く
+              </a>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   )
 }
 
-export function StatusDetailModal({ status, instanceUrl, accessToken, onClose, onOpenProfile }: StatusDetailModalProps) {
+export function StatusDetailModal({ status, instanceUrl, accessToken, onClose, onOpenProfile, onDelete, currentAccountId }: StatusDetailModalProps) {
   const [context, setContext] = useState<StatusContext | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -118,6 +139,29 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, onClose, o
       .catch((e: unknown) => setError(e instanceof Error ? e.message : 'コンテキストの取得に失敗しました'))
       .finally(() => setLoading(false))
   }, [status.id, instanceUrl, accessToken])
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('この投稿を削除しますか？')) return
+    const client = new MastodonClient(instanceUrl, accessToken)
+    try {
+      await client.deleteStatus(id)
+      if (id === status.id) {
+        onDelete?.(id)
+        onClose()
+      } else {
+        setContext((prev) =>
+          prev
+            ? {
+                ancestors: prev.ancestors.filter((s) => s.id !== id),
+                descendants: prev.descendants.filter((s) => s.id !== id),
+              }
+            : null,
+        )
+      }
+    } catch {
+      // ignore
+    }
+  }
 
   return (
     <div
@@ -156,17 +200,34 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, onClose, o
 
           {!loading && (
             <>
-              {/* Ancestors */}
               {context?.ancestors.map((s) => (
-                <StatusRow key={s.id} status={s} slim onOpenProfile={onOpenProfile} />
+                <StatusRow
+                  key={s.id}
+                  status={s}
+                  slim
+                  onOpenProfile={onOpenProfile}
+                  onDelete={handleDelete}
+                  isOwnPost={!!currentAccountId && s.account.id === currentAccountId}
+                />
               ))}
 
-              {/* Main status */}
-              <StatusRow status={status} highlight onOpenProfile={onOpenProfile} />
+              <StatusRow
+                status={status}
+                highlight
+                onOpenProfile={onOpenProfile}
+                onDelete={handleDelete}
+                isOwnPost={!!currentAccountId && status.account.id === currentAccountId}
+              />
 
-              {/* Descendants */}
               {context?.descendants.map((s) => (
-                <StatusRow key={s.id} status={s} slim onOpenProfile={onOpenProfile} />
+                <StatusRow
+                  key={s.id}
+                  status={s}
+                  slim
+                  onOpenProfile={onOpenProfile}
+                  onDelete={handleDelete}
+                  isOwnPost={!!currentAccountId && s.account.id === currentAccountId}
+                />
               ))}
 
               {context?.descendants.length === 0 && context?.ancestors.length === 0 && (

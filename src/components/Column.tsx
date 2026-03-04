@@ -15,9 +15,10 @@ interface ColumnProps {
   onRemove: (id: string) => void
   onUpdate: (column: ColumnConfig) => void
   onAddTagColumn?: (tag: string) => void
+  currentAccountId?: string
 }
 
-export function Column({ column, instanceUrl, accessToken, accountKey, onRemove, onUpdate, onAddTagColumn }: ColumnProps) {
+export function Column({ column, instanceUrl, accessToken, accountKey, onRemove, onUpdate, onAddTagColumn, currentAccountId }: ColumnProps) {
   const [detailStatus, setDetailStatus] = useState<Status | null>(null)
   const [profileAccount, setProfileAccount] = useState<Account | null>(null)
 
@@ -113,9 +114,11 @@ export function Column({ column, instanceUrl, accessToken, accountKey, onRemove,
             accessToken={accessToken}
             accountKey={accountKey}
             onUpdate={updateStatus}
+            onDelete={removeStatus}
             onOpenDetail={setDetailStatus}
             onOpenProfile={handleOpenProfile}
             onAddTagColumn={onAddTagColumn}
+            currentAccountId={currentAccountId}
           />
         ))}
 
@@ -135,8 +138,10 @@ export function Column({ column, instanceUrl, accessToken, accountKey, onRemove,
           status={detailStatus}
           instanceUrl={instanceUrl}
           accessToken={accessToken}
+          currentAccountId={currentAccountId}
           onClose={() => setDetailStatus(null)}
           onOpenProfile={handleOpenProfile}
+          onDelete={removeStatus}
         />
       )}
 
@@ -146,6 +151,7 @@ export function Column({ column, instanceUrl, accessToken, accountKey, onRemove,
           instanceUrl={instanceUrl}
           accessToken={accessToken}
           accountKey={accountKey}
+          currentAccountId={currentAccountId}
           onClose={() => setProfileAccount(null)}
           onOpenDetail={(s) => { setProfileAccount(null); setDetailStatus(s) }}
           onOpenProfile={handleOpenProfile}

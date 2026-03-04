@@ -9,6 +9,7 @@ interface UserProfileModalProps {
   instanceUrl: string
   accessToken: string
   accountKey?: string
+  currentAccountId?: string
   onClose: () => void
   onOpenDetail?: (status: Status) => void
   onOpenProfile?: (account: Account) => void
@@ -21,6 +22,7 @@ export function UserProfileModal({
   instanceUrl,
   accessToken,
   accountKey,
+  currentAccountId,
   onClose,
   onOpenDetail,
   onOpenProfile,
@@ -95,6 +97,11 @@ export function UserProfileModal({
   const handleUpdateStatus = (updated: Status) => {
     setStatuses((prev) => prev.map((s) => (s.id === updated.id ? updated : s)))
     setPinnedStatuses((prev) => prev.map((s) => (s.id === updated.id ? updated : s)))
+  }
+
+  const handleDeleteStatus = (id: string) => {
+    setStatuses((prev) => prev.filter((s) => s.id !== id))
+    setPinnedStatuses((prev) => prev.filter((s) => s.id !== id))
   }
 
   const hasHeader = !!account.header && !account.header.endsWith('/headers/original/missing.png')
@@ -197,7 +204,9 @@ export function UserProfileModal({
                     instanceUrl={instanceUrl}
                     accessToken={accessToken}
                     accountKey={accountKey}
+                    currentAccountId={currentAccountId}
                     onUpdate={handleUpdateStatus}
+                    onDelete={handleDeleteStatus}
                     onOpenDetail={onOpenDetail}
                     onOpenProfile={onOpenProfile}
                     pinned
@@ -211,7 +220,9 @@ export function UserProfileModal({
                     instanceUrl={instanceUrl}
                     accessToken={accessToken}
                     accountKey={accountKey}
+                    currentAccountId={currentAccountId}
                     onUpdate={handleUpdateStatus}
+                    onDelete={handleDeleteStatus}
                     onOpenDetail={onOpenDetail}
                     onOpenProfile={onOpenProfile}
                   />
