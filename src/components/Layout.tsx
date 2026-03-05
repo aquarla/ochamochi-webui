@@ -103,6 +103,7 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
             <option value="solarized">Solarized Dark</option>
             <option value="nord">Nord</option>
             <option value="dracula">Dracula</option>
+            <option value="horizon-bright">Horizon Bright</option>
           </select>
 
           {auth.account && (

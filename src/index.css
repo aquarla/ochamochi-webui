@@ -307,3 +307,60 @@ img.custom-emoji {
 [data-theme="dracula"] .placeholder-gray-700::placeholder { color: #6e7698; }
 [data-theme="dracula"] .disabled\:bg-gray-700:disabled { background-color: #44475a; }
 [data-theme="dracula"] .disabled\:text-gray-500:disabled { color: #6e7698; }
+
+/* ============================================================
+   Horizon Bright — warm peachy light theme (alexandernanberg/horizon-theme-vscode)
+   ============================================================ */
+
+[data-theme="horizon-bright"] body { background-color: #F5E6E0; color: #1E1D22; }
+
+[data-theme="horizon-bright"] ::-webkit-scrollbar-track { background: #FDF0ED; }
+[data-theme="horizon-bright"] ::-webkit-scrollbar-thumb { background: #F5C5B8; }
+[data-theme="horizon-bright"] ::-webkit-scrollbar-thumb:hover { background: #E84A72; }
+
+[data-theme="horizon-bright"] .bg-gray-900 { background-color: #F5E6E0; }
+[data-theme="horizon-bright"] .bg-gray-800 { background-color: #FDF0ED; }
+[data-theme="horizon-bright"] .bg-gray-750 { background-color: #FAE8E2; }
+[data-theme="horizon-bright"] .bg-gray-700 { background-color: #FADAD1; }
+[data-theme="horizon-bright"] .bg-gray-600 { background-color: #F5C9BC; }
+[data-theme="horizon-bright"] .bg-gray-800\/90 { background-color: rgba(253,240,237,0.93); }
+[data-theme="horizon-bright"] .bg-gray-700\/40 { background-color: rgba(250,218,209,0.6); }
+[data-theme="horizon-bright"] .hover\:bg-gray-750:hover { background-color: #FAE8E2; }
+[data-theme="horizon-bright"] .hover\:bg-gray-700:hover { background-color: #FADAD1; }
+[data-theme="horizon-bright"] .hover\:bg-gray-600:hover { background-color: #F5C9BC; }
+
+[data-theme="horizon-bright"] .text-white { color: #1E1D22; }
+[data-theme="horizon-bright"] .text-white\/70 { color: rgba(30,29,34,0.7); }
+[data-theme="horizon-bright"] .text-white\/80 { color: rgba(30,29,34,0.8); }
+[data-theme="horizon-bright"] .text-white\/90 { color: rgba(30,29,34,0.9); }
+[data-theme="horizon-bright"] .text-gray-200 { color: #2D2B33; }
+[data-theme="horizon-bright"] .text-gray-300 { color: #5C5260; }
+[data-theme="horizon-bright"] .text-gray-400 { color: #A49C9C; }
+[data-theme="horizon-bright"] .text-gray-500 { color: #BDB5B5; }
+[data-theme="horizon-bright"] .text-gray-600 { color: #D4CBCB; }
+[data-theme="horizon-bright"] .hover\:text-white:hover { color: #0A0910; }
+[data-theme="horizon-bright"] .hover\:text-gray-300:hover { color: #5C5260; }
+
+[data-theme="horizon-bright"] .border-gray-700 { border-color: #FADAD1; }
+[data-theme="horizon-bright"] .border-gray-700\/60 { border-color: rgba(250,218,209,0.7); }
+[data-theme="horizon-bright"] .border-gray-600 { border-color: #F5C9BC; }
+
+[data-theme="horizon-bright"] .placeholder-gray-500::placeholder { color: #BDB5B5; }
+[data-theme="horizon-bright"] .placeholder-gray-700::placeholder { color: #BDB5B5; }
+[data-theme="horizon-bright"] .disabled\:bg-gray-700:disabled { background-color: #FADAD1; }
+[data-theme="horizon-bright"] .disabled\:text-gray-500:disabled { color: #BDB5B5; }
+
+[data-theme="horizon-bright"] .prose-invert {
+  --tw-prose-body: #2D2B33;
+  --tw-prose-headings: #1E1D22;
+  --tw-prose-bold: #1E1D22;
+  --tw-prose-counters: #5C5260;
+  --tw-prose-bullets: #5C5260;
+  --tw-prose-hr: #FADAD1;
+  --tw-prose-quotes: #1E1D22;
+  --tw-prose-quote-borders: #FADAD1;
+  --tw-prose-captions: #5C5260;
+  --tw-prose-code: #1E1D22;
+  --tw-prose-th-borders: #FADAD1;
+  --tw-prose-td-borders: #F5E6E0;
+}

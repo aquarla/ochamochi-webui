@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 
-export type Theme = 'dark' | 'light' | 'sepia' | 'solarized' | 'nord' | 'dracula'
+export type Theme = 'dark' | 'light' | 'sepia' | 'solarized' | 'nord' | 'dracula' | 'horizon-bright'
 
-const THEMES: Theme[] = ['dark', 'light', 'sepia', 'solarized', 'nord', 'dracula']
+const THEMES: Theme[] = ['dark', 'light', 'sepia', 'solarized', 'nord', 'dracula', 'horizon-bright']
 
 function storageKey(accountKey?: string | null) {
   return accountKey ? `mastodon_theme_${accountKey}` : 'mastodon_theme_default'
