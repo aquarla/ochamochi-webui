@@ -1,4 +1,4 @@
-import type { Status, Account, MastodonNotification, StatusContext } from '../types'
+import type { Status, Account, MastodonNotification, StatusContext, CustomEmoji, MediaAttachment } from '../types'
 
 export class MastodonClient {
   constructor(
@@ -71,11 +71,28 @@ export class MastodonClient {
     in_reply_to_id?: string
     sensitive?: boolean
     spoiler_text?: string
+    media_ids?: string[]
   }): Promise<Status> {
     return this.request<Status>('/api/v1/statuses', {
       method: 'POST',
       body: JSON.stringify(params),
     })
+  }
+
+  async uploadMedia(file: File): Promise<MediaAttachment> {
+    const form = new FormData()
+    form.append('file', file)
+    const url = `${this.instanceUrl}/api/v2/media`
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${this.accessToken}` },
+      body: form,
+    })
+    if (!res.ok) {
+      const text = await res.text()
+      throw new Error(`${res.status} ${res.statusText}: ${text}`)
+    }
+    return res.json() as Promise<MediaAttachment>
   }
 
   async reblogStatus(id: string): Promise<Status> {
@@ -104,6 +121,10 @@ export class MastodonClient {
 
   async deleteStatus(id: string): Promise<void> {
     await this.request<unknown>(`/api/v1/statuses/${id}`, { method: 'DELETE' })
+  }
+
+  async getCustomEmojis(): Promise<CustomEmoji[]> {
+    return this.request<CustomEmoji[]>('/api/v1/custom_emojis')
   }
 
   async getFavourites(params: { max_id?: string; limit?: number } = {}): Promise<Status[]> {

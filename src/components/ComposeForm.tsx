@@ -1,5 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
 import { MastodonClient } from '../services/mastodon'
+import { EmojiPicker } from './EmojiPicker'
+
+interface AttachmentItem {
+  mediaId: string
+  previewUrl: string
+}
 
 interface ComposeFormProps {
   instanceUrl: string
@@ -32,8 +38,12 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
   const [cwText, setCwText] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [attachments, setAttachments] = useState<AttachmentItem[]>([])
+  const [uploading, setUploading] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const cwRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (inReplyToId && textareaRef.current) {
@@ -49,9 +59,14 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
     }
   }, [cwEnabled])
 
+  useEffect(() => {
+    const urls = attachments.map((a) => a.previewUrl)
+    return () => urls.forEach((u) => URL.revokeObjectURL(u))
+  }, [])
+
   const remaining = MAX_CHARS - text.length - (cwEnabled ? cwText.length : 0)
   const isOverLimit = remaining < 0
-  const canSubmit = text.trim().length > 0 && !isOverLimit && !loading
+  const canSubmit = (text.trim().length > 0 || attachments.length > 0) && !isOverLimit && !loading && !uploading
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -66,10 +81,13 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
         in_reply_to_id: inReplyToId,
         spoiler_text: cwEnabled && cwText ? cwText : undefined,
         sensitive: cwEnabled,
+        media_ids: attachments.length > 0 ? attachments.map((a) => a.mediaId) : undefined,
       })
+      attachments.forEach((a) => URL.revokeObjectURL(a.previewUrl))
       setText('')
       setCwEnabled(false)
       setCwText('')
+      setAttachments([])
       onComposed?.()
     } catch (e) {
       setError(e instanceof Error ? e.message : '投稿に失敗しました')
@@ -90,8 +108,64 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
     localStorage.setItem(visibilityStorageKey(accountKey), v)
   }
 
+  const insertEmoji = (emoji: string) => {
+    const el = textareaRef.current
+    if (!el) return
+    const start = el.selectionStart ?? text.length
+    const end = el.selectionEnd ?? text.length
+    const next = text.slice(0, start) + emoji + text.slice(end)
+    setText(next)
+    const cursor = start + emoji.length
+    requestAnimationFrame(() => {
+      el.focus()
+      el.setSelectionRange(cursor, cursor)
+    })
+    setShowEmojiPicker(false)
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? [])
+    e.target.value = ''
+    if (files.length === 0) return
+    const slots = 4 - attachments.length
+    const toUpload = files.slice(0, slots)
+    setUploading(true)
+    setError(null)
+    const client = new MastodonClient(instanceUrl, accessToken)
+    try {
+      const results = await Promise.all(
+        toUpload.map(async (file) => {
+          const previewUrl = URL.createObjectURL(file)
+          const media = await client.uploadMedia(file)
+          return { mediaId: media.id, previewUrl }
+        }),
+      )
+      setAttachments((prev) => [...prev, ...results])
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '画像のアップロードに失敗しました')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const removeAttachment = (mediaId: string) => {
+    setAttachments((prev) => {
+      const item = prev.find((a) => a.mediaId === mediaId)
+      if (item) URL.revokeObjectURL(item.previewUrl)
+      return prev.filter((a) => a.mediaId !== mediaId)
+    })
+  }
+
   return (
     <form onSubmit={handleSubmit} className={inline ? 'pt-2' : 'p-3 border-b border-gray-700'}>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*,video/*"
+        multiple
+        className="hidden"
+        onChange={handleFileChange}
+      />
       {cwEnabled && (
         <input
           ref={cwRef}
@@ -116,8 +190,51 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
         disabled={loading}
       />
 
-      <div className="flex items-center justify-between mt-2 gap-2">
+      {attachments.length > 0 && (
+        <div className="mt-2 grid grid-cols-4 gap-1">
+          {attachments.map((a) => (
+            <div key={a.mediaId} className="relative aspect-square">
+              <img
+                src={a.previewUrl}
+                alt=""
+                className="w-full h-full object-cover rounded"
+              />
+              <button
+                type="button"
+                onClick={() => removeAttachment(a.mediaId)}
+                className="absolute top-0.5 right-0.5 w-5 h-5 flex items-center justify-center bg-black/70 hover:bg-black/90 text-white rounded-full text-xs leading-none"
+                title="削除"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+          {uploading && (
+            <div className="aspect-square flex items-center justify-center bg-gray-700 rounded">
+              <div className="animate-spin w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full" />
+            </div>
+          )}
+        </div>
+      )}
+
+      {showEmojiPicker && (
+        <EmojiPicker instanceUrl={instanceUrl} accessToken={accessToken} onSelect={insertEmoji} />
+      )}
+
+      <div className="flex items-center justify-between mt-2 gap-x-2 gap-y-1 flex-wrap">
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="border-gray-600 text-gray-400 hover:border-gray-500 hover:text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed border rounded px-2 py-1 transition-colors"
+            title="画像を添付"
+            disabled={loading || uploading || attachments.length >= 4}
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </button>
+
           <button
             type="button"
             onClick={() => setCwEnabled((v) => !v)}
@@ -130,6 +247,20 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
             disabled={loading}
           >
             CW
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowEmojiPicker((v) => !v)}
+            className={`text-xs px-2 py-1 rounded border transition-colors ${
+              showEmojiPicker
+                ? 'bg-gray-600 border-gray-500 text-white'
+                : 'border-gray-600 text-gray-400 hover:border-gray-500 hover:text-gray-300'
+            }`}
+            title="絵文字"
+            disabled={loading}
+          >
+            😀
           </button>
 
           <select
