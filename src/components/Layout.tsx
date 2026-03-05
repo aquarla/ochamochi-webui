@@ -5,6 +5,7 @@ import { ComposeForm } from './ComposeForm'
 import { AddColumnModal } from './AddColumnModal'
 import { AddAccountModal } from './AddAccountModal'
 import { addColumn, removeColumn } from '../store/columns'
+import { useTheme } from '../hooks/useTheme'
 import type { AuthContext } from '../hooks/useAuth'
 import type { ColumnConfig, ColumnType } from '../types'
 
@@ -15,6 +16,7 @@ interface LayoutProps {
 }
 
 export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
+  const { theme, setTheme } = useTheme(auth.activeAccountKey)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showCompose, setShowCompose] = useState(false)
   const [showAccountMenu, setShowAccountMenu] = useState(false)
@@ -88,6 +90,20 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
             </svg>
             カラム追加
           </button>
+
+          <select
+            value={theme}
+            onChange={(e) => setTheme(e.target.value as import('../hooks/useTheme').Theme)}
+            className="bg-gray-700 text-gray-300 border border-gray-600 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+            title="テーマ"
+          >
+            <option value="dark">ダーク</option>
+            <option value="light">ライト</option>
+            <option value="sepia">セピア</option>
+            <option value="solarized">Solarized Dark</option>
+            <option value="nord">Nord</option>
+            <option value="dracula">Dracula</option>
+          </select>
 
           {auth.account && (
             <div className="relative ml-2" ref={accountMenuRef}>

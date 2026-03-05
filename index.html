@@ -4,6 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ochamochi Web for Mastodon</title>
+    <script>
+      try {
+        var ak = localStorage.getItem('mastodon_active_account')
+        var key = ak ? 'mastodon_theme_' + ak : 'mastodon_theme_default'
+        var t = localStorage.getItem(key) || 'dark'
+        document.documentElement.setAttribute('data-theme', t)
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>
