@@ -79,6 +79,15 @@ export function MediaGrid({ attachments, sensitive, forceReveal, thumbnailHeight
             <span className="text-white/90 text-xs font-medium">クリックして表示</span>
           </div>
         )}
+
+        {revealed && sensitive && !forceReveal && (
+          <button
+            className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white/80 hover:text-white text-xs px-1.5 py-0.5 rounded transition-colors"
+            onClick={() => setRevealed(false)}
+          >
+            隠す
+          </button>
+        )}
       </div>
 
       {viewerIndex !== null && (
