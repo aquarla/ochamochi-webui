@@ -33,13 +33,13 @@ export function LoginPage() {
       <div className="bg-gray-800 rounded-xl shadow-2xl p-8 w-full max-w-md">
         <h1 className="text-2xl font-bold text-white mb-2 text-center">Mastodon Multi-Column</h1>
         <p className="text-gray-400 text-center mb-8 text-sm">
-          インスタンスのドメインを入力してログインしてください
+          サーバーのドメインを入力してログインしてください
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="instance" className="block text-sm font-medium text-gray-300 mb-1">
-              インスタンスのドメイン
+              サーバーのドメイン
             </label>
             <div className="flex items-center bg-gray-700 border border-gray-600 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent">
               <span className="text-gray-400 pl-4 pr-1 select-none">https://</span>

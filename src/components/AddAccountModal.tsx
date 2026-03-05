@@ -50,13 +50,13 @@ export function AddAccountModal({ onClose }: AddAccountModalProps) {
         </div>
 
         <p className="text-gray-400 text-sm mb-4">
-          追加するインスタンスのドメインを入力してください
+          追加するサーバーのドメインを入力してください
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="add-instance" className="block text-sm font-medium text-gray-300 mb-1">
-              インスタンスのドメイン
+              サーバーのドメイン
             </label>
             <div className="flex items-center bg-gray-700 border border-gray-600 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent">
               <span className="text-gray-400 pl-4 pr-1 select-none">https://</span>
