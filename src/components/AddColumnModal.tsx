@@ -37,7 +37,7 @@ export function AddColumnModal({ onAdd, onClose }: AddColumnModalProps) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-2">
-            {(['home', 'notifications', 'local', 'public', 'tag'] as ColumnType[]).map((t) => (
+            {(['home', 'notifications', 'local', 'public', 'tag', 'favourites'] as ColumnType[]).map((t) => (
               <button
                 key={t}
                 type="button"
@@ -48,7 +48,7 @@ export function AddColumnModal({ onAdd, onClose }: AddColumnModalProps) {
                     : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                 }`}
               >
-                {t === 'home' ? 'ホーム' : t === 'notifications' ? '通知' : t === 'local' ? 'ローカル' : t === 'public' ? '連合' : 'タグ'}
+                {t === 'home' ? 'ホーム' : t === 'notifications' ? '通知' : t === 'local' ? 'ローカル' : t === 'public' ? '連合' : t === 'favourites' ? 'お気に入り' : 'タグ'}
               </button>
             ))}
           </div>

@@ -26,7 +26,7 @@ export function Column({ column, instanceUrl, accessToken, accountKey, onRemove,
     setDetailStatus(null)
     setProfileAccount(account)
   }
-  const supportsMediaFilter = column.type !== 'home'
+  const supportsMediaFilter = column.type !== 'home' && column.type !== 'favourites'
   const onlyMedia = supportsMediaFilter ? (column.onlyMedia ?? false) : false
 
   const { statuses, loading, error, hasMore, loadMore, prependStatus, removeStatus, updateStatus } =

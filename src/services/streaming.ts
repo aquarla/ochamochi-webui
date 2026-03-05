@@ -13,6 +13,8 @@ function getStreamName(type: ColumnType, tag?: string, onlyMedia?: boolean): str
       return onlyMedia ? 'public:media' : 'public'
     case 'tag':
       return `hashtag&tag=${encodeURIComponent(tag ?? '')}`
+    case 'favourites':
+      return ''  // no streaming endpoint; useStreaming skips this type
   }
 }
 

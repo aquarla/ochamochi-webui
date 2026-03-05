@@ -53,5 +53,7 @@ export function getColumnLabel(col: ColumnConfig): string {
       return `#${col.tag ?? ''}`
     case 'notifications':
       return '通知'
+    case 'favourites':
+      return 'お気に入り'
   }
 }
