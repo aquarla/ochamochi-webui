@@ -34,7 +34,10 @@ export function saveColumns(columns: ColumnConfig[], accountKey: string): void {
 }
 
 export function addColumn(columns: ColumnConfig[], type: ColumnType, tag?: string): ColumnConfig[] {
-  return [...columns, { id: generateId(), type, tag }]
+  const isDuplicate = (col: ColumnConfig) =>
+    col.type === type && (type !== 'tag' || col.tag === tag)
+  const filtered = columns.filter((col) => !isDuplicate(col))
+  return [...filtered, { id: generateId(), type, tag }]
 }
 
 export function removeColumn(columns: ColumnConfig[], id: string): ColumnConfig[] {
