@@ -51,16 +51,14 @@ export function MediaViewer({ attachments, initialIndex, onClose }: MediaViewerP
       </div>
 
       {/* Media */}
-      <div
-        className="flex items-center justify-center w-full h-full px-16 py-14"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="flex items-center justify-center w-full h-full px-16 py-14">
         {media.type === 'image' ? (
           <img
             src={media.url || media.preview_url}
             alt={media.description ?? ''}
             className="max-w-full max-h-full object-contain select-none"
             draggable={false}
+            onClick={(e) => e.stopPropagation()}
           />
         ) : media.type === 'video' || media.type === 'gifv' ? (
           <video
@@ -72,7 +70,7 @@ export function MediaViewer({ attachments, initialIndex, onClose }: MediaViewerP
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
-          <div className="text-gray-400">{media.type}</div>
+          <div className="text-gray-400" onClick={(e) => e.stopPropagation()}>{media.type}</div>
         )}
       </div>
 
