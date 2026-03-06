@@ -3,6 +3,7 @@ import { MastodonClient } from '../services/mastodon'
 import { emojifyText, emojifyHtml } from '../utils/emojify'
 import { Post } from './Post'
 import type { Account, Status } from '../types'
+import type { StoredAccountEntry } from '../services/auth'
 
 interface UserProfileModalProps {
   account: Account
@@ -13,6 +14,7 @@ interface UserProfileModalProps {
   onClose: () => void
   onOpenDetail?: (status: Status) => void
   onOpenProfile?: (account: Account) => void
+  accounts?: StoredAccountEntry[]
 }
 
 const LIMIT = 20
@@ -26,6 +28,7 @@ export function UserProfileModal({
   onClose,
   onOpenDetail,
   onOpenProfile,
+  accounts,
 }: UserProfileModalProps) {
   const [account, setAccount] = useState<Account>(initialAccount)
   const [pinnedStatuses, setPinnedStatuses] = useState<Status[]>([])
@@ -209,6 +212,7 @@ export function UserProfileModal({
                     onDelete={handleDeleteStatus}
                     onOpenDetail={onOpenDetail}
                     onOpenProfile={onOpenProfile}
+                    accounts={accounts}
                     pinned
                   />
                 ))}
@@ -225,6 +229,7 @@ export function UserProfileModal({
                     onDelete={handleDeleteStatus}
                     onOpenDetail={onOpenDetail}
                     onOpenProfile={onOpenProfile}
+                    accounts={accounts}
                   />
                 ))}
 

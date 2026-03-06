@@ -230,6 +230,7 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
                 onUpdate={handleUpdateColumn}
                 onAddTagColumn={(tag) => handleAddColumn('tag', tag)}
                 currentAccountId={auth.account?.id}
+                accounts={auth.accounts}
               />
             )
           )

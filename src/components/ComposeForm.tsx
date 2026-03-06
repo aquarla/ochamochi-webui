@@ -123,6 +123,35 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
     setShowEmojiPicker(false)
   }
 
+  const handlePaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const files = Array.from(e.clipboardData.items)
+      .filter((item) => item.kind === 'file' && item.type.startsWith('image/'))
+      .map((item) => item.getAsFile())
+      .filter((f): f is File => f !== null)
+    if (files.length === 0) return
+    e.preventDefault()
+    const slots = 4 - attachments.length
+    const toUpload = files.slice(0, slots)
+    if (toUpload.length === 0) return
+    setUploading(true)
+    setError(null)
+    const client = new MastodonClient(instanceUrl, accessToken)
+    try {
+      const results = await Promise.all(
+        toUpload.map(async (file) => {
+          const previewUrl = URL.createObjectURL(file)
+          const media = await client.uploadMedia(file)
+          return { mediaId: media.id, previewUrl }
+        }),
+      )
+      setAttachments((prev) => [...prev, ...results])
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '画像のアップロードに失敗しました')
+    } finally {
+      setUploading(false)
+    }
+  }
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? [])
     e.target.value = ''
@@ -183,6 +212,7 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={handleKeyDown}
+        onPaste={handlePaste}
         placeholder={inReplyToId ? '返信を入力… (Ctrl+Enter で投稿)' : '今どうしてる？ (Ctrl+Enter で投稿)'}
         autoFocus={!!inReplyToId}
         rows={inline ? 2 : 3}

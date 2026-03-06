@@ -6,6 +6,7 @@ import { Post } from './Post'
 import { StatusDetailModal } from './StatusDetailModal'
 import { UserProfileModal } from './UserProfileModal'
 import type { ColumnConfig, Status, Account } from '../types'
+import type { StoredAccountEntry } from '../services/auth'
 
 interface ColumnProps {
   column: ColumnConfig
@@ -16,9 +17,10 @@ interface ColumnProps {
   onUpdate: (column: ColumnConfig) => void
   onAddTagColumn?: (tag: string) => void
   currentAccountId?: string
+  accounts?: StoredAccountEntry[]
 }
 
-export function Column({ column, instanceUrl, accessToken, accountKey, onRemove, onUpdate, onAddTagColumn, currentAccountId }: ColumnProps) {
+export function Column({ column, instanceUrl, accessToken, accountKey, onRemove, onUpdate, onAddTagColumn, currentAccountId, accounts }: ColumnProps) {
   const [detailStatus, setDetailStatus] = useState<Status | null>(null)
   const [profileAccount, setProfileAccount] = useState<Account | null>(null)
 
@@ -119,6 +121,7 @@ export function Column({ column, instanceUrl, accessToken, accountKey, onRemove,
             onOpenProfile={handleOpenProfile}
             onAddTagColumn={onAddTagColumn}
             currentAccountId={currentAccountId}
+            accounts={accounts}
           />
         ))}
 
@@ -155,6 +158,7 @@ export function Column({ column, instanceUrl, accessToken, accountKey, onRemove,
           onClose={() => setProfileAccount(null)}
           onOpenDetail={(s) => { setProfileAccount(null); setDetailStatus(s) }}
           onOpenProfile={handleOpenProfile}
+          accounts={accounts}
         />
       )}
     </div>

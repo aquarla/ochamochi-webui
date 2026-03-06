@@ -131,6 +131,14 @@ export class MastodonClient {
     await this.request<unknown>(`/api/v1/statuses/${id}`, { method: 'DELETE' })
   }
 
+  async searchResolveStatus(url: string): Promise<Status> {
+    const qs = new URLSearchParams({ q: url, resolve: 'true', limit: '1' })
+    const result = await this.request<{ statuses: Status[] }>(`/api/v2/search?${qs}`)
+    const status = result.statuses[0]
+    if (!status) throw new Error('投稿が見つかりませんでした')
+    return status
+  }
+
   async getCustomEmojis(): Promise<CustomEmoji[]> {
     return this.request<CustomEmoji[]>('/api/v1/custom_emojis')
   }
