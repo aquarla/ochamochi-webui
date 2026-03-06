@@ -37,6 +37,10 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowCompose(false)
+        return
+      }
       if (e.key !== 'Enter') return
       const tag = (e.target as HTMLElement).tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
