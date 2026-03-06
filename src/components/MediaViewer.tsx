@@ -32,17 +32,19 @@ export function MediaViewer({ attachments, initialIndex, onClose }: MediaViewerP
       <div
         className="absolute top-0 inset-x-0 flex items-center justify-between px-4 py-3"
         onClick={(e) => e.stopPropagation()}
+        style={{ color: 'white' }}
       >
-        <span className="text-gray-400 text-sm">
+        <span className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
           {attachments.length > 1 && `${index + 1} / ${attachments.length}`}
         </span>
         {media.description && (
-          <p className="text-gray-300 text-xs max-w-md truncate px-4">{media.description}</p>
+          <p className="text-xs max-w-md truncate px-4" style={{ color: 'rgba(255,255,255,0.7)' }}>{media.description}</p>
         )}
         <button
           onClick={onClose}
-          className="text-gray-400 hover:text-white transition-colors"
+          className="transition-colors hover:opacity-100 opacity-70"
           aria-label="閉じる"
+          style={{ color: 'white' }}
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -77,7 +79,8 @@ export function MediaViewer({ attachments, initialIndex, onClose }: MediaViewerP
       {/* Prev / Next */}
       {hasPrev && (
         <button
-          className="absolute left-2 top-1/2 -translate-y-1/2 text-white/70 hover:text-white bg-black/40 rounded-full p-2 transition-colors"
+          className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/70 hover:bg-black/90 rounded-full p-2 transition-colors"
+          style={{ color: 'white' }}
           onClick={(e) => { e.stopPropagation(); setIndex((i) => i - 1) }}
           aria-label="前の画像"
         >
@@ -88,7 +91,8 @@ export function MediaViewer({ attachments, initialIndex, onClose }: MediaViewerP
       )}
       {hasNext && (
         <button
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-white/70 hover:text-white bg-black/40 rounded-full p-2 transition-colors"
+          className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/70 hover:bg-black/90 rounded-full p-2 transition-colors"
+          style={{ color: 'white' }}
           onClick={(e) => { e.stopPropagation(); setIndex((i) => i + 1) }}
           aria-label="次の画像"
         >
