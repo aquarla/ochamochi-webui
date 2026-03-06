@@ -119,12 +119,27 @@ export class MastodonClient {
     return this.request<Account>(`/api/v1/accounts/${id}`)
   }
 
+  async bookmarkStatus(id: string): Promise<Status> {
+    return this.request<Status>(`/api/v1/statuses/${id}/bookmark`, { method: 'POST' })
+  }
+
+  async unbookmarkStatus(id: string): Promise<Status> {
+    return this.request<Status>(`/api/v1/statuses/${id}/unbookmark`, { method: 'POST' })
+  }
+
   async deleteStatus(id: string): Promise<void> {
     await this.request<unknown>(`/api/v1/statuses/${id}`, { method: 'DELETE' })
   }
 
   async getCustomEmojis(): Promise<CustomEmoji[]> {
     return this.request<CustomEmoji[]>('/api/v1/custom_emojis')
+  }
+
+  async getBookmarks(params: { max_id?: string; limit?: number } = {}): Promise<Status[]> {
+    const qs = new URLSearchParams()
+    if (params.max_id) qs.set('max_id', params.max_id)
+    if (params.limit) qs.set('limit', String(params.limit))
+    return this.request<Status[]>(`/api/v1/bookmarks?${qs}`)
   }
 
   async getFavourites(params: { max_id?: string; limit?: number } = {}): Promise<Status[]> {

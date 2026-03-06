@@ -77,7 +77,7 @@ export interface Application {
   vapid_key?: string
 }
 
-export type ColumnType = 'home' | 'local' | 'public' | 'tag' | 'notifications' | 'favourites'
+export type ColumnType = 'home' | 'local' | 'public' | 'tag' | 'notifications' | 'favourites' | 'bookmarks'
 
 export type NotificationType =
   | 'mention'

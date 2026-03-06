@@ -21,6 +21,8 @@ async function fetchTimeline(
       return client.getTagTimeline(tag ?? '', params)
     case 'favourites':
       return client.getFavourites(params)
+    case 'bookmarks':
+      return client.getBookmarks(params)
     default:
       throw new Error(`useTimeline does not support column type: ${type as string}`)
   }

@@ -33,7 +33,7 @@ export function useStreaming({
   }, [onDelete])
 
   useEffect(() => {
-    if (type === 'favourites') return  // no streaming endpoint
+    if (type === 'favourites' || type === 'bookmarks') return  // no streaming endpoint
 
     const ws = createStream(instanceUrl, accessToken, type, tag, (event) => {
       if (event.event === 'update') {

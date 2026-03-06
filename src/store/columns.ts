@@ -58,5 +58,7 @@ export function getColumnLabel(col: ColumnConfig): string {
       return '通知'
     case 'favourites':
       return 'お気に入り'
+    case 'bookmarks':
+      return 'ブックマーク'
   }
 }
