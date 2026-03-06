@@ -35,6 +35,18 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [showAccountMenu])
 
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== 'Enter') return
+      const tag = (e.target as HTMLElement).tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      if ((e.target as HTMLElement).isContentEditable) return
+      setShowCompose((v) => !v)
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [])
+
   const handleAddColumn = (type: ColumnType, tag?: string) => {
     onColumnsChange(addColumn(columns, type, tag))
   }
