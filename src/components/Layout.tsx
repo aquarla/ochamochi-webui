@@ -45,6 +45,7 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
       const tag = (e.target as HTMLElement).tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
       if ((e.target as HTMLElement).isContentEditable) return
+      e.preventDefault()
       setShowCompose((v) => !v)
     }
     document.addEventListener('keydown', handler)
