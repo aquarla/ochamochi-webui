@@ -51,7 +51,7 @@ export function useTimeline(
     try {
       const items = await fetchTimeline(clientRef.current, type, tag, { limit: PAGE_LIMIT, only_media: onlyMedia })
       setStatuses(items)
-      setHasMore(items.length === PAGE_LIMIT)
+      setHasMore(items.length > 0)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally {
@@ -76,7 +76,7 @@ export function useTimeline(
         only_media: onlyMedia,
       })
       setStatuses((prev) => [...prev, ...items])
-      setHasMore(items.length === PAGE_LIMIT)
+      setHasMore(items.length > 0)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally {
