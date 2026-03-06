@@ -1,16 +1,22 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNotifications } from '../hooks/useNotifications'
 import { NotificationItem } from './NotificationItem'
-import type { ColumnConfig } from '../types'
+import { UserProfileModal } from './UserProfileModal'
+import type { ColumnConfig, Account } from '../types'
+import type { StoredAccountEntry } from '../services/auth'
 
 interface NotificationsColumnProps {
   column: ColumnConfig
   instanceUrl: string
   accessToken: string
+  accountKey?: string
+  currentAccountId?: string
+  accounts?: StoredAccountEntry[]
   onRemove: (id: string) => void
 }
 
-export function NotificationsColumn({ column, instanceUrl, accessToken, onRemove }: NotificationsColumnProps) {
+export function NotificationsColumn({ column, instanceUrl, accessToken, accountKey, currentAccountId, accounts, onRemove }: NotificationsColumnProps) {
+  const [profileAccount, setProfileAccount] = useState<Account | null>(null)
   const { notifications, loading, error, hasMore, loadMore } = useNotifications(instanceUrl, accessToken)
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -49,7 +55,7 @@ export function NotificationsColumn({ column, instanceUrl, accessToken, onRemove
         )}
 
         {notifications.map((n) => (
-          <NotificationItem key={n.id} notification={n} />
+          <NotificationItem key={n.id} notification={n} onOpenProfile={setProfileAccount} />
         ))}
 
         {loading && (
@@ -62,6 +68,19 @@ export function NotificationsColumn({ column, instanceUrl, accessToken, onRemove
           <div className="p-3 text-gray-600 text-xs text-center">最後まで読み込みました</div>
         )}
       </div>
+
+      {profileAccount && (
+        <UserProfileModal
+          account={profileAccount}
+          instanceUrl={instanceUrl}
+          accessToken={accessToken}
+          accountKey={accountKey}
+          currentAccountId={currentAccountId}
+          accounts={accounts}
+          onClose={() => setProfileAccount(null)}
+          onOpenProfile={setProfileAccount}
+        />
+      )}
     </div>
   )
 }

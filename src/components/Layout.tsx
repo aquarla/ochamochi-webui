@@ -217,6 +217,9 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
                 column={col}
                 instanceUrl={auth.instanceUrl!}
                 accessToken={auth.accessToken!}
+                accountKey={auth.activeAccountKey ?? undefined}
+                currentAccountId={auth.account?.id}
+                accounts={auth.accounts}
                 onRemove={handleRemoveColumn}
               />
             ) : (

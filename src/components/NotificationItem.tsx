@@ -1,8 +1,9 @@
-import type { MastodonNotification } from '../types'
+import type { MastodonNotification, Account } from '../types'
 import { emojifyText, emojifyHtml } from '../utils/emojify'
 
 interface NotificationItemProps {
   notification: MastodonNotification
+  onOpenProfile?: (account: Account) => void
 }
 
 function formatDate(dateStr: string): string {
@@ -30,7 +31,7 @@ const TYPE_META: Record<
   update:         { label: '編集',       color: 'text-gray-400' },
 }
 
-export function NotificationItem({ notification }: NotificationItemProps) {
+export function NotificationItem({ notification, onOpenProfile }: NotificationItemProps) {
   const { account, type, created_at, status } = notification
   const meta = TYPE_META[type] ?? { label: type, color: 'text-gray-400' }
   const displayNameHtml = emojifyText(account.display_name || account.username, account.emojis)
@@ -38,12 +39,18 @@ export function NotificationItem({ notification }: NotificationItemProps) {
   return (
     <article className="border-b border-gray-700 p-3 hover:bg-gray-750 transition-colors">
       <div className="flex items-start gap-2 mb-1.5">
-        <img
-          src={account.avatar_static}
-          alt={account.display_name || account.username}
-          className="w-8 h-8 rounded-full flex-shrink-0 bg-gray-700"
-          loading="lazy"
-        />
+        <button
+          type="button"
+          onClick={() => onOpenProfile?.(account)}
+          className={`flex-shrink-0 rounded-full ${onOpenProfile ? 'hover:opacity-80 transition-opacity cursor-pointer' : 'cursor-default'}`}
+        >
+          <img
+            src={account.avatar_static}
+            alt={account.display_name || account.username}
+            className="w-8 h-8 rounded-full bg-gray-700"
+            loading="lazy"
+          />
+        </button>
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2">
             <span className="font-medium text-white text-sm truncate" dangerouslySetInnerHTML={{ __html: displayNameHtml }} />
