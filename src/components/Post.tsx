@@ -24,13 +24,18 @@ function formatDate(dateStr: string): string {
   const now = new Date()
   const diffMs = now.getTime() - date.getTime()
   const diffSec = Math.floor(diffMs / 1000)
+  if (diffSec < 10) return '今'
   if (diffSec < 60) return `${diffSec}秒前`
   const diffMin = Math.floor(diffSec / 60)
   if (diffMin < 60) return `${diffMin}分前`
   const diffHour = Math.floor(diffMin / 60)
   if (diffHour < 24) return `${diffHour}時間前`
   const diffDay = Math.floor(diffHour / 24)
-  return `${diffDay}日前`
+  if (diffDay < 7) return `${diffDay}日前`
+  if (date.getFullYear() === now.getFullYear()) {
+    return `${date.getMonth() + 1}月${date.getDate()}日`
+  }
+  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`
 }
 
 export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, onDelete, onOpenDetail, onOpenProfile, onAddTagColumn, currentAccountId, pinned }: PostProps) {
