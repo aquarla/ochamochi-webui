@@ -300,6 +300,34 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
                 attachments={displayStatus.media_attachments}
                 sensitive={displayStatus.sensitive}
               />
+
+              {(() => {
+                const content = displayStatus.content
+                const contentLower = content.toLowerCase()
+                const hiddenTags = displayStatus.tags.filter((t) => {
+                  const nameLower = t.name.toLowerCase()
+                  const encoded = encodeURIComponent(t.name)
+                  return (
+                    !contentLower.includes(`/tags/${nameLower}`) &&
+                    !content.includes(`/tags/${encoded}`)
+                  )
+                })
+                if (hiddenTags.length === 0) return null
+                return (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {hiddenTags.map((t) => (
+                      <button
+                        key={t.name}
+                        type="button"
+                        onClick={() => onAddTagColumn?.(t.name)}
+                        className="text-blue-400 hover:text-blue-300 text-xs transition-colors"
+                      >
+                        #{t.name}
+                      </button>
+                    ))}
+                  </div>
+                )
+              })()}
             </>
           )}
 
