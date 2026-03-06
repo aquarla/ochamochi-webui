@@ -214,7 +214,7 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
         onKeyDown={handleKeyDown}
         onPaste={handlePaste}
         placeholder={inReplyToId ? '返信を入力… (Ctrl+Enter で投稿)' : '今どうしてる？ (Ctrl+Enter で投稿)'}
-        autoFocus={!!inReplyToId}
+        autoFocus
         rows={inline ? 2 : 3}
         className="w-full bg-gray-700 text-white placeholder-gray-500 border border-gray-600 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         disabled={loading}
