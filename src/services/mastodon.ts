@@ -1,4 +1,4 @@
-import type { Status, Account, MastodonNotification, StatusContext, CustomEmoji, MediaAttachment } from '../types'
+import type { Status, Account, MastodonNotification, StatusContext, CustomEmoji, MediaAttachment, ScheduledStatus } from '../types'
 
 export class MastodonClient {
   constructor(
@@ -72,6 +72,7 @@ export class MastodonClient {
     sensitive?: boolean
     spoiler_text?: string
     media_ids?: string[]
+    scheduled_at?: string
   }): Promise<Status> {
     return this.request<Status>('/api/v1/statuses', {
       method: 'POST',
@@ -155,6 +156,14 @@ export class MastodonClient {
     if (params.max_id) qs.set('max_id', params.max_id)
     if (params.limit) qs.set('limit', String(params.limit))
     return this.request<Status[]>(`/api/v1/favourites?${qs}`)
+  }
+
+  async getScheduledStatuses(): Promise<ScheduledStatus[]> {
+    return this.request<ScheduledStatus[]>('/api/v1/scheduled_statuses')
+  }
+
+  async cancelScheduledStatus(id: string): Promise<void> {
+    await this.request<unknown>(`/api/v1/scheduled_statuses/${id}`, { method: 'DELETE' })
   }
 
   async getAccountStatuses(

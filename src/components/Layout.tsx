@@ -7,6 +7,7 @@ import { AddAccountModal } from './AddAccountModal'
 import { addColumn, removeColumn } from '../store/columns'
 import { useTheme } from '../hooks/useTheme'
 import { SettingsModal } from './SettingsModal'
+import { ScheduledColumn } from './ScheduledColumn'
 import { loadSettings } from '../hooks/useSettings'
 import type { AppSettings } from '../hooks/useSettings'
 import type { AuthContext } from '../hooks/useAuth'
@@ -243,6 +244,14 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
                 accountKey={auth.activeAccountKey ?? undefined}
                 currentAccountId={auth.account?.id}
                 accounts={auth.accounts}
+                onRemove={handleRemoveColumn}
+              />
+            ) : col.type === 'scheduled' ? (
+              <ScheduledColumn
+                key={col.id}
+                column={col}
+                instanceUrl={auth.instanceUrl!}
+                accessToken={auth.accessToken!}
                 onRemove={handleRemoveColumn}
               />
             ) : (

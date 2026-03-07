@@ -21,6 +21,22 @@ interface ComposeFormProps {
 const MAX_CHARS = 500
 const VISIBILITY_KEY = 'mastodon_visibility'
 
+function getMinDatetime(): string {
+  const d = new Date(Date.now() + 5 * 60 * 1000)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+function getDefaultSchedule(): string {
+  const d = new Date(Date.now() + 60 * 60 * 1000)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+function formatScheduledAt(dt: string): string {
+  return new Date(dt).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
+
 type Visibility = 'public' | 'unlisted' | 'private' | 'direct'
 
 function visibilityStorageKey(accountKey?: string): string {
@@ -41,6 +57,9 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [attachments, setAttachments] = useState<AttachmentItem[]>([])
   const [uploading, setUploading] = useState(false)
+  const [scheduledAt, setScheduledAt] = useState<string>('')
+  const [showSchedulePicker, setShowSchedulePicker] = useState(false)
+  const [pendingSchedule, setPendingSchedule] = useState<string>('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const cwRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -82,12 +101,14 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
         spoiler_text: cwEnabled && cwText ? cwText : undefined,
         sensitive: cwEnabled,
         media_ids: attachments.length > 0 ? attachments.map((a) => a.mediaId) : undefined,
+        scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : undefined,
       })
       attachments.forEach((a) => URL.revokeObjectURL(a.previewUrl))
       setText('')
       setCwEnabled(false)
       setCwText('')
       setAttachments([])
+      setScheduledAt('')
       onComposed?.()
     } catch (e) {
       setError(e instanceof Error ? e.message : '投稿に失敗しました')
@@ -251,6 +272,25 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
         <EmojiPicker instanceUrl={instanceUrl} accessToken={accessToken} onSelect={insertEmoji} />
       )}
 
+      {scheduledAt && (
+        <div className="flex items-center gap-1.5 mt-1.5">
+          <svg className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span className="text-blue-400 text-xs">{formatScheduledAt(scheduledAt)} に予約投稿</span>
+          <button
+            type="button"
+            onClick={() => setScheduledAt('')}
+            className="text-gray-500 hover:text-gray-300 transition-colors ml-0.5"
+            title="予約を解除"
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mt-2 gap-x-2 gap-y-1 flex-wrap">
         <div className="flex items-center gap-2">
           <button
@@ -293,6 +333,25 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
             😀
           </button>
 
+          <button
+            type="button"
+            onClick={() => {
+              setPendingSchedule(scheduledAt || getDefaultSchedule())
+              setShowSchedulePicker(true)
+            }}
+            className={`px-2 py-1 rounded border transition-colors ${
+              scheduledAt
+                ? 'bg-blue-600 border-blue-500 text-white'
+                : 'border-gray-600 text-gray-400 hover:border-gray-500 hover:text-gray-300'
+            }`}
+            title="投稿日時を設定"
+            disabled={loading}
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </button>
+
           <select
             value={visibility}
             onChange={(e) => handleVisibilityChange(e.target.value as Visibility)}
@@ -324,13 +383,55 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
             disabled={!canSubmit}
             className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed text-white text-xs font-medium rounded px-3 py-1.5 transition-colors"
           >
-            {loading ? '投稿中...' : inReplyToId ? '返信' : '投稿'}
+            {loading ? '投稿中...' : scheduledAt ? '予約投稿' : inReplyToId ? '返信' : '投稿'}
           </button>
         </div>
       </div>
 
       {error && (
         <p className="text-red-400 text-xs mt-1">{error}</p>
+      )}
+
+      {showSchedulePicker && (
+        <div
+          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
+          onClick={() => setShowSchedulePicker(false)}
+        >
+          <div
+            className="bg-gray-800 rounded-xl p-5 w-80 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-white font-semibold mb-3">投稿日時を設定</h3>
+            <input
+              type="datetime-local"
+              value={pendingSchedule}
+              min={getMinDatetime()}
+              onChange={(e) => setPendingSchedule(e.target.value)}
+              className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <p className="text-gray-400 text-xs mt-1.5">※ 5分以上先の日時を指定してください</p>
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                type="button"
+                onClick={() => setShowSchedulePicker(false)}
+                className="text-gray-400 hover:text-white text-sm px-3 py-1.5 rounded transition-colors"
+              >
+                キャンセル
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setScheduledAt(pendingSchedule)
+                  setShowSchedulePicker(false)
+                }}
+                disabled={!pendingSchedule}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed text-white text-sm font-medium px-3 py-1.5 rounded transition-colors"
+              >
+                設定
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </form>
   )

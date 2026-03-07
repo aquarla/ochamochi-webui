@@ -77,7 +77,21 @@ export interface Application {
   vapid_key?: string
 }
 
-export type ColumnType = 'home' | 'local' | 'public' | 'tag' | 'notifications' | 'favourites' | 'bookmarks'
+export type ColumnType = 'home' | 'local' | 'public' | 'tag' | 'notifications' | 'favourites' | 'bookmarks' | 'scheduled'
+
+export interface ScheduledStatus {
+  id: string
+  scheduled_at: string
+  params: {
+    text: string
+    visibility: 'public' | 'unlisted' | 'private' | 'direct' | null
+    sensitive: boolean | null
+    spoiler_text: string | null
+    media_ids: string[] | null
+    in_reply_to_id: string | null
+  }
+  media_attachments: MediaAttachment[]
+}
 
 export type NotificationType =
   | 'mention'

@@ -15,6 +15,7 @@ function getStreamName(type: ColumnType, tag?: string, onlyMedia?: boolean): str
       return `hashtag&tag=${encodeURIComponent(tag ?? '')}`
     case 'favourites':
     case 'bookmarks':
+    case 'scheduled':
       return ''  // no streaming endpoint; useStreaming skips this type
   }
 }
