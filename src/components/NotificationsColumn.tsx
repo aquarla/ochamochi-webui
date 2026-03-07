@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNotifications } from '../hooks/useNotifications'
 import { NotificationItem } from './NotificationItem'
 import { UserProfileModal } from './UserProfileModal'
+import { loadSettings } from '../hooks/useSettings'
 import type { ColumnConfig, Account } from '../types'
 import type { StoredAccountEntry } from '../services/auth'
 
@@ -19,6 +20,15 @@ export function NotificationsColumn({ column, instanceUrl, accessToken, accountK
   const [profileAccount, setProfileAccount] = useState<Account | null>(null)
   const { notifications, loading, error, hasMore, loadMore } = useNotifications(instanceUrl, accessToken)
   const scrollRef = useRef<HTMLDivElement>(null)
+
+  const settings = loadSettings(accountKey)
+  const visibleNotifications = notifications.filter((n) => {
+    if (n.type === 'mention') return settings.notifyMention
+    if (n.type === 'follow' || n.type === 'follow_request') return settings.notifyFollow
+    if (n.type === 'reblog') return settings.notifyReblog
+    if (n.type === 'favourite') return settings.notifyFavourite
+    return true
+  })
 
   useEffect(() => {
     const el = scrollRef.current
@@ -50,11 +60,11 @@ export function NotificationsColumn({ column, instanceUrl, accessToken, accountK
           <div className="p-3 text-red-400 text-xs border-b border-gray-700">エラー: {error}</div>
         )}
 
-        {notifications.length === 0 && !loading && !error && (
+        {visibleNotifications.length === 0 && !loading && !error && (
           <div className="p-4 text-gray-500 text-sm text-center">通知がありません</div>
         )}
 
-        {notifications.map((n) => (
+        {visibleNotifications.map((n) => (
           <NotificationItem key={n.id} notification={n} onOpenProfile={setProfileAccount} />
         ))}
 

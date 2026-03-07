@@ -23,6 +23,22 @@ img.custom-emoji {
   object-fit: contain;
 }
 
+/* Column width: narrow (×0.8 = 256px) */
+[data-col-width="narrow"] .w-80 { width: 16rem; }
+
+/* Column width: wide (×1.2 = 384px) */
+[data-col-width="wide"] .w-80 { width: 24rem; }
+
+/* Font size: small */
+[data-font-size="small"] .text-xs  { font-size: 0.6875rem; line-height: 1rem; }
+[data-font-size="small"] .text-sm  { font-size: 0.75rem;   line-height: 1.125rem; }
+[data-font-size="small"] .text-base { font-size: 0.875rem; line-height: 1.25rem; }
+
+/* Font size: large */
+[data-font-size="large"] .text-xs  { font-size: 0.875rem; line-height: 1.25rem; }
+[data-font-size="large"] .text-sm  { font-size: 1rem;     line-height: 1.5rem; }
+[data-font-size="large"] .text-base { font-size: 1.125rem; line-height: 1.75rem; }
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

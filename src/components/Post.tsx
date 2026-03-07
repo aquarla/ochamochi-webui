@@ -6,6 +6,7 @@ import { emojifyText, emojifyHtml } from '../utils/emojify'
 import { ComposeForm } from './ComposeForm'
 import { MediaGrid } from './MediaGrid'
 import type { StoredAccountEntry } from '../services/auth'
+import { loadSettings } from '../hooks/useSettings'
 
 interface PostProps {
   status: Status
@@ -55,6 +56,7 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
   // Accounts eligible for "import to another server" (exclude the current viewing account)
   const importableAccounts = (accounts ?? []).filter(
     (a) => !(a.instanceUrl === instanceUrl && a.accessToken === accessToken)
+      && loadSettings(a.accountKey).allowCrossAccountAction
   )
 
   const displayStatus = status.reblog ?? status
@@ -135,8 +137,11 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
 
   const handleFavourite = async () => {
     if (actionLoading) return
-    setActionLoading(true)
     const wasFavourited = displayStatus.favourited
+    if (!wasFavourited && loadSettings(accountKey).confirmFavourite) {
+      if (!window.confirm('この投稿をお気に入りに追加しますか？')) return
+    }
+    setActionLoading(true)
     applyUpdate({
       favourited: !wasFavourited,
       favourites_count: displayStatus.favourites_count + (wasFavourited ? -1 : 1),
@@ -174,8 +179,11 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
 
   const handleReblog = async () => {
     if (actionLoading) return
-    setActionLoading(true)
     const wasReblogged = displayStatus.reblogged
+    if (!wasReblogged && loadSettings(accountKey).confirmBoost) {
+      if (!window.confirm('この投稿をブーストしますか？')) return
+    }
+    setActionLoading(true)
     applyUpdate({
       reblogged: !wasReblogged,
       reblogs_count: displayStatus.reblogs_count + (wasReblogged ? -1 : 1),

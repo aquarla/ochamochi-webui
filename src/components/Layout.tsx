@@ -6,6 +6,9 @@ import { AddColumnModal } from './AddColumnModal'
 import { AddAccountModal } from './AddAccountModal'
 import { addColumn, removeColumn } from '../store/columns'
 import { useTheme } from '../hooks/useTheme'
+import { SettingsModal } from './SettingsModal'
+import { loadSettings } from '../hooks/useSettings'
+import type { AppSettings } from '../hooks/useSettings'
 import type { AuthContext } from '../hooks/useAuth'
 import type { ColumnConfig, ColumnType } from '../types'
 
@@ -16,11 +19,18 @@ interface LayoutProps {
 }
 
 export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
-  const { theme, setTheme } = useTheme(auth.activeAccountKey)
+  useTheme(auth.activeAccountKey)
+  const [settings, setSettings] = useState<AppSettings>(() => loadSettings(auth.activeAccountKey))
+
+  useEffect(() => {
+    setSettings(loadSettings(auth.activeAccountKey))
+  }, [auth.activeAccountKey])
+
   const [showAddModal, setShowAddModal] = useState(false)
   const [showCompose, setShowCompose] = useState(false)
   const [showAccountMenu, setShowAccountMenu] = useState(false)
   const [showAddAccountModal, setShowAddAccountModal] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
   const accountMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -108,20 +118,16 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
             カラム追加
           </button>
 
-          <select
-            value={theme}
-            onChange={(e) => setTheme(e.target.value as import('../hooks/useTheme').Theme)}
-            className="bg-gray-700 text-gray-300 border border-gray-600 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
-            title="テーマ"
+          <button
+            onClick={() => setShowSettings(true)}
+            className="text-gray-400 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-gray-700"
+            title="設定"
           >
-            <option value="dark">ダーク</option>
-            <option value="light">ライト</option>
-            <option value="sepia">セピア</option>
-            <option value="solarized">Solarized Dark</option>
-            <option value="nord">Nord</option>
-            <option value="dracula">Dracula</option>
-            <option value="horizon-bright">Horizon Bright</option>
-          </select>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </button>
 
           {auth.account && (
             <div className="relative ml-2" ref={accountMenuRef}>
@@ -213,7 +219,7 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
       )}
 
       {/* Columns */}
-      <div className="flex flex-1 overflow-x-auto overflow-y-hidden gap-[10px] p-[10px]">
+      <div className="flex flex-1 overflow-x-auto overflow-y-hidden gap-[10px] p-[10px]" data-font-size={settings.fontSize} data-col-width={settings.columnWidth}>
         {columns.length === 0 ? (
           <div className="flex-1 flex items-center justify-center text-gray-500">
             <div className="text-center">
@@ -266,6 +272,15 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
 
       {showAddAccountModal && (
         <AddAccountModal onClose={() => setShowAddAccountModal(false)} />
+      )}
+
+      {showSettings && (
+        <SettingsModal
+          onClose={() => setShowSettings(false)}
+          accountKey={auth.activeAccountKey ?? undefined}
+          instanceUrl={auth.instanceUrl ?? undefined}
+          onSave={setSettings}
+        />
       )}
     </div>
   )
