@@ -147,18 +147,18 @@ export function UserProfileModal({
 
           {/* Profile info */}
           <div className="px-4 pb-4">
-            <div className="flex items-end gap-3 -mt-8 mb-3">
+            <div className="-mt-8 mb-3">
               <img
                 src={account.avatar_static}
                 alt={account.display_name || account.username}
-                className="w-16 h-16 rounded-full border-4 border-gray-800 bg-gray-700 flex-shrink-0"
+                className="w-16 h-16 rounded-full border-4 border-gray-800 bg-gray-700 mb-2"
               />
-              <div className="pb-1 min-w-0">
+              <div className="min-w-0">
                 <p
-                  className="font-bold text-white text-base leading-tight"
+                  className="font-bold text-white text-base leading-tight break-words"
                   dangerouslySetInnerHTML={{ __html: emojifyText(account.display_name || account.username, account.emojis) }}
                 />
-                <p className="text-gray-400 text-sm">@{account.acct}</p>
+                <p className="text-gray-400 text-sm break-all">@{account.acct}</p>
               </div>
             </div>
 
