@@ -23,6 +23,8 @@ export function ScheduledColumn({ column, instanceUrl, accessToken, onRemove }: 
   const [statuses, setStatuses] = useState<ScheduledStatus[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [cancelTarget, setCancelTarget] = useState<ScheduledStatus | null>(null)
+  const [cancelLoading, setCancelLoading] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -40,14 +42,18 @@ export function ScheduledColumn({ column, instanceUrl, accessToken, onRemove }: 
 
   useEffect(() => { load() }, [load])
 
-  const handleCancel = async (id: string) => {
-    if (!window.confirm('この予約投稿をキャンセルしますか？')) return
+  const executeCancel = async () => {
+    if (!cancelTarget || cancelLoading) return
+    setCancelLoading(true)
     try {
       const client = new MastodonClient(instanceUrl, accessToken)
-      await client.cancelScheduledStatus(id)
-      setStatuses((prev) => prev.filter((s) => s.id !== id))
+      await client.cancelScheduledStatus(cancelTarget.id)
+      setStatuses((prev) => prev.filter((s) => s.id !== cancelTarget.id))
+      setCancelTarget(null)
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'キャンセルに失敗しました')
+      setError(e instanceof Error ? e.message : 'キャンセルに失敗しました')
+    } finally {
+      setCancelLoading(false)
     }
   }
 
@@ -110,7 +116,7 @@ export function ScheduledColumn({ column, instanceUrl, accessToken, onRemove }: 
                 )}
               </div>
               <button
-                onClick={() => handleCancel(s.id)}
+                onClick={() => setCancelTarget(s)}
                 className="text-gray-600 hover:text-red-400 transition-colors flex-shrink-0 p-1 mt-0.5"
                 title="予約をキャンセル"
               >
@@ -122,6 +128,50 @@ export function ScheduledColumn({ column, instanceUrl, accessToken, onRemove }: 
           </div>
         ))}
       </div>
+
+      {cancelTarget && (
+        <div
+          className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] p-4"
+          onClick={() => setCancelTarget(null)}
+        >
+          <div
+            className="bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-white font-semibold text-base mb-4">この予約投稿をキャンセルしますか？</h3>
+            <div className="mb-4 bg-gray-700/50 rounded-lg p-3">
+              <div className="flex items-center gap-1.5 mb-2">
+                <svg className="w-3 h-3 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-blue-400 text-xs">{formatScheduledAt(cancelTarget.scheduled_at)}</span>
+              </div>
+              <p className="text-gray-300 text-sm line-clamp-4 leading-relaxed whitespace-pre-wrap">
+                {cancelTarget.params.spoiler_text
+                  ? `CW: ${cancelTarget.params.spoiler_text}`
+                  : cancelTarget.params.text}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setCancelTarget(null)}
+                className="flex-1 px-4 py-2 text-sm text-gray-300 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+              >
+                戻る
+              </button>
+              <button
+                type="button"
+                onClick={executeCancel}
+                disabled={cancelLoading}
+                className="flex-1 px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 disabled:opacity-60 rounded-lg transition-colors"
+              >
+                {cancelLoading ? 'キャンセル中…' : '予約をキャンセル'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -72,6 +72,8 @@ export function UserProfileModal({
   const [muteLoading, setMuteLoading] = useState(false)
   const [showBlockDialog, setShowBlockDialog] = useState(false)
   const [blockLoading, setBlockLoading] = useState(false)
+  const [showUnmuteDialog, setShowUnmuteDialog] = useState(false)
+  const [showUnblockDialog, setShowUnblockDialog] = useState(false)
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const listScrollRef = useRef<HTMLDivElement>(null)
@@ -219,12 +221,12 @@ export function UserProfileModal({
   }
 
   const handleUnmute = async () => {
-    setShowMenu(false)
-    if (!window.confirm('このユーザーのミュートを解除しますか？')) return
+    if (showUnmuteDialog) return
     try {
       const c = new MastodonClient(instanceUrl, accessToken)
       const updated = await c.unmuteAccount(account.id)
       setRelationship(updated)
+      setShowUnmuteDialog(false)
     } catch {
       // ignore
     }
@@ -246,12 +248,12 @@ export function UserProfileModal({
   }
 
   const handleUnblock = async () => {
-    setShowMenu(false)
-    if (!window.confirm('このユーザーのブロックを解除しますか？')) return
+    if (showUnblockDialog) return
     try {
       const c = new MastodonClient(instanceUrl, accessToken)
       const updated = await c.unblockAccount(account.id)
       setRelationship(updated)
+      setShowUnblockDialog(false)
     } catch {
       // ignore
     }
@@ -550,7 +552,7 @@ export function UserProfileModal({
                           <div className="absolute right-0 top-full mt-1 w-64 bg-gray-700 border border-gray-600 rounded-lg shadow-xl z-20 overflow-hidden">
                             {relationship.muting ? (
                               <button
-                                onClick={handleUnmute}
+                                onClick={() => { setShowMenu(false); setShowUnmuteDialog(true) }}
                                 className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-600 hover:text-white transition-colors"
                               >
                                 ミュートを解除
@@ -565,7 +567,7 @@ export function UserProfileModal({
                             )}
                             {relationship.blocking ? (
                               <button
-                                onClick={handleUnblock}
+                                onClick={() => { setShowMenu(false); setShowUnblockDialog(true) }}
                                 className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-600 hover:text-white transition-colors border-t border-gray-600"
                               >
                                 ブロックを解除
@@ -684,6 +686,58 @@ export function UserProfileModal({
               </div>
             </div>
           </>
+        )}
+
+        {/* Unmute dialog */}
+        {showUnmuteDialog && (
+          <div
+            className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60]"
+            onClick={() => setShowUnmuteDialog(false)}
+          >
+            <div
+              className="bg-gray-800 rounded-xl p-5 w-80 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-white font-semibold mb-3">ミュートを解除しますか？</h3>
+              <div className="flex items-center gap-3 mb-5 p-3 bg-gray-700/50 rounded-lg">
+                <img src={account.avatar_static} alt="" className="w-10 h-10 rounded-full bg-gray-700 flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-white text-sm font-medium truncate" dangerouslySetInnerHTML={{ __html: emojifyText(account.display_name || account.username, account.emojis) }} />
+                  <p className="text-gray-400 text-xs truncate">@{account.acct}</p>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <button onClick={() => setShowUnmuteDialog(false)} className="text-gray-400 hover:text-white text-sm px-3 py-1.5 rounded transition-colors">キャンセル</button>
+                <button onClick={handleUnmute} className="bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium px-3 py-1.5 rounded transition-colors">ミュートを解除</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Unblock dialog */}
+        {showUnblockDialog && (
+          <div
+            className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60]"
+            onClick={() => setShowUnblockDialog(false)}
+          >
+            <div
+              className="bg-gray-800 rounded-xl p-5 w-80 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-white font-semibold mb-3">ブロックを解除しますか？</h3>
+              <div className="flex items-center gap-3 mb-5 p-3 bg-gray-700/50 rounded-lg">
+                <img src={account.avatar_static} alt="" className="w-10 h-10 rounded-full bg-gray-700 flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-white text-sm font-medium truncate" dangerouslySetInnerHTML={{ __html: emojifyText(account.display_name || account.username, account.emojis) }} />
+                  <p className="text-gray-400 text-xs truncate">@{account.acct}</p>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <button onClick={() => setShowUnblockDialog(false)} className="text-gray-400 hover:text-white text-sm px-3 py-1.5 rounded transition-colors">キャンセル</button>
+                <button onClick={handleUnblock} className="bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-3 py-1.5 rounded transition-colors">ブロックを解除</button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Block dialog */}

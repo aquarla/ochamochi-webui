@@ -56,6 +56,10 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
   const [muteLoading, setMuteLoading] = useState(false)
   const [showBlockDialog, setShowBlockDialog] = useState(false)
   const [blockLoading, setBlockLoading] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [showFavDialog, setShowFavDialog] = useState(false)
+  const [showBoostDialog, setShowBoostDialog] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
 
@@ -106,13 +110,17 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
   const isOwnPost = !!currentAccountId && displayStatus.account.id === currentAccountId
 
   const handleDelete = async () => {
-    if (!window.confirm('この投稿を削除しますか？')) return
-    const client = new MastodonClient(instanceUrl, accessToken)
+    if (deleteLoading) return
+    setDeleteLoading(true)
     try {
+      const client = new MastodonClient(instanceUrl, accessToken)
       await client.deleteStatus(displayStatus.id)
       onDelete?.(status.id)
+      setShowDeleteDialog(false)
     } catch {
       // ignore
+    } finally {
+      setDeleteLoading(false)
     }
   }
 
@@ -172,12 +180,10 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
     onUpdate(isReblog ? { ...status, reblog: next } : { ...status, ...next })
   }
 
-  const handleFavourite = async () => {
+  const executeFavourite = async () => {
     if (actionLoading) return
     const wasFavourited = displayStatus.favourited
-    if (!wasFavourited && loadSettings(accountKey).confirmFavourite) {
-      if (!window.confirm('この投稿をお気に入りに追加しますか？')) return
-    }
+    setShowFavDialog(false)
     setActionLoading(true)
     applyUpdate({
       favourited: !wasFavourited,
@@ -194,6 +200,15 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
     } finally {
       setActionLoading(false)
     }
+  }
+
+  const handleFavourite = () => {
+    if (actionLoading) return
+    if (!displayStatus.favourited && loadSettings(accountKey).confirmFavourite) {
+      setShowFavDialog(true)
+      return
+    }
+    executeFavourite()
   }
 
   const handleBookmark = async () => {
@@ -214,12 +229,10 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
     }
   }
 
-  const handleReblog = async () => {
+  const executeReblog = async () => {
     if (actionLoading) return
     const wasReblogged = displayStatus.reblogged
-    if (!wasReblogged && loadSettings(accountKey).confirmBoost) {
-      if (!window.confirm('この投稿をブーストしますか？')) return
-    }
+    setShowBoostDialog(false)
     setActionLoading(true)
     applyUpdate({
       reblogged: !wasReblogged,
@@ -239,6 +252,15 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
     } finally {
       setActionLoading(false)
     }
+  }
+
+  const handleReblog = () => {
+    if (actionLoading) return
+    if (!displayStatus.reblogged && loadSettings(accountKey).confirmBoost) {
+      setShowBoostDialog(true)
+      return
+    }
+    executeReblog()
   }
 
   return (
@@ -426,7 +448,7 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
             <div className="flex items-center gap-2 ml-auto">
               {isOwnPost && (
                 <button
-                  onClick={handleDelete}
+                  onClick={() => setShowDeleteDialog(true)}
                   className="flex items-center gap-1 text-xs hover:text-red-400 transition-colors"
                   title="削除"
                 >
@@ -579,6 +601,123 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
         onCancel={() => setReplyOpen(false)}
         inline
       />
+    )}
+
+    {showFavDialog && createPortal(
+      <div
+        className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] p-4"
+        onClick={() => setShowFavDialog(false)}
+      >
+        <div
+          className="bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-5"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h3 className="text-white font-semibold text-base mb-4">この投稿をお気に入りに追加しますか？</h3>
+          <div
+            className="mb-5 bg-gray-700/50 rounded-lg p-3 text-gray-300 text-sm line-clamp-4 leading-relaxed"
+            dangerouslySetInnerHTML={{
+              __html: displayStatus.spoiler_text
+                ? emojifyText(displayStatus.spoiler_text, displayStatus.emojis)
+                : emojifyHtml(displayStatus.content, displayStatus.emojis)
+            }}
+          />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setShowFavDialog(false)}
+              className="flex-1 px-4 py-2 text-sm text-gray-300 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+            >
+              キャンセル
+            </button>
+            <button
+              type="button"
+              onClick={executeFavourite}
+              className="flex-1 px-4 py-2 text-sm text-white bg-yellow-600 hover:bg-yellow-700 rounded-lg transition-colors"
+            >
+              お気に入りに追加
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    )}
+
+    {showBoostDialog && createPortal(
+      <div
+        className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] p-4"
+        onClick={() => setShowBoostDialog(false)}
+      >
+        <div
+          className="bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-5"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h3 className="text-white font-semibold text-base mb-4">この投稿をブーストしますか？</h3>
+          <div
+            className="mb-5 bg-gray-700/50 rounded-lg p-3 text-gray-300 text-sm line-clamp-4 leading-relaxed"
+            dangerouslySetInnerHTML={{
+              __html: displayStatus.spoiler_text
+                ? emojifyText(displayStatus.spoiler_text, displayStatus.emojis)
+                : emojifyHtml(displayStatus.content, displayStatus.emojis)
+            }}
+          />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setShowBoostDialog(false)}
+              className="flex-1 px-4 py-2 text-sm text-gray-300 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+            >
+              キャンセル
+            </button>
+            <button
+              type="button"
+              onClick={executeReblog}
+              className="flex-1 px-4 py-2 text-sm text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
+            >
+              ブーストする
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    )}
+
+    {showDeleteDialog && createPortal(
+      <div
+        className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] p-4"
+        onClick={() => setShowDeleteDialog(false)}
+      >
+        <div
+          className="bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-5"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h3 className="text-white font-semibold text-base mb-4">この投稿を削除しますか？</h3>
+          <div className="mb-5 bg-gray-700/50 rounded-lg p-3 text-gray-300 text-sm line-clamp-4 leading-relaxed"
+            dangerouslySetInnerHTML={{
+              __html: displayStatus.spoiler_text
+                ? emojifyText(displayStatus.spoiler_text, displayStatus.emojis)
+                : emojifyHtml(displayStatus.content, displayStatus.emojis)
+            }}
+          />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setShowDeleteDialog(false)}
+              className="flex-1 px-4 py-2 text-sm text-gray-300 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+            >
+              キャンセル
+            </button>
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleteLoading}
+              className="flex-1 px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 disabled:opacity-60 rounded-lg transition-colors"
+            >
+              {deleteLoading ? '削除中…' : '削除する'}
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
     )}
 
     {showBlockDialog && createPortal(

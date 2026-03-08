@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { MastodonClient } from '../services/mastodon'
 import { emojifyText, emojifyHtml } from '../utils/emojify'
 import { MediaGrid } from './MediaGrid'
@@ -29,11 +30,11 @@ interface StatusRowProps {
   highlight?: boolean
   slim?: boolean
   onOpenProfile?: (account: Account) => void
-  onDelete?: (id: string) => void
+  onDeleteRequest?: (status: Status) => void
   isOwnPost?: boolean
 }
 
-function StatusRow({ status, highlight, slim, onOpenProfile, onDelete, isOwnPost }: StatusRowProps) {
+function StatusRow({ status, highlight, slim, onOpenProfile, onDeleteRequest, isOwnPost }: StatusRowProps) {
   const hasCw = !!status.spoiler_text
   const [cwOpen, setCwOpen] = useState(!hasCw)
 
@@ -120,9 +121,9 @@ function StatusRow({ status, highlight, slim, onOpenProfile, onDelete, isOwnPost
             </>
           )}
           <div className="flex items-center gap-2 ml-auto">
-            {isOwnPost && onDelete && (
+            {isOwnPost && onDeleteRequest && (
               <button
-                onClick={() => onDelete(status.id)}
+                onClick={() => onDeleteRequest(status)}
                 className="hover:text-red-400 transition-colors"
                 title="削除"
               >
@@ -152,6 +153,8 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, onClose, o
   const [context, setContext] = useState<StatusContext | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Status | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
   useEffect(() => {
     const client = new MastodonClient(instanceUrl, accessToken)
@@ -162,11 +165,14 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, onClose, o
       .finally(() => setLoading(false))
   }, [status.id, instanceUrl, accessToken])
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('この投稿を削除しますか？')) return
-    const client = new MastodonClient(instanceUrl, accessToken)
+  const executeDelete = async () => {
+    if (!deleteTarget || deleteLoading) return
+    const id = deleteTarget.id
+    setDeleteLoading(true)
     try {
+      const client = new MastodonClient(instanceUrl, accessToken)
       await client.deleteStatus(id)
+      setDeleteTarget(null)
       if (id === status.id) {
         onDelete?.(id)
         onClose()
@@ -182,10 +188,13 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, onClose, o
       }
     } catch {
       // ignore
+    } finally {
+      setDeleteLoading(false)
     }
   }
 
   return (
+    <>
     <div
       className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
       onClick={onClose}
@@ -228,7 +237,7 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, onClose, o
                   status={s}
                   slim
                   onOpenProfile={onOpenProfile}
-                  onDelete={handleDelete}
+                  onDeleteRequest={setDeleteTarget}
                   isOwnPost={!!currentAccountId && s.account.id === currentAccountId}
                 />
               ))}
@@ -237,7 +246,7 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, onClose, o
                 status={status}
                 highlight
                 onOpenProfile={onOpenProfile}
-                onDelete={handleDelete}
+                onDeleteRequest={setDeleteTarget}
                 isOwnPost={!!currentAccountId && status.account.id === currentAccountId}
               />
 
@@ -247,7 +256,7 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, onClose, o
                   status={s}
                   slim
                   onOpenProfile={onOpenProfile}
-                  onDelete={handleDelete}
+                  onDeleteRequest={setDeleteTarget}
                   isOwnPost={!!currentAccountId && s.account.id === currentAccountId}
                 />
               ))}
@@ -260,5 +269,46 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, onClose, o
         </div>
       </div>
     </div>
+
+    {deleteTarget && createPortal(
+      <div
+        className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] p-4"
+        onClick={() => setDeleteTarget(null)}
+      >
+        <div
+          className="bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-5"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h3 className="text-white font-semibold text-base mb-4">この投稿を削除しますか？</h3>
+          <div
+            className="mb-5 bg-gray-700/50 rounded-lg p-3 text-gray-300 text-sm line-clamp-4 leading-relaxed"
+            dangerouslySetInnerHTML={{
+              __html: deleteTarget.spoiler_text
+                ? emojifyText(deleteTarget.spoiler_text, deleteTarget.emojis)
+                : emojifyHtml(deleteTarget.content, deleteTarget.emojis)
+            }}
+          />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setDeleteTarget(null)}
+              className="flex-1 px-4 py-2 text-sm text-gray-300 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+            >
+              キャンセル
+            </button>
+            <button
+              type="button"
+              onClick={executeDelete}
+              disabled={deleteLoading}
+              className="flex-1 px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 disabled:opacity-60 rounded-lg transition-colors"
+            >
+              {deleteLoading ? '削除中…' : '削除する'}
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    )}
+    </>
   )
 }
