@@ -50,6 +50,12 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
   const [expandedSection, setExpandedSection] = useState<'import' | 'fav' | 'boost' | null>(null)
   // keys: "${accountKey}:import" | "${accountKey}:fav" | "${accountKey}:boost"
   const [importStates, setImportStates] = useState<Record<string, 'idle' | 'loading' | 'ok' | 'error'>>({})
+  const [showMuteDialog, setShowMuteDialog] = useState(false)
+  const [muteDuration, setMuteDuration] = useState('0')
+  const [muteNotifications, setMuteNotifications] = useState(true)
+  const [muteLoading, setMuteLoading] = useState(false)
+  const [showBlockDialog, setShowBlockDialog] = useState(false)
+  const [blockLoading, setBlockLoading] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
 
@@ -127,6 +133,37 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
       setImportStates((prev) => ({ ...prev, [key]: 'ok' }))
     } catch {
       setImportStates((prev) => ({ ...prev, [key]: 'error' }))
+    }
+  }
+
+  const handleMute = async () => {
+    if (muteLoading) return
+    setMuteLoading(true)
+    try {
+      const client = new MastodonClient(instanceUrl, accessToken)
+      await client.muteAccount(displayStatus.account.id, {
+        duration: parseInt(muteDuration),
+        notifications: muteNotifications,
+      })
+      setShowMuteDialog(false)
+    } catch {
+      // ignore
+    } finally {
+      setMuteLoading(false)
+    }
+  }
+
+  const handleBlock = async () => {
+    if (blockLoading) return
+    setBlockLoading(true)
+    try {
+      const client = new MastodonClient(instanceUrl, accessToken)
+      await client.blockAccount(displayStatus.account.id)
+      setShowBlockDialog(false)
+    } catch {
+      // ignore
+    } finally {
+      setBlockLoading(false)
     }
   }
 
@@ -434,6 +471,31 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
                       元のサイトで開く
                     </a>
 
+                    {!isOwnPost && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => { setShowMenu(false); setShowMuteDialog(true) }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-xs text-orange-400 hover:bg-gray-700 hover:text-orange-300 transition-colors border-t border-gray-700"
+                        >
+                          <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                          </svg>
+                          このユーザーをミュートする
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setShowMenu(false); setShowBlockDialog(true) }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-gray-700 hover:text-red-300 transition-colors border-t border-gray-700"
+                        >
+                          <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                          </svg>
+                          このユーザーをブロックする
+                        </button>
+                      </>
+                    )}
+
                     {importableAccounts.length > 0 && (
                       <>
                         {(
@@ -517,6 +579,135 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
         onCancel={() => setReplyOpen(false)}
         inline
       />
+    )}
+
+    {showBlockDialog && createPortal(
+      <div
+        className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] p-4"
+        onClick={() => setShowBlockDialog(false)}
+      >
+        <div
+          className="bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-5"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h3 className="text-white font-semibold text-base mb-4">このユーザーをブロックしますか？</h3>
+
+          <div className="flex items-center gap-3 mb-4 bg-gray-700/50 rounded-lg p-3">
+            <img
+              src={displayStatus.account.avatar_static}
+              alt=""
+              className="w-10 h-10 rounded-full bg-gray-700 flex-shrink-0"
+            />
+            <div className="min-w-0">
+              <p
+                className="text-white text-sm font-medium truncate"
+                dangerouslySetInnerHTML={{ __html: emojifyText(displayStatus.account.display_name || displayStatus.account.username, displayStatus.account.emojis) }}
+              />
+              <p className="text-gray-400 text-xs truncate">@{displayStatus.account.acct}</p>
+            </div>
+          </div>
+
+          <p className="text-gray-400 text-xs mb-5">ブロックすると、このユーザーからフォローされなくなり、タイムラインに投稿が表示されなくなります。</p>
+
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setShowBlockDialog(false)}
+              className="flex-1 px-4 py-2 text-sm text-gray-300 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+            >
+              キャンセル
+            </button>
+            <button
+              type="button"
+              onClick={handleBlock}
+              disabled={blockLoading}
+              className="flex-1 px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 disabled:opacity-60 rounded-lg transition-colors"
+            >
+              {blockLoading ? 'ブロック中…' : 'ブロックする'}
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    )}
+
+    {showMuteDialog && createPortal(
+      <div
+        className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] p-4"
+        onClick={() => setShowMuteDialog(false)}
+      >
+        <div
+          className="bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-5"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h3 className="text-white font-semibold text-base mb-4">ユーザーをミュート</h3>
+
+          <div className="flex items-center gap-3 mb-5 bg-gray-700/50 rounded-lg p-3">
+            <img
+              src={displayStatus.account.avatar_static}
+              alt=""
+              className="w-10 h-10 rounded-full bg-gray-700 flex-shrink-0"
+            />
+            <div className="min-w-0">
+              <p
+                className="text-white text-sm font-medium truncate"
+                dangerouslySetInnerHTML={{ __html: emojifyText(displayStatus.account.display_name || displayStatus.account.username, displayStatus.account.emojis) }}
+              />
+              <p className="text-gray-400 text-xs truncate">@{displayStatus.account.acct}</p>
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-gray-400 text-xs mb-1.5">ミュート期間</label>
+            <select
+              value={muteDuration}
+              onChange={(e) => setMuteDuration(e.target.value)}
+              className="w-full bg-gray-700 border border-gray-600 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-orange-500"
+            >
+              {[
+                { value: '0', label: '無期限' },
+                { value: '1800', label: '30分' },
+                { value: '3600', label: '1時間' },
+                { value: '21600', label: '6時間' },
+                { value: '86400', label: '24時間' },
+                { value: '259200', label: '3日' },
+                { value: '604800', label: '7日' },
+              ].map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <label className="flex items-center gap-2 mb-5 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={muteNotifications}
+              onChange={(e) => setMuteNotifications(e.target.checked)}
+              className="w-4 h-4 rounded accent-orange-500"
+            />
+            <span className="text-gray-300 text-sm">通知をオフにする</span>
+          </label>
+
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setShowMuteDialog(false)}
+              className="flex-1 px-4 py-2 text-sm text-gray-300 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+            >
+              キャンセル
+            </button>
+            <button
+              type="button"
+              onClick={handleMute}
+              disabled={muteLoading}
+              className="flex-1 px-4 py-2 text-sm text-white bg-orange-600 hover:bg-orange-700 disabled:opacity-60 rounded-lg transition-colors"
+            >
+              {muteLoading ? 'ミュート中…' : 'ミュートする'}
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
     )}
   </article>
   )

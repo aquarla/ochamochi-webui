@@ -36,6 +36,8 @@ export interface Relationship {
   following: boolean
   requested: boolean
   followed_by: boolean
+  muting: boolean
+  blocking: boolean
 }
 
 export interface MediaAttachment {

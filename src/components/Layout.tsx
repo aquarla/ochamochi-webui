@@ -8,6 +8,7 @@ import { addColumn, removeColumn } from '../store/columns'
 import { useTheme } from '../hooks/useTheme'
 import { SettingsModal } from './SettingsModal'
 import { ScheduledColumn } from './ScheduledColumn'
+import { UserProfileModal } from './UserProfileModal'
 import { loadSettings } from '../hooks/useSettings'
 import type { AppSettings } from '../hooks/useSettings'
 import type { AuthContext } from '../hooks/useAuth'
@@ -32,6 +33,7 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
   const [showAccountMenu, setShowAccountMenu] = useState(false)
   const [showAddAccountModal, setShowAddAccountModal] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [showSelfProfile, setShowSelfProfile] = useState(false)
   const accountMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -94,7 +96,12 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
         <div className="flex items-center gap-3">
           <h1 className="text-white font-bold">Ochamochi Web for Mastodon</h1>
           {auth.account && auth.instanceUrl && (
-            <span className="text-gray-400 text-sm">@{auth.account.acct}@{new URL(auth.instanceUrl).hostname}</span>
+            <button
+              onClick={() => setShowSelfProfile(true)}
+              className="text-gray-400 hover:text-white text-sm transition-colors"
+            >
+              @{auth.account.acct}@{new URL(auth.instanceUrl).hostname}
+            </button>
           )}
         </div>
 
@@ -281,6 +288,18 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
 
       {showAddAccountModal && (
         <AddAccountModal onClose={() => setShowAddAccountModal(false)} />
+      )}
+
+      {showSelfProfile && auth.account && (
+        <UserProfileModal
+          account={auth.account}
+          instanceUrl={auth.instanceUrl!}
+          accessToken={auth.accessToken!}
+          accountKey={auth.activeAccountKey ?? undefined}
+          currentAccountId={auth.account.id}
+          onClose={() => setShowSelfProfile(false)}
+          accounts={auth.accounts}
+        />
       )}
 
       {showSettings && (

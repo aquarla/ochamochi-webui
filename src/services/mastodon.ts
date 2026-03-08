@@ -153,6 +153,28 @@ export class MastodonClient {
     return this.request<Relationship>(`/api/v1/accounts/${id}/unfollow`, { method: 'POST' })
   }
 
+  async muteAccount(id: string, params: { duration?: number; notifications?: boolean } = {}): Promise<Relationship> {
+    return this.request<Relationship>(`/api/v1/accounts/${id}/mute`, {
+      method: 'POST',
+      body: JSON.stringify({
+        duration: params.duration ?? 0,
+        notifications: params.notifications ?? true,
+      }),
+    })
+  }
+
+  async unmuteAccount(id: string): Promise<Relationship> {
+    return this.request<Relationship>(`/api/v1/accounts/${id}/unmute`, { method: 'POST' })
+  }
+
+  async blockAccount(id: string): Promise<Relationship> {
+    return this.request<Relationship>(`/api/v1/accounts/${id}/block`, { method: 'POST' })
+  }
+
+  async unblockAccount(id: string): Promise<Relationship> {
+    return this.request<Relationship>(`/api/v1/accounts/${id}/unblock`, { method: 'POST' })
+  }
+
   async bookmarkStatus(id: string): Promise<Status> {
     return this.request<Status>(`/api/v1/statuses/${id}/bookmark`, { method: 'POST' })
   }

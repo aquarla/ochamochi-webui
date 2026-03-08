@@ -22,6 +22,16 @@ const LIST_LIMIT = 40
 
 type ModalView = 'profile' | 'following' | 'followers'
 
+const MUTE_DURATION_OPTIONS = [
+  { value: '0',      label: '無期限' },
+  { value: '1800',   label: '30分' },
+  { value: '3600',   label: '1時間' },
+  { value: '21600',  label: '6時間' },
+  { value: '86400',  label: '24時間' },
+  { value: '259200', label: '3日' },
+  { value: '604800', label: '7日' },
+]
+
 export function UserProfileModal({
   account: initialAccount,
   instanceUrl,
@@ -54,8 +64,18 @@ export function UserProfileModal({
   const [listPrivate, setListPrivate] = useState(false)
   const [listFollowingInProgress, setListFollowingInProgress] = useState<Set<string>>(new Set())
 
+  // Menu / mute / block state
+  const [showMenu, setShowMenu] = useState(false)
+  const [showMuteDialog, setShowMuteDialog] = useState(false)
+  const [muteDuration, setMuteDuration] = useState('0')
+  const [muteNotifications, setMuteNotifications] = useState(true)
+  const [muteLoading, setMuteLoading] = useState(false)
+  const [showBlockDialog, setShowBlockDialog] = useState(false)
+  const [blockLoading, setBlockLoading] = useState(false)
+
   const scrollRef = useRef<HTMLDivElement>(null)
   const listScrollRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
 
   const isSelf = !!currentAccountId && currentAccountId === initialAccount.id
 
@@ -86,6 +106,17 @@ export function UserProfileModal({
     return () => { cancelled = true }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialAccount.id])
+
+  // Click outside → close menu
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false)
+      }
+    }
+    if (showMenu) document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [showMenu])
 
   const loadMore = async () => {
     if (loading || !hasMore || !maxId) return
@@ -166,6 +197,63 @@ export function UserProfileModal({
       // ignore
     } finally {
       setFollowLoading(false)
+    }
+  }
+
+  const handleMute = async () => {
+    if (muteLoading) return
+    setMuteLoading(true)
+    try {
+      const c = new MastodonClient(instanceUrl, accessToken)
+      const updated = await c.muteAccount(account.id, {
+        duration: parseInt(muteDuration),
+        notifications: muteNotifications,
+      })
+      setRelationship(updated)
+      setShowMuteDialog(false)
+    } catch {
+      // ignore
+    } finally {
+      setMuteLoading(false)
+    }
+  }
+
+  const handleUnmute = async () => {
+    setShowMenu(false)
+    if (!window.confirm('このユーザーのミュートを解除しますか？')) return
+    try {
+      const c = new MastodonClient(instanceUrl, accessToken)
+      const updated = await c.unmuteAccount(account.id)
+      setRelationship(updated)
+    } catch {
+      // ignore
+    }
+  }
+
+  const handleBlock = async () => {
+    if (blockLoading) return
+    setBlockLoading(true)
+    try {
+      const c = new MastodonClient(instanceUrl, accessToken)
+      const updated = await c.blockAccount(account.id)
+      setRelationship(updated)
+      setShowBlockDialog(false)
+    } catch {
+      // ignore
+    } finally {
+      setBlockLoading(false)
+    }
+  }
+
+  const handleUnblock = async () => {
+    setShowMenu(false)
+    if (!window.confirm('このユーザーのブロックを解除しますか？')) return
+    try {
+      const c = new MastodonClient(instanceUrl, accessToken)
+      const updated = await c.unblockAccount(account.id)
+      setRelationship(updated)
+    } catch {
+      // ignore
     }
   }
 
@@ -414,7 +502,8 @@ export function UserProfileModal({
                   </div>
 
                   {!isSelf && relationship && (
-                    <div className="mt-11 flex-shrink-0">
+                    <div className="mt-11 flex-shrink-0 flex items-center gap-1.5">
+                      {/* Follow button */}
                       {relationship.following ? (
                         <button
                           onClick={handleUnfollow}
@@ -440,6 +529,58 @@ export function UserProfileModal({
                           {followLoading ? '...' : account.locked ? 'フォローリクエストを送る' : 'フォローする'}
                         </button>
                       )}
+
+                      {/* Menu button */}
+                      <div className="relative" ref={menuRef}>
+                        <button
+                          onClick={() => setShowMenu((v) => !v)}
+                          className={`p-1.5 rounded-lg border transition-colors ${
+                            showMenu
+                              ? 'border-gray-500 text-white bg-gray-700'
+                              : 'border-gray-600 text-gray-400 hover:border-gray-500 hover:text-gray-300'
+                          }`}
+                          title="その他の操作"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                          </svg>
+                        </button>
+
+                        {showMenu && (
+                          <div className="absolute right-0 top-full mt-1 w-64 bg-gray-700 border border-gray-600 rounded-lg shadow-xl z-20 overflow-hidden">
+                            {relationship.muting ? (
+                              <button
+                                onClick={handleUnmute}
+                                className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-600 hover:text-white transition-colors"
+                              >
+                                ミュートを解除
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => { setShowMenu(false); setShowMuteDialog(true) }}
+                                className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-600 hover:text-white transition-colors"
+                              >
+                                このユーザーをミュートする
+                              </button>
+                            )}
+                            {relationship.blocking ? (
+                              <button
+                                onClick={handleUnblock}
+                                className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-600 hover:text-white transition-colors border-t border-gray-600"
+                              >
+                                ブロックを解除
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => { setShowMenu(false); setShowBlockDialog(true) }}
+                                className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-gray-600 hover:text-red-300 transition-colors border-t border-gray-600"
+                              >
+                                このユーザーをブロックする
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -543,6 +684,111 @@ export function UserProfileModal({
               </div>
             </div>
           </>
+        )}
+
+        {/* Block dialog */}
+        {showBlockDialog && (
+          <div
+            className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60]"
+            onClick={() => setShowBlockDialog(false)}
+          >
+            <div
+              className="bg-gray-800 rounded-xl p-5 w-80 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-white font-semibold mb-3">このユーザーをブロックしますか？</h3>
+              <div className="flex items-center gap-3 mb-5 p-3 bg-gray-700/50 rounded-lg">
+                <img src={account.avatar_static} alt="" className="w-10 h-10 rounded-full bg-gray-700 flex-shrink-0" />
+                <div className="min-w-0">
+                  <p
+                    className="text-white text-sm font-medium truncate"
+                    dangerouslySetInnerHTML={{ __html: emojifyText(account.display_name || account.username, account.emojis) }}
+                  />
+                  <p className="text-gray-400 text-xs truncate">@{account.acct}</p>
+                </div>
+              </div>
+              <p className="text-gray-400 text-xs mb-5">ブロックすると、このユーザーからフォローされなくなり、タイムラインに投稿が表示されなくなります。</p>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setShowBlockDialog(false)}
+                  className="text-gray-400 hover:text-white text-sm px-3 py-1.5 rounded transition-colors"
+                >
+                  キャンセル
+                </button>
+                <button
+                  onClick={handleBlock}
+                  disabled={blockLoading}
+                  className="bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium px-3 py-1.5 rounded transition-colors"
+                >
+                  {blockLoading ? 'ブロック中...' : 'ブロックする'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Mute dialog */}
+        {showMuteDialog && (
+          <div
+            className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60]"
+            onClick={() => setShowMuteDialog(false)}
+          >
+            <div
+              className="bg-gray-800 rounded-xl p-5 w-80 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-white font-semibold mb-3">このユーザーをミュートしますか？</h3>
+              <div className="flex items-center gap-3 mb-4 p-3 bg-gray-700/50 rounded-lg">
+                <img src={account.avatar_static} alt="" className="w-10 h-10 rounded-full bg-gray-700 flex-shrink-0" />
+                <div className="min-w-0">
+                  <p
+                    className="text-white text-sm font-medium truncate"
+                    dangerouslySetInnerHTML={{ __html: emojifyText(account.display_name || account.username, account.emojis) }}
+                  />
+                  <p className="text-gray-400 text-xs truncate">@{account.acct}</p>
+                </div>
+              </div>
+
+              <div className="mb-3">
+                <label className="block text-gray-400 text-xs mb-1.5">ミュート期間</label>
+                <select
+                  value={muteDuration}
+                  onChange={(e) => setMuteDuration(e.target.value)}
+                  className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {MUTE_DURATION_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <label className="flex items-center gap-2 mb-5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={muteNotifications}
+                  onChange={(e) => setMuteNotifications(e.target.checked)}
+                  className="w-4 h-4 rounded accent-blue-500"
+                />
+                <span className="text-gray-300 text-sm">通知をオフにする</span>
+              </label>
+
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setShowMuteDialog(false)}
+                  className="text-gray-400 hover:text-white text-sm px-3 py-1.5 rounded transition-colors"
+                >
+                  キャンセル
+                </button>
+                <button
+                  onClick={handleMute}
+                  disabled={muteLoading}
+                  className="bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium px-3 py-1.5 rounded transition-colors"
+                >
+                  {muteLoading ? 'ミュート中...' : 'ミュートする'}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
