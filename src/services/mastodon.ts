@@ -1,4 +1,4 @@
-import type { Status, Account, MastodonNotification, StatusContext, CustomEmoji, MediaAttachment, ScheduledStatus } from '../types'
+import type { Status, Account, MastodonNotification, StatusContext, CustomEmoji, MediaAttachment, ScheduledStatus, Relationship } from '../types'
 
 export class MastodonClient {
   constructor(
@@ -118,6 +118,39 @@ export class MastodonClient {
 
   async getAccountById(id: string): Promise<Account> {
     return this.request<Account>(`/api/v1/accounts/${id}`)
+  }
+
+  async getRelationship(id: string): Promise<Relationship> {
+    const result = await this.request<Relationship[]>(`/api/v1/accounts/relationships?id[]=${encodeURIComponent(id)}`)
+    return result[0]
+  }
+
+  async getRelationships(ids: string[]): Promise<Relationship[]> {
+    if (ids.length === 0) return []
+    const qs = ids.map((id) => `id[]=${encodeURIComponent(id)}`).join('&')
+    return this.request<Relationship[]>(`/api/v1/accounts/relationships?${qs}`)
+  }
+
+  async getFollowers(id: string, params: { max_id?: string; limit?: number } = {}): Promise<Account[]> {
+    const qs = new URLSearchParams()
+    if (params.max_id) qs.set('max_id', params.max_id)
+    if (params.limit) qs.set('limit', String(params.limit))
+    return this.request<Account[]>(`/api/v1/accounts/${id}/followers?${qs}`)
+  }
+
+  async getFollowing(id: string, params: { max_id?: string; limit?: number } = {}): Promise<Account[]> {
+    const qs = new URLSearchParams()
+    if (params.max_id) qs.set('max_id', params.max_id)
+    if (params.limit) qs.set('limit', String(params.limit))
+    return this.request<Account[]>(`/api/v1/accounts/${id}/following?${qs}`)
+  }
+
+  async followAccount(id: string): Promise<Relationship> {
+    return this.request<Relationship>(`/api/v1/accounts/${id}/follow`, { method: 'POST' })
+  }
+
+  async unfollowAccount(id: string): Promise<Relationship> {
+    return this.request<Relationship>(`/api/v1/accounts/${id}/unfollow`, { method: 'POST' })
   }
 
   async bookmarkStatus(id: string): Promise<Status> {

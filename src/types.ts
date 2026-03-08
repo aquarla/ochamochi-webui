@@ -23,11 +23,19 @@ export interface Account {
   header_static?: string
   url: string
   note: string
+  locked: boolean
   followers_count: number
   following_count: number
   statuses_count: number
   emojis: CustomEmoji[]
   fields?: AccountField[]
+}
+
+export interface Relationship {
+  id: string
+  following: boolean
+  requested: boolean
+  followed_by: boolean
 }
 
 export interface MediaAttachment {
