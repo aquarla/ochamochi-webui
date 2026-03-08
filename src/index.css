@@ -23,6 +23,15 @@ img.custom-emoji {
   object-fit: contain;
 }
 
+img.custom-emoji-stamp {
+  display: inline !important;
+  height: 2.4em;
+  width: auto;
+  vertical-align: text-bottom;
+  margin: 0 0.05em;
+  object-fit: contain;
+}
+
 /* Column width: narrow (×0.8 = 256px) */
 [data-col-width="narrow"] .w-80 { width: 16rem; }
 

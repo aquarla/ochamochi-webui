@@ -8,8 +8,10 @@ function escapeHtml(text: string): string {
     .replace(/"/g, '&quot;')
 }
 
-const EMOJI_IMG = (emoji: CustomEmoji) =>
-  `<img src="${emoji.static_url}" alt=":${emoji.shortcode}:" title=":${emoji.shortcode}:" class="custom-emoji" />`
+const EMOJI_IMG = (emoji: CustomEmoji) => {
+  const cls = emoji.shortcode.startsWith('stamp_') ? 'custom-emoji-stamp' : 'custom-emoji'
+  return `<img src="${emoji.static_url}" alt=":${emoji.shortcode}:" title=":${emoji.shortcode}:" class="${cls}" />`
+}
 
 /**
  * HTML フィールド (content) 用。

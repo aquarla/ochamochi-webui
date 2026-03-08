@@ -20,19 +20,145 @@ interface ColumnProps {
   accounts?: StoredAccountEntry[]
 }
 
+// ---- Tag chip input ----
+
+interface TagChipInputProps {
+  tags: string[]
+  onAdd: (tag: string) => void
+  onRemove: (tag: string) => void
+  placeholder?: string
+}
+
+function TagChipInput({ tags, onAdd, onRemove, placeholder = 'タグを追加…' }: TagChipInputProps) {
+  const [input, setInput] = useState('')
+
+  const commit = () => {
+    const tag = input.trim().replace(/^#/, '').toLowerCase()
+    if (tag && !tags.includes(tag)) onAdd(tag)
+    setInput('')
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault()
+      commit()
+    } else if (e.key === 'Backspace' && input === '' && tags.length > 0) {
+      onRemove(tags[tags.length - 1])
+    }
+  }
+
+  return (
+    <div
+      className="flex flex-wrap gap-1 p-2 bg-gray-700/60 border border-gray-600 rounded-lg min-h-[2.25rem] cursor-text"
+      onClick={(e) => (e.currentTarget.querySelector('input') as HTMLInputElement | null)?.focus()}
+    >
+      {tags.map((tag) => (
+        <span
+          key={tag}
+          className="flex items-center gap-0.5 bg-blue-600/30 text-blue-300 text-xs px-2 py-0.5 rounded-full"
+        >
+          #{tag}
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onRemove(tag) }}
+            className="ml-0.5 hover:text-white transition-colors leading-none"
+          >
+            ×
+          </button>
+        </span>
+      ))}
+      <input
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onBlur={commit}
+        placeholder={tags.length === 0 ? placeholder : ''}
+        className="flex-1 bg-transparent text-white text-xs outline-none min-w-[5rem] placeholder-gray-500"
+      />
+    </div>
+  )
+}
+
+// ---- Tag filter panel ----
+
+interface TagFilterPanelProps {
+  column: ColumnConfig
+  onApply: (updates: Pick<ColumnConfig, 'tagAny' | 'tagAll' | 'tagNone'>) => void
+}
+
+function TagFilterPanel({ column, onApply }: TagFilterPanelProps) {
+  const [anyTags, setAnyTags] = useState<string[]>(column.tagAny ?? [])
+  const [allTags, setAllTags] = useState<string[]>(column.tagAll ?? [])
+  const [noneTags, setNoneTags] = useState<string[]>(column.tagNone ?? [])
+
+  const add = (set: React.Dispatch<React.SetStateAction<string[]>>) => (tag: string) =>
+    set((prev) => prev.includes(tag) ? prev : [...prev, tag])
+  const remove = (set: React.Dispatch<React.SetStateAction<string[]>>) => (tag: string) =>
+    set((prev) => prev.filter((t) => t !== tag))
+
+  const handleApply = () => {
+    onApply({
+      tagAny: anyTags.length ? anyTags : undefined,
+      tagAll: allTags.length ? allTags : undefined,
+      tagNone: noneTags.length ? noneTags : undefined,
+    })
+  }
+
+  return (
+    <div className="border-b border-gray-700 bg-gray-800 px-3 py-3 space-y-3 flex-shrink-0">
+      <div>
+        <p className="text-xs text-gray-400 mb-1.5">
+          いずれかを含む <span className="text-gray-600">any</span>
+        </p>
+        <TagChipInput tags={anyTags} onAdd={add(setAnyTags)} onRemove={remove(setAnyTags)} />
+      </div>
+      <div>
+        <p className="text-xs text-gray-400 mb-1.5">
+          すべてを含む <span className="text-gray-600">all</span>
+        </p>
+        <TagChipInput tags={allTags} onAdd={add(setAllTags)} onRemove={remove(setAllTags)} />
+      </div>
+      <div>
+        <p className="text-xs text-gray-400 mb-1.5">
+          除外するタグ <span className="text-gray-600">none</span>
+        </p>
+        <TagChipInput tags={noneTags} onAdd={add(setNoneTags)} onRemove={remove(setNoneTags)} />
+      </div>
+      <button
+        type="button"
+        onClick={handleApply}
+        className="w-full py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+      >
+        適用
+      </button>
+    </div>
+  )
+}
+
+// ---- Column ----
+
 export function Column({ column, instanceUrl, accessToken, accountKey, onRemove, onUpdate, onAddTagColumn, currentAccountId, accounts }: ColumnProps) {
   const [detailStatus, setDetailStatus] = useState<Status | null>(null)
   const [profileAccount, setProfileAccount] = useState<Account | null>(null)
+  const [showTagFilter, setShowTagFilter] = useState(false)
 
   const handleOpenProfile = (account: Account) => {
     setDetailStatus(null)
     setProfileAccount(account)
   }
+
+  const isTagColumn = column.type === 'tag'
   const supportsMediaFilter = column.type !== 'home' && column.type !== 'favourites' && column.type !== 'bookmarks'
   const onlyMedia = supportsMediaFilter ? (column.onlyMedia ?? false) : false
 
+  const tagFilters = isTagColumn
+    ? { any: column.tagAny, all: column.tagAll, none: column.tagNone }
+    : undefined
+
+  const tagFilterCount = (column.tagAny?.length ?? 0) + (column.tagAll?.length ?? 0) + (column.tagNone?.length ?? 0)
+
   const { statuses, loading, error, hasMore, loadMore, prependStatus, removeStatus, updateStatus } =
-    useTimeline(instanceUrl, accessToken, column.type, column.tag, supportsMediaFilter ? onlyMedia : undefined)
+    useTimeline(instanceUrl, accessToken, column.type, column.tag, supportsMediaFilter ? onlyMedia : undefined, tagFilters)
 
   useStreaming({
     instanceUrl,
@@ -69,6 +195,24 @@ export function Column({ column, instanceUrl, accessToken, accountKey, onRemove,
       <div className="flex items-center justify-between px-3 py-2.5 border-b border-gray-700 bg-gray-800/90 sticky top-0 z-10">
         <h2 className="text-white font-semibold text-sm">{label}</h2>
         <div className="flex items-center gap-1">
+          {isTagColumn && (
+            <button
+              onClick={() => setShowTagFilter((v) => !v)}
+              className={`relative flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors ${
+                showTagFilter || tagFilterCount > 0
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700'
+              }`}
+              title="タグフィルター"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
+              </svg>
+              {tagFilterCount > 0 && (
+                <span className="text-[10px] font-bold leading-none">{tagFilterCount}</span>
+              )}
+            </button>
+          )}
           {supportsMediaFilter && (
             <button
               onClick={() => onUpdate({ ...column, onlyMedia: !onlyMedia })}
@@ -95,6 +239,17 @@ export function Column({ column, instanceUrl, accessToken, accountKey, onRemove,
           </button>
         </div>
       </div>
+
+      {/* Tag filter panel */}
+      {isTagColumn && showTagFilter && (
+        <TagFilterPanel
+          column={column}
+          onApply={(updates) => {
+            onUpdate({ ...column, ...updates })
+            setShowTagFilter(false)
+          }}
+        />
+      )}
 
       {/* Timeline */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto">

@@ -125,6 +125,9 @@ export interface ColumnConfig {
   type: ColumnType
   tag?: string
   onlyMedia?: boolean
+  tagAny?: string[]
+  tagAll?: string[]
+  tagNone?: string[]
 }
 
 export interface AuthState {

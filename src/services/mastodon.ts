@@ -46,11 +46,17 @@ export class MastodonClient {
     return this.request<Status[]>(`/api/v1/timelines/public?${qs}`)
   }
 
-  async getTagTimeline(tag: string, params: { max_id?: string; limit?: number; only_media?: boolean } = {}): Promise<Status[]> {
+  async getTagTimeline(
+    tag: string,
+    params: { max_id?: string; limit?: number; only_media?: boolean; any?: string[]; all?: string[]; none?: string[] } = {},
+  ): Promise<Status[]> {
     const qs = new URLSearchParams()
     if (params.max_id) qs.set('max_id', params.max_id)
     if (params.limit) qs.set('limit', String(params.limit))
     if (params.only_media) qs.set('only_media', 'true')
+    params.any?.forEach((t) => qs.append('any[]', t))
+    params.all?.forEach((t) => qs.append('all[]', t))
+    params.none?.forEach((t) => qs.append('none[]', t))
     return this.request<Status[]>(`/api/v1/timelines/tag/${encodeURIComponent(tag)}?${qs}`)
   }
 

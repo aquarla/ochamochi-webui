@@ -4,11 +4,14 @@ import type { Status, ColumnType } from '../types'
 
 const PAGE_LIMIT = 20
 
+type TagFilters = { any?: string[]; all?: string[]; none?: string[] }
+
 async function fetchTimeline(
   client: MastodonClient,
   type: ColumnType,
   tag: string | undefined,
   params: { max_id?: string; limit?: number; only_media?: boolean },
+  tagFilters?: TagFilters,
 ): Promise<Status[]> {
   switch (type) {
     case 'home':
@@ -18,7 +21,7 @@ async function fetchTimeline(
     case 'public':
       return client.getPublicTimeline(params)
     case 'tag':
-      return client.getTagTimeline(tag ?? '', params)
+      return client.getTagTimeline(tag ?? '', { ...params, ...tagFilters })
     case 'favourites':
       return client.getFavourites(params)
     case 'bookmarks':
@@ -34,6 +37,7 @@ export function useTimeline(
   type: ColumnType,
   tag?: string,
   onlyMedia?: boolean,
+  tagFilters?: TagFilters,
 ) {
   const [statuses, setStatuses] = useState<Status[]>([])
   const [loading, setLoading] = useState(false)
@@ -45,11 +49,15 @@ export function useTimeline(
     clientRef.current = new MastodonClient(instanceUrl, accessToken)
   }, [instanceUrl, accessToken])
 
+  // Serialize for stable dependency comparison (arrays can't be deps directly)
+  const tagFiltersKey = JSON.stringify(tagFilters)
+
   const load = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const items = await fetchTimeline(clientRef.current, type, tag, { limit: PAGE_LIMIT, only_media: onlyMedia })
+      const filters: TagFilters | undefined = tagFiltersKey ? JSON.parse(tagFiltersKey) : undefined
+      const items = await fetchTimeline(clientRef.current, type, tag, { limit: PAGE_LIMIT, only_media: onlyMedia }, filters)
       setStatuses(items)
       setHasMore(items.length > 0)
     } catch (e) {
@@ -57,7 +65,8 @@ export function useTimeline(
     } finally {
       setLoading(false)
     }
-  }, [type, tag, onlyMedia])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [type, tag, onlyMedia, tagFiltersKey])
 
   useEffect(() => {
     setStatuses([])
@@ -70,11 +79,12 @@ export function useTimeline(
     const lastId = statuses[statuses.length - 1].id
     setLoading(true)
     try {
+      const filters: TagFilters | undefined = tagFiltersKey ? JSON.parse(tagFiltersKey) : undefined
       const items = await fetchTimeline(clientRef.current, type, tag, {
         max_id: lastId,
         limit: PAGE_LIMIT,
         only_media: onlyMedia,
-      })
+      }, filters)
       setStatuses((prev) => [...prev, ...items])
       setHasMore(items.length > 0)
     } catch (e) {
@@ -82,7 +92,8 @@ export function useTimeline(
     } finally {
       setLoading(false)
     }
-  }, [loading, hasMore, statuses, type, tag, onlyMedia])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, hasMore, statuses, type, tag, onlyMedia, tagFiltersKey])
 
   const prependStatus = useCallback((status: Status) => {
     setStatuses((prev) => {
