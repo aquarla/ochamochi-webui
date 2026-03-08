@@ -380,3 +380,10 @@ img.custom-emoji {
   --tw-prose-th-borders: #FADAD1;
   --tw-prose-td-borders: #F5E6E0;
 }
+
+/* Blue backgrounds: always white text when not disabled, across light themes */
+[data-theme="light"] .bg-blue-600:not(:disabled),
+[data-theme="sepia"] .bg-blue-600:not(:disabled),
+[data-theme="horizon-bright"] .bg-blue-600:not(:disabled) {
+  color: #ffffff;
+}
