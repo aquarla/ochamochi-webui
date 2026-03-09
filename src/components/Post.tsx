@@ -18,6 +18,7 @@ interface PostProps {
   onOpenDetail?: (status: Status) => void
   onOpenProfile?: (account: Account) => void
   onAddTagColumn?: (tag: string) => void
+  onMuteAccount?: (accountId: string) => void
   currentAccountId?: string
   pinned?: boolean
   accounts?: StoredAccountEntry[]
@@ -42,7 +43,7 @@ function formatDate(dateStr: string): string {
   return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`
 }
 
-export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, onDelete, onOpenDetail, onOpenProfile, onAddTagColumn, currentAccountId, pinned, accounts }: PostProps) {
+export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, onDelete, onOpenDetail, onOpenProfile, onAddTagColumn, onMuteAccount, currentAccountId, pinned, accounts }: PostProps) {
   const [actionLoading, setActionLoading] = useState(false)
   const [replyOpen, setReplyOpen] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
@@ -175,6 +176,7 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
         notifications: muteNotifications,
       })
       setShowMuteDialog(false)
+      onMuteAccount?.(displayStatus.account.id)
     } catch {
       // ignore
     } finally {

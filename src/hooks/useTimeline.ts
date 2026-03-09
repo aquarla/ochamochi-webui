@@ -110,9 +110,15 @@ export function useTimeline(
     setStatuses((prev) => prev.filter((s) => s.id !== id))
   }, [])
 
+  const removeByAccountId = useCallback((accountId: string) => {
+    setStatuses((prev) =>
+      prev.filter((s) => s.account.id !== accountId && s.reblog?.account.id !== accountId)
+    )
+  }, [])
+
   const updateStatus = useCallback((updated: Status) => {
     setStatuses((prev) => prev.map((s) => (s.id === updated.id ? updated : s)))
   }, [])
 
-  return { statuses, loading, error, hasMore, loadMore, prependStatus, removeStatus, updateStatus }
+  return { statuses, loading, error, hasMore, loadMore, prependStatus, removeStatus, removeByAccountId, updateStatus }
 }

@@ -175,6 +175,13 @@ export function SearchColumn({
     setStatuses((prev) => prev.filter((s) => s.id !== id))
   }
 
+  const handleMuteAccount = (accountId: string) => {
+    setStatuses((prev) =>
+      prev.filter((s) => s.account.id !== accountId && s.reblog?.account.id !== accountId)
+    )
+    setAccountResults((prev) => prev.filter((a) => a.id !== accountId))
+  }
+
   const label = getColumnLabel(column)
   const isEmpty = searched && !loading &&
     statuses.length === 0 && accountResults.length === 0 && tagResults.length === 0
@@ -288,6 +295,7 @@ export function SearchColumn({
             onOpenDetail={setDetailStatus}
             onOpenProfile={handleOpenProfile}
             onAddTagColumn={onAddTagColumn}
+            onMuteAccount={handleMuteAccount}
             currentAccountId={currentAccountId}
             accounts={accounts}
           />

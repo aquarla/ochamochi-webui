@@ -179,7 +179,7 @@ export function Column({ column, instanceUrl, accessToken, accountKey, onRemove,
 
   const tagFilterCount = (column.tagAny?.length ?? 0) + (column.tagAll?.length ?? 0) + (column.tagNone?.length ?? 0)
 
-  const { statuses, loading, error, hasMore, loadMore, prependStatus, removeStatus, updateStatus } =
+  const { statuses, loading, error, hasMore, loadMore, prependStatus, removeStatus, removeByAccountId, updateStatus } =
     useTimeline(instanceUrl, accessToken, column.type, column.tag, supportsMediaFilter ? onlyMedia : undefined, tagFilters, column.listId)
 
   useStreaming({
@@ -307,6 +307,7 @@ export function Column({ column, instanceUrl, accessToken, accountKey, onRemove,
             onOpenDetail={setDetailStatus}
             onOpenProfile={handleOpenProfile}
             onAddTagColumn={onAddTagColumn}
+            onMuteAccount={removeByAccountId}
             currentAccountId={currentAccountId}
             accounts={accounts}
           />
