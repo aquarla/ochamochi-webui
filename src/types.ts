@@ -92,7 +92,13 @@ export interface MastodonList {
   title: string
 }
 
-export type ColumnType = 'home' | 'local' | 'public' | 'tag' | 'list' | 'notifications' | 'favourites' | 'bookmarks' | 'scheduled'
+export interface Tag {
+  name: string
+  url: string
+  history?: Array<{ day: string; uses: string; accounts: string }>
+}
+
+export type ColumnType = 'home' | 'local' | 'public' | 'tag' | 'list' | 'notifications' | 'favourites' | 'bookmarks' | 'scheduled' | 'search'
 
 export interface ScheduledStatus {
   id: string
@@ -136,6 +142,8 @@ export interface ColumnConfig {
   tagAll?: string[]
   tagNone?: string[]
   locked?: boolean
+  searchType?: 'accounts' | 'statuses' | 'hashtags'
+  searchQuery?: string
 }
 
 export interface AuthState {

@@ -33,8 +33,15 @@ export function saveColumns(columns: ColumnConfig[], accountKey: string): void {
   localStorage.setItem(storageKey(accountKey), JSON.stringify(columns))
 }
 
-export function addColumn(columns: ColumnConfig[], type: ColumnType, tag?: string, listId?: string, listTitle?: string): ColumnConfig[] {
-  return [...columns, { id: generateId(), type, tag, listId, listTitle }]
+export function addColumn(
+  columns: ColumnConfig[],
+  type: ColumnType,
+  tag?: string,
+  listId?: string,
+  listTitle?: string,
+  searchType?: 'accounts' | 'statuses' | 'hashtags',
+): ColumnConfig[] {
+  return [...columns, { id: generateId(), type, tag, listId, listTitle, searchType }]
 }
 
 export function removeColumn(columns: ColumnConfig[], id: string): ColumnConfig[] {
@@ -61,5 +68,9 @@ export function getColumnLabel(col: ColumnConfig): string {
       return col.listTitle ?? 'リスト'
     case 'scheduled':
       return '予約投稿'
+    case 'search':
+      if (col.searchType === 'accounts') return 'アカウント検索'
+      if (col.searchType === 'hashtags') return 'タグ検索'
+      return '投稿検索'
   }
 }

@@ -3,7 +3,7 @@ import { MastodonClient } from '../services/mastodon'
 import type { ColumnType, MastodonList } from '../types'
 
 interface AddColumnModalProps {
-  onAdd: (type: ColumnType, tag?: string, listId?: string, listTitle?: string) => void
+  onAdd: (type: ColumnType, tag?: string, listId?: string, listTitle?: string, searchType?: 'accounts' | 'statuses' | 'hashtags') => void
   onClose: () => void
   instanceUrl?: string
   accessToken?: string
@@ -16,6 +16,7 @@ export function AddColumnModal({ onAdd, onClose, instanceUrl, accessToken }: Add
   const [listsLoading, setListsLoading] = useState(false)
   const [listsError, setListsError] = useState<string | null>(null)
   const [selectedListId, setSelectedListId] = useState<string | null>(null)
+  const [searchType, setSearchType] = useState<'accounts' | 'statuses' | 'hashtags'>('statuses')
 
   useEffect(() => {
     if (type !== 'list' || !instanceUrl || !accessToken) return
@@ -33,7 +34,13 @@ export function AddColumnModal({ onAdd, onClose, instanceUrl, accessToken }: Add
     if (type === 'tag' && !tag.trim()) return
     if (type === 'list' && !selectedListId) return
     const selectedList = type === 'list' ? lists.find((l) => l.id === selectedListId) : undefined
-    onAdd(type, type === 'tag' ? tag.trim().replace(/^#/, '') : undefined, selectedList?.id, selectedList?.title)
+    onAdd(
+      type,
+      type === 'tag' ? tag.trim().replace(/^#/, '') : undefined,
+      selectedList?.id,
+      selectedList?.title,
+      type === 'search' ? searchType : undefined,
+    )
     onClose()
   }
 
@@ -59,7 +66,7 @@ export function AddColumnModal({ onAdd, onClose, instanceUrl, accessToken }: Add
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-2">
-            {(['home', 'notifications', 'local', 'public', 'tag', 'list', 'favourites', 'bookmarks', 'scheduled'] as ColumnType[]).map((t) => (
+            {(['home', 'notifications', 'local', 'public', 'tag', 'list', 'favourites', 'bookmarks', 'scheduled', 'search'] as ColumnType[]).map((t) => (
               <button
                 key={t}
                 type="button"
@@ -70,7 +77,7 @@ export function AddColumnModal({ onAdd, onClose, instanceUrl, accessToken }: Add
                     : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                 }`}
               >
-                {t === 'home' ? 'ホーム' : t === 'notifications' ? '通知' : t === 'local' ? 'ローカル' : t === 'public' ? '連合' : t === 'list' ? 'リスト' : t === 'favourites' ? 'お気に入り' : t === 'bookmarks' ? 'ブックマーク' : t === 'scheduled' ? '予約投稿' : 'タグ'}
+                {t === 'home' ? 'ホーム' : t === 'notifications' ? '通知' : t === 'local' ? 'ローカル' : t === 'public' ? '連合' : t === 'list' ? 'リスト' : t === 'favourites' ? 'お気に入り' : t === 'bookmarks' ? 'ブックマーク' : t === 'scheduled' ? '予約投稿' : t === 'search' ? '検索' : 'タグ'}
               </button>
             ))}
           </div>
@@ -118,6 +125,28 @@ export function AddColumnModal({ onAdd, onClose, instanceUrl, accessToken }: Add
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {type === 'search' && (
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">検索種別</label>
+              <div className="flex gap-2">
+                {(['statuses', 'accounts', 'hashtags'] as const).map((st) => (
+                  <button
+                    key={st}
+                    type="button"
+                    onClick={() => setSearchType(st)}
+                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      searchType === st
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    }`}
+                  >
+                    {st === 'statuses' ? '投稿' : st === 'accounts' ? 'アカウント' : 'タグ'}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 

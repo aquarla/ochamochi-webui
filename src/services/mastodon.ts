@@ -1,4 +1,4 @@
-import type { Status, Account, MastodonNotification, StatusContext, CustomEmoji, MediaAttachment, ScheduledStatus, Relationship, MastodonList } from '../types'
+import type { Status, Account, MastodonNotification, StatusContext, CustomEmoji, MediaAttachment, ScheduledStatus, Relationship, MastodonList, Tag } from '../types'
 
 export class MastodonClient {
   constructor(
@@ -232,6 +232,17 @@ export class MastodonClient {
 
   async getScheduledStatuses(): Promise<ScheduledStatus[]> {
     return this.request<ScheduledStatus[]>('/api/v1/scheduled_statuses')
+  }
+
+  async search(
+    q: string,
+    type: 'accounts' | 'statuses' | 'hashtags',
+    params: { limit?: number; offset?: number } = {},
+  ): Promise<{ accounts: Account[]; statuses: Status[]; hashtags: Tag[] }> {
+    const qs = new URLSearchParams({ q, type })
+    if (params.limit) qs.set('limit', String(params.limit))
+    if (params.offset) qs.set('offset', String(params.offset))
+    return this.request<{ accounts: Account[]; statuses: Status[]; hashtags: Tag[] }>(`/api/v2/search?${qs}`)
   }
 
   async cancelScheduledStatus(id: string): Promise<void> {

@@ -8,6 +8,7 @@ import { addColumn, removeColumn } from '../store/columns'
 import { useTheme } from '../hooks/useTheme'
 import { SettingsModal } from './SettingsModal'
 import { ScheduledColumn } from './ScheduledColumn'
+import { SearchColumn } from './SearchColumn'
 import { UserProfileModal } from './UserProfileModal'
 import { loadSettings } from '../hooks/useSettings'
 import type { AppSettings } from '../hooks/useSettings'
@@ -65,8 +66,8 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
     return () => document.removeEventListener('keydown', handler)
   }, [])
 
-  const handleAddColumn = (type: ColumnType, tag?: string, listId?: string, listTitle?: string) => {
-    onColumnsChange(addColumn(columns, type, tag, listId, listTitle))
+  const handleAddColumn = (type: ColumnType, tag?: string, listId?: string, listTitle?: string, searchType?: 'accounts' | 'statuses' | 'hashtags') => {
+    onColumnsChange(addColumn(columns, type, tag, listId, listTitle, searchType))
   }
 
   const handleRemoveColumn = (id: string) => {
@@ -262,6 +263,19 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
                 accessToken={auth.accessToken!}
                 onRemove={handleRemoveColumn}
                 onUpdate={handleUpdateColumn}
+              />
+            ) : col.type === 'search' ? (
+              <SearchColumn
+                key={col.id}
+                column={col}
+                instanceUrl={auth.instanceUrl!}
+                accessToken={auth.accessToken!}
+                accountKey={auth.activeAccountKey ?? undefined}
+                currentAccountId={auth.account?.id}
+                accounts={auth.accounts}
+                onRemove={handleRemoveColumn}
+                onUpdate={handleUpdateColumn}
+                onAddTagColumn={(tag) => handleAddColumn('tag', tag)}
               />
             ) : (
               <Column
