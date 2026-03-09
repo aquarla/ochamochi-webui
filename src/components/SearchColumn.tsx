@@ -183,7 +183,11 @@ export function SearchColumn({
     <div className="flex-shrink-0 w-80 flex flex-col bg-gray-800 border-r border-gray-700">
       {/* Header */}
       <div className="flex items-center justify-between gap-1 px-3 py-2.5 border-b border-gray-700 bg-gray-800/90 sticky top-0 z-10">
-        <h2 className="text-white font-semibold text-sm truncate min-w-0" title={label}>{label}</h2>
+        <h2
+          className="text-white font-semibold text-sm truncate min-w-0 cursor-pointer hover:text-gray-300 transition-colors"
+          title={label}
+          onClick={() => scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
+        >{label}</h2>
         <div className="flex items-center gap-1">
           <LockButton
             locked={!!column.locked}

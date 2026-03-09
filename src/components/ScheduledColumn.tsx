@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { MastodonClient } from '../services/mastodon'
 import type { ColumnConfig, ScheduledStatus } from '../types'
 
@@ -26,6 +26,7 @@ export function ScheduledColumn({ column, instanceUrl, accessToken, onRemove, on
   const [error, setError] = useState<string | null>(null)
   const [cancelTarget, setCancelTarget] = useState<ScheduledStatus | null>(null)
   const [cancelLoading, setCancelLoading] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -61,7 +62,11 @@ export function ScheduledColumn({ column, instanceUrl, accessToken, onRemove, on
   return (
     <div className="flex-shrink-0 w-80 flex flex-col bg-gray-800 border-r border-gray-700">
       <div className="flex items-center justify-between gap-1 px-3 py-2.5 border-b border-gray-700 bg-gray-800/90 sticky top-0 z-10">
-        <h2 className="text-white font-semibold text-sm truncate min-w-0" title="予約投稿">予約投稿</h2>
+        <h2
+          className="text-white font-semibold text-sm truncate min-w-0 cursor-pointer hover:text-gray-300 transition-colors"
+          title="予約投稿"
+          onClick={() => scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
+        >予約投稿</h2>
         <div className="flex items-center gap-1">
           <button
             onClick={load}
@@ -100,7 +105,7 @@ export function ScheduledColumn({ column, instanceUrl, accessToken, onRemove, on
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto">
         {loading && (
           <div className="flex items-center justify-center p-8">
             <div className="animate-spin w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full" />
