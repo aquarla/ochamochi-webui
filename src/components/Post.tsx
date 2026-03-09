@@ -75,6 +75,7 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
   const [cwOpen, setCwOpen] = useState(false)
 
   const contentRef = useRef<HTMLDivElement>(null)
+  const truncateUrl = loadSettings(accountKey).truncateUrl
 
   useEffect(() => {
     if (!showMenu) return
@@ -106,6 +107,26 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
     el.addEventListener('click', handler)
     return () => el.removeEventListener('click', handler)
   }, [onAddTagColumn])
+
+  // Truncate plain URL link text (Mastodon's invisible/ellipsis spans are handled via CSS classes)
+  useEffect(() => {
+    const el = contentRef.current
+    if (!el) return
+    const URL_MAX = 40
+    el.querySelectorAll<HTMLAnchorElement>('a').forEach((link) => {
+      if (link.querySelector('.invisible, .ellipsis')) return
+      const saved = link.getAttribute('data-orig-url')
+      const text = saved ?? link.textContent ?? ''
+      if (!text.startsWith('http://') && !text.startsWith('https://')) return
+      if (truncateUrl && text.length > URL_MAX) {
+        if (!saved) link.setAttribute('data-orig-url', text)
+        link.textContent = text.slice(0, URL_MAX) + '…'
+      } else if (!truncateUrl && saved) {
+        link.textContent = saved
+        link.removeAttribute('data-orig-url')
+      }
+    })
+  }, [truncateUrl])
 
   const isOwnPost = !!currentAccountId && displayStatus.account.id === currentAccountId
 
@@ -359,7 +380,7 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
             <>
               <div
                 ref={contentRef}
-                className="text-gray-200 text-sm leading-relaxed prose prose-sm prose-invert max-w-none break-words [&_a]:text-blue-400 [&_a:hover]:text-blue-300 [&_p]:mb-1"
+                className={`text-gray-200 text-sm leading-relaxed prose prose-sm prose-invert max-w-none break-words [&_a]:text-blue-400 [&_a:hover]:text-blue-300 [&_p]:mb-1${truncateUrl ? " [&_.invisible]:hidden [&_.ellipsis]:after:content-['…']" : ''}`}
                 dangerouslySetInnerHTML={{ __html: emojifyHtml(displayStatus.content, displayStatus.emojis) }}
               />
 

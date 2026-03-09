@@ -13,6 +13,7 @@ export interface AppSettings {
   columnWidth: ColumnWidth
   allowCrossAccountAction: boolean
   showPreviewCard: boolean
+  truncateUrl: boolean
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -27,6 +28,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   columnWidth: 'medium',
   allowCrossAccountAction: true,
   showPreviewCard: true,
+  truncateUrl: true,
 }
 
 function storageKey(accountKey?: string | null) {

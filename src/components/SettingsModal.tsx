@@ -202,6 +202,12 @@ function DisplaySettings({
           onChange={(v) => onChange({ ...settings, showPreviewCard: v })}
         />
       </SettingRow>
+      <SettingRow label="長いURLを省略表示" description="一定の長さを超えるURLを…で短縮して表示する">
+        <ToggleSwitch
+          checked={settings.truncateUrl}
+          onChange={(v) => onChange({ ...settings, truncateUrl: v })}
+        />
+      </SettingRow>
 
       <SectionTitle>フォント・サイズ</SectionTitle>
       <SettingRow label="フォントサイズ" description="タイムライン上のテキストサイズ">
