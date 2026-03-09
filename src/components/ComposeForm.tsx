@@ -242,9 +242,9 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
       />
 
       {attachments.length > 0 && (
-        <div className="mt-2 grid grid-cols-4 gap-1">
+        <div className="mt-2 flex flex-wrap gap-1">
           {attachments.map((a) => (
-            <div key={a.mediaId} className="relative aspect-square">
+            <div key={a.mediaId} className="relative w-16 h-16">
               <img
                 src={a.previewUrl}
                 alt=""

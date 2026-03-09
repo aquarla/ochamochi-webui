@@ -550,17 +550,29 @@ export function UserProfileModal({
 
                         {showMenu && (
                           <div className="absolute right-0 top-full mt-1 w-64 bg-gray-700 border border-gray-600 rounded-lg shadow-xl z-20 overflow-hidden">
+                            <a
+                              href={account.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => setShowMenu(false)}
+                              className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-600 hover:text-white transition-colors flex items-center gap-2"
+                            >
+                              元のページを開く
+                              <svg className="w-3 h-3 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              </svg>
+                            </a>
                             {relationship.muting ? (
                               <button
                                 onClick={() => { setShowMenu(false); setShowUnmuteDialog(true) }}
-                                className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-600 hover:text-white transition-colors"
+                                className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-600 hover:text-white transition-colors border-t border-gray-600"
                               >
                                 ミュートを解除
                               </button>
                             ) : (
                               <button
                                 onClick={() => { setShowMenu(false); setShowMuteDialog(true) }}
-                                className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-600 hover:text-white transition-colors"
+                                className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-600 hover:text-white transition-colors border-t border-gray-600"
                               >
                                 このユーザーをミュートする
                               </button>
