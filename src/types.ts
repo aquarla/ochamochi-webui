@@ -76,6 +76,7 @@ export interface Status {
   mentions: Array<{ id: string; username: string; acct: string; url: string }>
   tags: Array<{ name: string; url: string }>
   emojis: CustomEmoji[]
+  card?: PreviewCard | null
 }
 
 export interface Application {
@@ -85,6 +86,19 @@ export interface Application {
   client_secret: string
   redirect_uri: string
   vapid_key?: string
+}
+
+export interface PreviewCard {
+  url: string
+  title: string
+  description: string
+  type: 'link' | 'photo' | 'video' | 'rich'
+  image: string | null
+  provider_name: string
+  provider_url: string
+  author_name: string
+  width: number
+  height: number
 }
 
 export interface MastodonList {

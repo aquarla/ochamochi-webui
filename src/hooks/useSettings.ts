@@ -12,6 +12,7 @@ export interface AppSettings {
   fontSize: FontSize
   columnWidth: ColumnWidth
   allowCrossAccountAction: boolean
+  showPreviewCard: boolean
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -25,6 +26,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   fontSize: 'medium',
   columnWidth: 'medium',
   allowCrossAccountAction: true,
+  showPreviewCard: true,
 }
 
 function storageKey(accountKey?: string | null) {

@@ -368,6 +368,34 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
                 sensitive={displayStatus.sensitive}
               />
 
+              {loadSettings(accountKey).showPreviewCard && displayStatus.card && displayStatus.card.title && (
+                <a
+                  href={displayStatus.card.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 flex flex-col border border-gray-600 rounded-lg overflow-hidden hover:border-gray-400 transition-colors bg-gray-750 text-left"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {displayStatus.card.image && (
+                    <img
+                      src={displayStatus.card.image}
+                      alt=""
+                      className="w-full max-h-36 object-cover bg-gray-700"
+                      loading="lazy"
+                    />
+                  )}
+                  <div className="px-3 py-2 min-w-0">
+                    <p className="text-white text-xs font-medium leading-snug line-clamp-2">{displayStatus.card.title}</p>
+                    {displayStatus.card.description && (
+                      <p className="text-gray-400 text-xs leading-snug mt-0.5 line-clamp-2">{displayStatus.card.description}</p>
+                    )}
+                    <p className="text-gray-500 text-[11px] mt-1 truncate">
+                      {displayStatus.card.provider_name || new URL(displayStatus.card.url).hostname}
+                    </p>
+                  </div>
+                </a>
+              )}
+
               {(() => {
                 const content = displayStatus.content
                 const contentLower = content.toLowerCase()

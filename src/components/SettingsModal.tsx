@@ -195,6 +195,14 @@ function DisplaySettings({
         />
       </SettingRow>
 
+      <SectionTitle>投稿</SectionTitle>
+      <SettingRow label="OGPプレビューを表示" description="URLを含む投稿にリンクカードを表示する">
+        <ToggleSwitch
+          checked={settings.showPreviewCard}
+          onChange={(v) => onChange({ ...settings, showPreviewCard: v })}
+        />
+      </SettingRow>
+
       <SectionTitle>フォント・サイズ</SectionTitle>
       <SettingRow label="フォントサイズ" description="タイムライン上のテキストサイズ">
         <SelectField
