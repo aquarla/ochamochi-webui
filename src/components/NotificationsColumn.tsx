@@ -14,9 +14,10 @@ interface NotificationsColumnProps {
   currentAccountId?: string
   accounts?: StoredAccountEntry[]
   onRemove: (id: string) => void
+  onUpdate: (column: ColumnConfig) => void
 }
 
-export function NotificationsColumn({ column, instanceUrl, accessToken, accountKey, currentAccountId, accounts, onRemove }: NotificationsColumnProps) {
+export function NotificationsColumn({ column, instanceUrl, accessToken, accountKey, currentAccountId, accounts, onRemove, onUpdate }: NotificationsColumnProps) {
   const [profileAccount, setProfileAccount] = useState<Account | null>(null)
   const { notifications, loading, error, hasMore, loadMore } = useNotifications(instanceUrl, accessToken)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -42,17 +43,35 @@ export function NotificationsColumn({ column, instanceUrl, accessToken, accountK
 
   return (
     <div className="flex-shrink-0 w-80 flex flex-col bg-gray-800 border-r border-gray-700">
-      <div className="flex items-center justify-between px-3 py-2.5 border-b border-gray-700 bg-gray-800/90 sticky top-0 z-10">
-        <h2 className="text-white font-semibold text-sm">通知</h2>
-        <button
-          onClick={() => onRemove(column.id)}
-          className="text-gray-500 hover:text-red-400 transition-colors p-1 rounded"
-          title="カラムを削除"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+      <div className="flex items-center justify-between gap-1 px-3 py-2.5 border-b border-gray-700 bg-gray-800/90 sticky top-0 z-10">
+        <h2 className="text-white font-semibold text-sm truncate min-w-0" title="通知">通知</h2>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => onUpdate({ ...column, locked: !column.locked })}
+            className={`transition-colors p-1 rounded ${column.locked ? 'bg-blue-600 text-white hover:bg-blue-700' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700'}`}
+            title={column.locked ? 'ロック中（クリックで解除）' : 'クリックでロック'}
+          >
+            {column.locked ? (
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            ) : (
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 018 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+              </svg>
+            )}
+          </button>
+          <button
+            onClick={() => onRemove(column.id)}
+            disabled={!!column.locked}
+            className="text-gray-500 hover:text-red-400 transition-colors p-1 rounded disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-gray-500"
+            title="カラムを削除"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto">

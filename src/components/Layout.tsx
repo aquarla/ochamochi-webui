@@ -252,6 +252,7 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
                 currentAccountId={auth.account?.id}
                 accounts={auth.accounts}
                 onRemove={handleRemoveColumn}
+                onUpdate={handleUpdateColumn}
               />
             ) : col.type === 'scheduled' ? (
               <ScheduledColumn
@@ -260,6 +261,7 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
                 instanceUrl={auth.instanceUrl!}
                 accessToken={auth.accessToken!}
                 onRemove={handleRemoveColumn}
+                onUpdate={handleUpdateColumn}
               />
             ) : (
               <Column

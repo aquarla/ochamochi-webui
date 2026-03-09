@@ -128,6 +128,7 @@ export interface ColumnConfig {
   tagAny?: string[]
   tagAll?: string[]
   tagNone?: string[]
+  locked?: boolean
 }
 
 export interface AuthState {
