@@ -2,7 +2,7 @@ import type { ColumnType, StreamEvent } from '../types'
 
 export type StreamHandler = (event: StreamEvent) => void
 
-function getStreamName(type: ColumnType, tag?: string, onlyMedia?: boolean): string {
+function getStreamName(type: ColumnType, tag?: string, onlyMedia?: boolean, listId?: string): string {
   switch (type) {
     case 'home':
     case 'notifications':
@@ -13,6 +13,8 @@ function getStreamName(type: ColumnType, tag?: string, onlyMedia?: boolean): str
       return onlyMedia ? 'public:media' : 'public'
     case 'tag':
       return `hashtag&tag=${encodeURIComponent(tag ?? '')}`
+    case 'list':
+      return `list&list=${encodeURIComponent(listId ?? '')}`
     case 'favourites':
     case 'bookmarks':
     case 'scheduled':
@@ -28,9 +30,10 @@ export function createStream(
   onEvent: StreamHandler,
   onError?: (err: Event) => void,
   onlyMedia?: boolean,
+  listId?: string,
 ): WebSocket {
   const wsUrl = instanceUrl.replace(/^http/, 'ws')
-  const stream = getStreamName(type, tag, onlyMedia)
+  const stream = getStreamName(type, tag, onlyMedia, listId)
   const url = `${wsUrl}/api/v1/streaming?access_token=${encodeURIComponent(accessToken)}&stream=${stream}`
 
   const ws = new WebSocket(url)

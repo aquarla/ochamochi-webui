@@ -87,7 +87,12 @@ export interface Application {
   vapid_key?: string
 }
 
-export type ColumnType = 'home' | 'local' | 'public' | 'tag' | 'notifications' | 'favourites' | 'bookmarks' | 'scheduled'
+export interface MastodonList {
+  id: string
+  title: string
+}
+
+export type ColumnType = 'home' | 'local' | 'public' | 'tag' | 'list' | 'notifications' | 'favourites' | 'bookmarks' | 'scheduled'
 
 export interface ScheduledStatus {
   id: string
@@ -124,6 +129,8 @@ export interface ColumnConfig {
   id: string
   type: ColumnType
   tag?: string
+  listId?: string
+  listTitle?: string
   onlyMedia?: boolean
   tagAny?: string[]
   tagAll?: string[]

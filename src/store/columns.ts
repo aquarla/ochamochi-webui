@@ -33,8 +33,8 @@ export function saveColumns(columns: ColumnConfig[], accountKey: string): void {
   localStorage.setItem(storageKey(accountKey), JSON.stringify(columns))
 }
 
-export function addColumn(columns: ColumnConfig[], type: ColumnType, tag?: string): ColumnConfig[] {
-  return [...columns, { id: generateId(), type, tag }]
+export function addColumn(columns: ColumnConfig[], type: ColumnType, tag?: string, listId?: string, listTitle?: string): ColumnConfig[] {
+  return [...columns, { id: generateId(), type, tag, listId, listTitle }]
 }
 
 export function removeColumn(columns: ColumnConfig[], id: string): ColumnConfig[] {
@@ -57,6 +57,8 @@ export function getColumnLabel(col: ColumnConfig): string {
       return 'お気に入り'
     case 'bookmarks':
       return 'ブックマーク'
+    case 'list':
+      return col.listTitle ?? 'リスト'
     case 'scheduled':
       return '予約投稿'
   }

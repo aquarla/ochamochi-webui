@@ -7,6 +7,7 @@ interface UseStreamingOptions {
   accessToken: string
   type: ColumnType
   tag?: string
+  listId?: string
   onlyMedia?: boolean
   onNew: (status: Status) => void
   onDelete: (id: string) => void
@@ -17,6 +18,7 @@ export function useStreaming({
   accessToken,
   type,
   tag,
+  listId,
   onlyMedia,
   onNew,
   onDelete,
@@ -33,7 +35,7 @@ export function useStreaming({
   }, [onDelete])
 
   useEffect(() => {
-    if (type === 'favourites' || type === 'bookmarks') return  // no streaming endpoint
+    if (type === 'favourites' || type === 'bookmarks' || type === 'scheduled') return  // no streaming endpoint
 
     const ws = createStream(instanceUrl, accessToken, type, tag, (event) => {
       if (event.event === 'update') {
@@ -46,10 +48,10 @@ export function useStreaming({
       } else if (event.event === 'delete') {
         onDeleteRef.current(event.payload)
       }
-    }, undefined, onlyMedia)
+    }, undefined, onlyMedia, listId)
 
     return () => {
       ws.close()
     }
-  }, [instanceUrl, accessToken, type, tag, onlyMedia])
+  }, [instanceUrl, accessToken, type, tag, listId, onlyMedia])
 }

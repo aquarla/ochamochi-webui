@@ -65,8 +65,8 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
     return () => document.removeEventListener('keydown', handler)
   }, [])
 
-  const handleAddColumn = (type: ColumnType, tag?: string) => {
-    onColumnsChange(addColumn(columns, type, tag))
+  const handleAddColumn = (type: ColumnType, tag?: string, listId?: string, listTitle?: string) => {
+    onColumnsChange(addColumn(columns, type, tag, listId, listTitle))
   }
 
   const handleRemoveColumn = (id: string) => {
@@ -285,6 +285,8 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
         <AddColumnModal
           onAdd={handleAddColumn}
           onClose={() => setShowAddModal(false)}
+          instanceUrl={auth.instanceUrl ?? undefined}
+          accessToken={auth.accessToken ?? undefined}
         />
       )}
 

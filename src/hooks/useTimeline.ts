@@ -12,6 +12,7 @@ async function fetchTimeline(
   tag: string | undefined,
   params: { max_id?: string; limit?: number; only_media?: boolean },
   tagFilters?: TagFilters,
+  listId?: string,
 ): Promise<Status[]> {
   switch (type) {
     case 'home':
@@ -22,6 +23,8 @@ async function fetchTimeline(
       return client.getPublicTimeline(params)
     case 'tag':
       return client.getTagTimeline(tag ?? '', { ...params, ...tagFilters })
+    case 'list':
+      return client.getListTimeline(listId ?? '', params)
     case 'favourites':
       return client.getFavourites(params)
     case 'bookmarks':
@@ -38,6 +41,7 @@ export function useTimeline(
   tag?: string,
   onlyMedia?: boolean,
   tagFilters?: TagFilters,
+  listId?: string,
 ) {
   const [statuses, setStatuses] = useState<Status[]>([])
   const [loading, setLoading] = useState(false)
@@ -57,7 +61,7 @@ export function useTimeline(
     setError(null)
     try {
       const filters: TagFilters | undefined = tagFiltersKey ? JSON.parse(tagFiltersKey) : undefined
-      const items = await fetchTimeline(clientRef.current, type, tag, { limit: PAGE_LIMIT, only_media: onlyMedia }, filters)
+      const items = await fetchTimeline(clientRef.current, type, tag, { limit: PAGE_LIMIT, only_media: onlyMedia }, filters, listId)
       setStatuses(items)
       setHasMore(items.length > 0)
     } catch (e) {
@@ -66,7 +70,7 @@ export function useTimeline(
       setLoading(false)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [type, tag, onlyMedia, tagFiltersKey])
+  }, [type, tag, onlyMedia, tagFiltersKey, listId])
 
   useEffect(() => {
     setStatuses([])
@@ -84,7 +88,7 @@ export function useTimeline(
         max_id: lastId,
         limit: PAGE_LIMIT,
         only_media: onlyMedia,
-      }, filters)
+      }, filters, listId)
       setStatuses((prev) => [...prev, ...items])
       setHasMore(items.length > 0)
     } catch (e) {
@@ -93,7 +97,7 @@ export function useTimeline(
       setLoading(false)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, hasMore, statuses, type, tag, onlyMedia, tagFiltersKey])
+  }, [loading, hasMore, statuses, type, tag, onlyMedia, tagFiltersKey, listId])
 
   const prependStatus = useCallback((status: Status) => {
     setStatuses((prev) => {

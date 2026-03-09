@@ -170,7 +170,7 @@ export function Column({ column, instanceUrl, accessToken, accountKey, onRemove,
   }
 
   const isTagColumn = column.type === 'tag'
-  const supportsMediaFilter = column.type !== 'home' && column.type !== 'favourites' && column.type !== 'bookmarks'
+  const supportsMediaFilter = column.type !== 'home' && column.type !== 'list' && column.type !== 'favourites' && column.type !== 'bookmarks'
   const onlyMedia = supportsMediaFilter ? (column.onlyMedia ?? false) : false
 
   const tagFilters = isTagColumn
@@ -180,13 +180,14 @@ export function Column({ column, instanceUrl, accessToken, accountKey, onRemove,
   const tagFilterCount = (column.tagAny?.length ?? 0) + (column.tagAll?.length ?? 0) + (column.tagNone?.length ?? 0)
 
   const { statuses, loading, error, hasMore, loadMore, prependStatus, removeStatus, updateStatus } =
-    useTimeline(instanceUrl, accessToken, column.type, column.tag, supportsMediaFilter ? onlyMedia : undefined, tagFilters)
+    useTimeline(instanceUrl, accessToken, column.type, column.tag, supportsMediaFilter ? onlyMedia : undefined, tagFilters, column.listId)
 
   useStreaming({
     instanceUrl,
     accessToken,
     type: column.type,
     tag: column.tag,
+    listId: column.listId,
     onlyMedia: supportsMediaFilter ? onlyMedia : undefined,
     onNew: prependStatus,
     onDelete: removeStatus,

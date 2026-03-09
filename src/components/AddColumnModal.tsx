@@ -1,21 +1,43 @@
-import { useState } from 'react'
-import type { ColumnType } from '../types'
+import { useState, useEffect } from 'react'
+import { MastodonClient } from '../services/mastodon'
+import type { ColumnType, MastodonList } from '../types'
 
 interface AddColumnModalProps {
-  onAdd: (type: ColumnType, tag?: string) => void
+  onAdd: (type: ColumnType, tag?: string, listId?: string, listTitle?: string) => void
   onClose: () => void
+  instanceUrl?: string
+  accessToken?: string
 }
 
-export function AddColumnModal({ onAdd, onClose }: AddColumnModalProps) {
+export function AddColumnModal({ onAdd, onClose, instanceUrl, accessToken }: AddColumnModalProps) {
   const [type, setType] = useState<ColumnType>('tag')
   const [tag, setTag] = useState('')
+  const [lists, setLists] = useState<MastodonList[]>([])
+  const [listsLoading, setListsLoading] = useState(false)
+  const [listsError, setListsError] = useState<string | null>(null)
+  const [selectedListId, setSelectedListId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (type !== 'list' || !instanceUrl || !accessToken) return
+    setListsLoading(true)
+    setListsError(null)
+    const client = new MastodonClient(instanceUrl, accessToken)
+    client.getLists()
+      .then((data) => setLists(data))
+      .catch((e) => setListsError(e instanceof Error ? e.message : 'リスト取得に失敗しました'))
+      .finally(() => setListsLoading(false))
+  }, [type, instanceUrl, accessToken])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (type === 'tag' && !tag.trim()) return
-    onAdd(type, type === 'tag' ? tag.trim().replace(/^#/, '') : undefined)
+    if (type === 'list' && !selectedListId) return
+    const selectedList = type === 'list' ? lists.find((l) => l.id === selectedListId) : undefined
+    onAdd(type, type === 'tag' ? tag.trim().replace(/^#/, '') : undefined, selectedList?.id, selectedList?.title)
     onClose()
   }
+
+  const isSubmitDisabled = (type === 'tag' && !tag.trim()) || (type === 'list' && !selectedListId)
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={onClose}>
@@ -37,7 +59,7 @@ export function AddColumnModal({ onAdd, onClose }: AddColumnModalProps) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-2">
-            {(['home', 'notifications', 'local', 'public', 'tag', 'favourites', 'bookmarks', 'scheduled'] as ColumnType[]).map((t) => (
+            {(['home', 'notifications', 'local', 'public', 'tag', 'list', 'favourites', 'bookmarks', 'scheduled'] as ColumnType[]).map((t) => (
               <button
                 key={t}
                 type="button"
@@ -48,7 +70,7 @@ export function AddColumnModal({ onAdd, onClose }: AddColumnModalProps) {
                     : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                 }`}
               >
-                {t === 'home' ? 'ホーム' : t === 'notifications' ? '通知' : t === 'local' ? 'ローカル' : t === 'public' ? '連合' : t === 'favourites' ? 'お気に入り' : t === 'bookmarks' ? 'ブックマーク' : t === 'scheduled' ? '予約投稿' : 'タグ'}
+                {t === 'home' ? 'ホーム' : t === 'notifications' ? '通知' : t === 'local' ? 'ローカル' : t === 'public' ? '連合' : t === 'list' ? 'リスト' : t === 'favourites' ? 'お気に入り' : t === 'bookmarks' ? 'ブックマーク' : t === 'scheduled' ? '予約投稿' : 'タグ'}
               </button>
             ))}
           </div>
@@ -67,9 +89,41 @@ export function AddColumnModal({ onAdd, onClose }: AddColumnModalProps) {
             </div>
           )}
 
+          {type === 'list' && (
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">リストを選択</label>
+              {listsLoading ? (
+                <div className="flex justify-center py-4">
+                  <div className="animate-spin w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full" />
+                </div>
+              ) : listsError ? (
+                <p className="text-red-400 text-xs">{listsError}</p>
+              ) : lists.length === 0 ? (
+                <p className="text-gray-500 text-sm text-center py-2">リストがありません</p>
+              ) : (
+                <div className="space-y-1 max-h-48 overflow-y-auto">
+                  {lists.map((list) => (
+                    <button
+                      key={list.id}
+                      type="button"
+                      onClick={() => setSelectedListId(list.id)}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                        selectedListId === list.id
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      {list.title}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           <button
             type="submit"
-            disabled={type === 'tag' && !tag.trim()}
+            disabled={isSubmitDisabled}
             className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed text-white font-medium rounded-lg px-4 py-2 transition-colors"
           >
             追加

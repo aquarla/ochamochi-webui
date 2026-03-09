@@ -1,4 +1,4 @@
-import type { Status, Account, MastodonNotification, StatusContext, CustomEmoji, MediaAttachment, ScheduledStatus, Relationship } from '../types'
+import type { Status, Account, MastodonNotification, StatusContext, CustomEmoji, MediaAttachment, ScheduledStatus, Relationship, MastodonList } from '../types'
 
 export class MastodonClient {
   constructor(
@@ -217,6 +217,17 @@ export class MastodonClient {
     if (params.max_id) qs.set('max_id', params.max_id)
     if (params.limit) qs.set('limit', String(params.limit))
     return this.request<Status[]>(`/api/v1/favourites?${qs}`)
+  }
+
+  async getLists(): Promise<MastodonList[]> {
+    return this.request<MastodonList[]>('/api/v1/lists')
+  }
+
+  async getListTimeline(listId: string, params: { max_id?: string; limit?: number } = {}): Promise<Status[]> {
+    const qs = new URLSearchParams()
+    if (params.max_id) qs.set('max_id', params.max_id)
+    if (params.limit) qs.set('limit', String(params.limit))
+    return this.request<Status[]>(`/api/v1/timelines/list/${encodeURIComponent(listId)}?${qs}`)
   }
 
   async getScheduledStatuses(): Promise<ScheduledStatus[]> {
