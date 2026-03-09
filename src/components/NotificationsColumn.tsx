@@ -3,7 +3,7 @@ import { useNotifications } from '../hooks/useNotifications'
 import { NotificationItem } from './NotificationItem'
 import { UserProfileModal } from './UserProfileModal'
 import { loadSettings } from '../hooks/useSettings'
-import type { ColumnConfig, Account } from '../types'
+import type { ColumnConfig, Account, MastodonNotification } from '../types'
 import type { StoredAccountEntry } from '../services/auth'
 
 interface NotificationsColumnProps {
@@ -19,10 +19,34 @@ interface NotificationsColumnProps {
 
 export function NotificationsColumn({ column, instanceUrl, accessToken, accountKey, currentAccountId, accounts, onRemove, onUpdate }: NotificationsColumnProps) {
   const [profileAccount, setProfileAccount] = useState<Account | null>(null)
-  const { notifications, loading, error, hasMore, loadMore } = useNotifications(instanceUrl, accessToken)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const settings = loadSettings(accountKey)
+
+  const handleNewNotification = (n: MastodonNotification) => {
+    if (!settings.desktopNotification) return
+    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return
+    if (n.type === 'mention' && !settings.notifyMention) return
+    if ((n.type === 'follow' || n.type === 'follow_request') && !settings.notifyFollow) return
+    if (n.type === 'reblog' && !settings.notifyReblog) return
+    if (n.type === 'favourite' && !settings.notifyFavourite) return
+    const name = n.account.display_name || n.account.username
+    const titles: Record<string, string> = {
+      mention: `${name} があなたにメンションしました`,
+      follow: `${name} があなたをフォローしました`,
+      follow_request: `${name} がフォローリクエストを送りました`,
+      reblog: `${name} があなたの投稿をブーストしました`,
+      favourite: `${name} があなたの投稿をお気に入りしました`,
+      poll: 'アンケートが終了しました',
+      update: `${name} が投稿を編集しました`,
+    }
+    const title = titles[n.type] ?? `${name} からの通知`
+    const body = n.status?.content ? n.status.content.replace(/<[^>]+>/g, '').trim() : undefined
+    new Notification(title, { body, icon: n.account.avatar_static })
+  }
+
+  const { notifications, loading, error, hasMore, loadMore } = useNotifications(instanceUrl, accessToken, handleNewNotification)
+
   const visibleNotifications = notifications.filter((n) => {
     if (n.type === 'mention') return settings.notifyMention
     if (n.type === 'follow' || n.type === 'follow_request') return settings.notifyFollow

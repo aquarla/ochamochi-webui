@@ -5,12 +5,18 @@ import type { MastodonNotification } from '../types'
 
 const PAGE_LIMIT = 20
 
-export function useNotifications(instanceUrl: string, accessToken: string) {
+export function useNotifications(
+  instanceUrl: string,
+  accessToken: string,
+  onNew?: (n: MastodonNotification) => void,
+) {
   const [notifications, setNotifications] = useState<MastodonNotification[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [hasMore, setHasMore] = useState(true)
   const clientRef = useRef(new MastodonClient(instanceUrl, accessToken))
+  const onNewRef = useRef(onNew)
+  onNewRef.current = onNew
 
   useEffect(() => {
     clientRef.current = new MastodonClient(instanceUrl, accessToken)
@@ -61,6 +67,7 @@ export function useNotifications(instanceUrl: string, accessToken: string) {
             if (prev.some((x) => x.id === n.id)) return prev
             return [n, ...prev]
           })
+          onNewRef.current?.(n)
         } catch {
           // ignore
         }

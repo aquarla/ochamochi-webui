@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { loadSettings, saveSettings } from '../hooks/useSettings'
 import type { AppSettings } from '../hooks/useSettings'
 import { useTheme } from '../hooks/useTheme'
@@ -230,8 +230,28 @@ function NotificationsSettings({
   settings: AppSettings
   onChange: (s: AppSettings) => void
 }) {
+  const [permission, setPermission] = useState<NotificationPermission>(() =>
+    typeof Notification !== 'undefined' ? Notification.permission : 'denied'
+  )
+
+  const handleDesktopToggle = useCallback(async (v: boolean) => {
+    if (v && typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
+      const result = await Notification.requestPermission()
+      setPermission(result)
+    }
+    onChange({ ...settings, desktopNotification: v })
+  }, [settings, onChange])
+
+  const desktopDescription = settings.desktopNotification && permission === 'denied'
+    ? 'ブラウザの設定で通知を許可してください'
+    : '通知カラムに新着があったときにデスクトップへ通知する'
+
   return (
     <div>
+      <SectionTitle>デスクトップ通知</SectionTitle>
+      <SettingRow label="デスクトップ通知" description={desktopDescription}>
+        <ToggleSwitch checked={settings.desktopNotification} onChange={handleDesktopToggle} />
+      </SettingRow>
       <SectionTitle>通知の種類</SectionTitle>
       <SettingRow label="メンション" description="自分宛ての返信・メンション">
         <ToggleSwitch checked={settings.notifyMention} onChange={(v) => onChange({ ...settings, notifyMention: v })} />

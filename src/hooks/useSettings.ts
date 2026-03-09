@@ -8,6 +8,7 @@ export interface AppSettings {
   notifyFollow: boolean
   notifyReblog: boolean
   notifyFavourite: boolean
+  desktopNotification: boolean
   fontSize: FontSize
   columnWidth: ColumnWidth
   allowCrossAccountAction: boolean
@@ -20,6 +21,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   notifyFollow: true,
   notifyReblog: true,
   notifyFavourite: true,
+  desktopNotification: false,
   fontSize: 'medium',
   columnWidth: 'medium',
   allowCrossAccountAction: true,
