@@ -89,7 +89,10 @@ export function useTimeline(
         limit: PAGE_LIMIT,
         only_media: onlyMedia,
       }, filters, listId)
-      setStatuses((prev) => [...prev, ...items])
+      setStatuses((prev) => {
+        const existingIds = new Set(prev.map((s) => s.id))
+        return [...prev, ...items.filter((s) => !existingIds.has(s.id))]
+      })
       setHasMore(items.length > 0)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
