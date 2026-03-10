@@ -3,8 +3,8 @@ import { createPortal } from 'react-dom'
 import type { Status, Account } from '../types'
 import { MastodonClient } from '../services/mastodon'
 import { emojifyText, emojifyHtml } from '../utils/emojify'
-import { ComposeForm } from './ComposeForm'
 import { EditStatusModal } from './EditStatusModal'
+import { ReplyModal } from './ReplyModal'
 import { MediaGrid } from './MediaGrid'
 import type { StoredAccountEntry } from '../services/auth'
 import { loadSettings } from '../hooks/useSettings'
@@ -655,15 +655,13 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
       </div>
 
     {replyOpen && (
-      <ComposeForm
+      <ReplyModal
+        status={displayStatus}
         instanceUrl={instanceUrl}
         accessToken={accessToken}
         accountKey={accountKey}
-        inReplyToId={displayStatus.id}
-        initialText={`@${displayStatus.account.acct} `}
+        onClose={() => setReplyOpen(false)}
         onComposed={() => setReplyOpen(false)}
-        onCancel={() => setReplyOpen(false)}
-        inline
       />
     )}
 

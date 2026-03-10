@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Column } from './Column'
 import { NotificationsColumn } from './NotificationsColumn'
-import { ComposeForm } from './ComposeForm'
+import { ComposeModal } from './ComposeModal'
 import { AddColumnModal } from './AddColumnModal'
 import { AddAccountModal } from './AddAccountModal'
 import { addColumn, removeColumn } from '../store/columns'
@@ -215,16 +215,14 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
         </div>
       </header>
 
-      {/* Compose panel */}
       {showCompose && (
-        <div className="flex-shrink-0 bg-gray-800 border-b border-gray-700">
-          <ComposeForm
-            instanceUrl={auth.instanceUrl!}
-            accessToken={auth.accessToken!}
-            accountKey={auth.activeAccountKey ?? undefined}
-            onComposed={() => setShowCompose(false)}
-          />
-        </div>
+        <ComposeModal
+          instanceUrl={auth.instanceUrl!}
+          accessToken={auth.accessToken!}
+          accountKey={auth.activeAccountKey ?? undefined}
+          onComposed={() => setShowCompose(false)}
+          onClose={() => setShowCompose(false)}
+        />
       )}
 
       {/* Columns */}
