@@ -3,12 +3,14 @@ import { createPortal } from 'react-dom'
 import { MastodonClient } from '../services/mastodon'
 import { emojifyText, emojifyHtml } from '../utils/emojify'
 import { MediaGrid } from './MediaGrid'
+import { loadSettings } from '../hooks/useSettings'
 import type { Status, StatusContext, Account } from '../types'
 
 interface StatusDetailModalProps {
   status: Status
   instanceUrl: string
   accessToken: string
+  accountKey?: string
   onClose: () => void
   onOpenProfile?: (account: Account) => void
   onDelete?: (id: string) => void
@@ -29,12 +31,13 @@ interface StatusRowProps {
   status: Status
   highlight?: boolean
   slim?: boolean
+  showCard?: boolean
   onOpenProfile?: (account: Account) => void
   onDeleteRequest?: (status: Status) => void
   isOwnPost?: boolean
 }
 
-function StatusRow({ status, highlight, slim, onOpenProfile, onDeleteRequest, isOwnPost }: StatusRowProps) {
+function StatusRow({ status, highlight, slim, showCard, onOpenProfile, onDeleteRequest, isOwnPost }: StatusRowProps) {
   const hasCw = !!status.spoiler_text
   const [cwOpen, setCwOpen] = useState(!hasCw)
 
@@ -109,6 +112,33 @@ function StatusRow({ status, highlight, slim, onOpenProfile, onDeleteRequest, is
               sensitive={status.sensitive}
               thumbnailHeight="h-40"
             />
+            {showCard && status.card?.title && (
+              <a
+                href={status.card.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 flex flex-col border border-gray-600 rounded-lg overflow-hidden hover:border-gray-400 transition-colors text-left"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {status.card.image && (
+                  <img
+                    src={status.card.image}
+                    alt=""
+                    className="w-full max-h-36 object-cover bg-gray-700"
+                    loading="lazy"
+                  />
+                )}
+                <div className="px-3 py-2 min-w-0">
+                  <p className="text-white text-xs font-medium leading-snug line-clamp-2">{status.card.title}</p>
+                  {status.card.description && (
+                    <p className="text-gray-400 text-xs leading-snug mt-0.5 line-clamp-2">{status.card.description}</p>
+                  )}
+                  <p className="text-gray-500 text-[11px] mt-1 truncate">
+                    {status.card.provider_name || new URL(status.card.url).hostname}
+                  </p>
+                </div>
+              </a>
+            )}
           </>
         )}
 
@@ -149,12 +179,13 @@ function StatusRow({ status, highlight, slim, onOpenProfile, onDeleteRequest, is
   )
 }
 
-export function StatusDetailModal({ status, instanceUrl, accessToken, onClose, onOpenProfile, onDelete, currentAccountId }: StatusDetailModalProps) {
+export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey, onClose, onOpenProfile, onDelete, currentAccountId }: StatusDetailModalProps) {
   const [context, setContext] = useState<StatusContext | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Status | null>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
+  const showCard = loadSettings(accountKey).showPreviewCard
 
   useEffect(() => {
     const client = new MastodonClient(instanceUrl, accessToken)
@@ -236,6 +267,7 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, onClose, o
                   key={s.id}
                   status={s}
                   slim
+                  showCard={showCard}
                   onOpenProfile={onOpenProfile}
                   onDeleteRequest={setDeleteTarget}
                   isOwnPost={!!currentAccountId && s.account.id === currentAccountId}
@@ -245,6 +277,7 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, onClose, o
               <StatusRow
                 status={status}
                 highlight
+                showCard={showCard}
                 onOpenProfile={onOpenProfile}
                 onDeleteRequest={setDeleteTarget}
                 isOwnPost={!!currentAccountId && status.account.id === currentAccountId}
@@ -255,6 +288,7 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, onClose, o
                   key={s.id}
                   status={s}
                   slim
+                  showCard={showCard}
                   onOpenProfile={onOpenProfile}
                   onDeleteRequest={setDeleteTarget}
                   isOwnPost={!!currentAccountId && s.account.id === currentAccountId}

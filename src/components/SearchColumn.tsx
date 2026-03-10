@@ -317,6 +317,7 @@ export function SearchColumn({
           status={detailStatus}
           instanceUrl={instanceUrl}
           accessToken={accessToken}
+          accountKey={accountKey}
           currentAccountId={currentAccountId}
           onClose={() => setDetailStatus(null)}
           onDelete={handleDeleteStatus}
