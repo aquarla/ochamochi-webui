@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTimeline } from '../hooks/useTimeline'
 import { useStreaming } from '../hooks/useStreaming'
 import { getColumnLabel } from '../store/columns'
 import { Post } from './Post'
 import { StatusDetailModal } from './StatusDetailModal'
 import { UserProfileModal } from './UserProfileModal'
+import { MastodonClient } from '../services/mastodon'
 import type { ColumnConfig, Status, Account } from '../types'
 import type { StoredAccountEntry } from '../services/auth'
 
@@ -182,6 +183,23 @@ export function Column({ column, instanceUrl, accessToken, accountKey, onRemove,
   const { statuses, loading, error, hasMore, loadMore, prependStatus, removeStatus, removeByAccountId, updateStatus } =
     useTimeline(instanceUrl, accessToken, column.type, column.tag, supportsMediaFilter ? onlyMedia : undefined, tagFilters, column.listId)
 
+  const handleNewStatus = useCallback((status: Status) => {
+    prependStatus(status)
+    // カードは非同期生成されるため、URLを含む新規投稿は3秒後に再取得する
+    const target = status.reblog ?? status
+    if (!target.card && target.content.includes('href=')) {
+      setTimeout(async () => {
+        try {
+          const client = new MastodonClient(instanceUrl, accessToken)
+          const updated = await client.getStatus(status.id)
+          if (updated.card ?? updated.reblog?.card) updateStatus(updated)
+        } catch {
+          // ignore
+        }
+      }, 3000)
+    }
+  }, [prependStatus, updateStatus, instanceUrl, accessToken])
+
   useStreaming({
     instanceUrl,
     accessToken,
@@ -189,7 +207,7 @@ export function Column({ column, instanceUrl, accessToken, accountKey, onRemove,
     tag: column.tag,
     listId: column.listId,
     onlyMedia: supportsMediaFilter ? onlyMedia : undefined,
-    onNew: prependStatus,
+    onNew: handleNewStatus,
     onDelete: removeStatus,
   })
 

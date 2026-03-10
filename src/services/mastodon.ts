@@ -249,6 +249,10 @@ export class MastodonClient {
     await this.request<unknown>(`/api/v1/scheduled_statuses/${id}`, { method: 'DELETE' })
   }
 
+  async getStatus(id: string): Promise<Status> {
+    return this.request<Status>(`/api/v1/statuses/${id}`)
+  }
+
   async getAccountStatuses(
     id: string,
     params: { max_id?: string; limit?: number; pinned?: boolean; exclude_replies?: boolean } = {},
