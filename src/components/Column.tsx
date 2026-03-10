@@ -185,7 +185,7 @@ export function Column({ column, instanceUrl, accessToken, accountKey, onRemove,
 
   const handleNewStatus = useCallback((status: Status) => {
     prependStatus(status)
-    // カードは非同期生成されるため、URLを含む新規投稿は3秒後に再取得する
+    // カードは非同期生成されるため、URLを含む新規投稿は30秒後に再取得する
     const target = status.reblog ?? status
     if (!target.card && target.content.includes('href=')) {
       setTimeout(async () => {
@@ -196,7 +196,7 @@ export function Column({ column, instanceUrl, accessToken, accountKey, onRemove,
         } catch {
           // ignore
         }
-      }, 3000)
+      }, 30000)
     }
   }, [prependStatus, updateStatus, instanceUrl, accessToken])
 
