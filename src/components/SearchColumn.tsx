@@ -321,6 +321,7 @@ export function SearchColumn({
           currentAccountId={currentAccountId}
           onClose={() => setDetailStatus(null)}
           onDelete={handleDeleteStatus}
+          onUpdate={handleUpdateStatus}
           onOpenProfile={handleOpenProfile}
         />
       )}

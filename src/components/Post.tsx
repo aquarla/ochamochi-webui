@@ -4,6 +4,7 @@ import type { Status, Account } from '../types'
 import { MastodonClient } from '../services/mastodon'
 import { emojifyText, emojifyHtml } from '../utils/emojify'
 import { ComposeForm } from './ComposeForm'
+import { EditStatusModal } from './EditStatusModal'
 import { MediaGrid } from './MediaGrid'
 import type { StoredAccountEntry } from '../services/auth'
 import { loadSettings } from '../hooks/useSettings'
@@ -57,6 +58,7 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
   const [muteLoading, setMuteLoading] = useState(false)
   const [showBlockDialog, setShowBlockDialog] = useState(false)
   const [blockLoading, setBlockLoading] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [showFavDialog, setShowFavDialog] = useState(false)
@@ -499,6 +501,17 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
             <div className="flex items-center gap-2 ml-auto">
               {isOwnPost && (
                 <button
+                  onClick={() => setShowEditModal(true)}
+                  className="flex items-center gap-1 text-xs hover:text-blue-400 transition-colors"
+                  title="編集"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+              )}
+              {isOwnPost && (
+                <button
                   onClick={() => setShowDeleteDialog(true)}
                   className="flex items-center gap-1 text-xs hover:text-red-400 transition-colors"
                   title="削除"
@@ -819,6 +832,19 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
         </div>
       </div>,
       document.body
+    )}
+
+    {showEditModal && (
+      <EditStatusModal
+        status={displayStatus}
+        instanceUrl={instanceUrl}
+        accessToken={accessToken}
+        accountKey={accountKey}
+        onClose={() => setShowEditModal(false)}
+        onEdited={(updated) => {
+          onUpdate(isReblog ? { ...status, reblog: updated } : { ...status, ...updated })
+        }}
+      />
     )}
 
     {showMuteDialog && createPortal(

@@ -1,0 +1,48 @@
+import { createPortal } from 'react-dom'
+import { ComposeForm } from './ComposeForm'
+import type { Status } from '../types'
+
+interface EditStatusModalProps {
+  status: Status
+  instanceUrl: string
+  accessToken: string
+  accountKey?: string
+  onClose: () => void
+  onEdited: (updated: Status) => void
+}
+
+export function EditStatusModal({ status, instanceUrl, accessToken, accountKey, onClose, onEdited }: EditStatusModalProps) {
+  return createPortal(
+    <div
+      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-gray-800 rounded-xl shadow-2xl w-full max-w-xl flex flex-col overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700 flex-shrink-0">
+          <h2 className="text-white font-semibold text-sm">投稿を編集</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white transition-colors"
+            aria-label="閉じる"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <ComposeForm
+          instanceUrl={instanceUrl}
+          accessToken={accessToken}
+          accountKey={accountKey}
+          editStatus={status}
+          onEdited={onEdited}
+          onCancel={onClose}
+        />
+      </div>
+    </div>,
+    document.body,
+  )
+}

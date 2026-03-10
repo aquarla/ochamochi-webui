@@ -189,6 +189,18 @@ export class MastodonClient {
     return this.request<Status>(`/api/v1/statuses/${id}/unbookmark`, { method: 'POST' })
   }
 
+  async editStatus(id: string, params: {
+    status: string
+    sensitive?: boolean
+    spoiler_text?: string
+    media_ids?: string[]
+  }): Promise<Status> {
+    return this.request<Status>(`/api/v1/statuses/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(params),
+    })
+  }
+
   async deleteStatus(id: string): Promise<void> {
     await this.request<unknown>(`/api/v1/statuses/${id}`, { method: 'DELETE' })
   }
@@ -251,6 +263,10 @@ export class MastodonClient {
 
   async getStatus(id: string): Promise<Status> {
     return this.request<Status>(`/api/v1/statuses/${id}`)
+  }
+
+  async getStatusSource(id: string): Promise<{ id: string; text: string; spoiler_text: string }> {
+    return this.request<{ id: string; text: string; spoiler_text: string }>(`/api/v1/statuses/${id}/source`)
   }
 
   async getAccountStatuses(

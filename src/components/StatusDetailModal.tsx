@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { MastodonClient } from '../services/mastodon'
 import { emojifyText, emojifyHtml } from '../utils/emojify'
 import { MediaGrid } from './MediaGrid'
+import { EditStatusModal } from './EditStatusModal'
 import { loadSettings } from '../hooks/useSettings'
 import type { Status, StatusContext, Account } from '../types'
 
@@ -14,6 +15,7 @@ interface StatusDetailModalProps {
   onClose: () => void
   onOpenProfile?: (account: Account) => void
   onDelete?: (id: string) => void
+  onUpdate?: (status: Status) => void
   currentAccountId?: string
 }
 
@@ -34,10 +36,11 @@ interface StatusRowProps {
   showCard?: boolean
   onOpenProfile?: (account: Account) => void
   onDeleteRequest?: (status: Status) => void
+  onEditRequest?: (status: Status) => void
   isOwnPost?: boolean
 }
 
-function StatusRow({ status, highlight, slim, showCard, onOpenProfile, onDeleteRequest, isOwnPost }: StatusRowProps) {
+function StatusRow({ status, highlight, slim, showCard, onOpenProfile, onDeleteRequest, onEditRequest, isOwnPost }: StatusRowProps) {
   const hasCw = !!status.spoiler_text
   const [cwOpen, setCwOpen] = useState(!hasCw)
 
@@ -151,6 +154,17 @@ function StatusRow({ status, highlight, slim, showCard, onOpenProfile, onDeleteR
             </>
           )}
           <div className="flex items-center gap-2 ml-auto">
+            {isOwnPost && onEditRequest && (
+              <button
+                onClick={() => onEditRequest(status)}
+                className="hover:text-blue-400 transition-colors"
+                title="編集"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+            )}
             {isOwnPost && onDeleteRequest && (
               <button
                 onClick={() => onDeleteRequest(status)}
@@ -179,12 +193,14 @@ function StatusRow({ status, highlight, slim, showCard, onOpenProfile, onDeleteR
   )
 }
 
-export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey, onClose, onOpenProfile, onDelete, currentAccountId }: StatusDetailModalProps) {
+export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey, onClose, onOpenProfile, onDelete, onUpdate, currentAccountId }: StatusDetailModalProps) {
   const [context, setContext] = useState<StatusContext | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Status | null>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
+  const [editTarget, setEditTarget] = useState<Status | null>(null)
+  const [mainStatus, setMainStatus] = useState<Status>(status)
   const showCard = loadSettings(accountKey).showPreviewCard
 
   useEffect(() => {
@@ -221,6 +237,23 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey
       // ignore
     } finally {
       setDeleteLoading(false)
+    }
+  }
+
+  const handleEdited = (updated: Status) => {
+    setEditTarget(null)
+    if (updated.id === status.id) {
+      setMainStatus(updated)
+      onUpdate?.(updated)
+    } else {
+      setContext((prev) =>
+        prev
+          ? {
+              ancestors: prev.ancestors.map((s) => (s.id === updated.id ? updated : s)),
+              descendants: prev.descendants.map((s) => (s.id === updated.id ? updated : s)),
+            }
+          : null,
+      )
     }
   }
 
@@ -270,17 +303,19 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey
                   showCard={showCard}
                   onOpenProfile={onOpenProfile}
                   onDeleteRequest={setDeleteTarget}
+                  onEditRequest={setEditTarget}
                   isOwnPost={!!currentAccountId && s.account.id === currentAccountId}
                 />
               ))}
 
               <StatusRow
-                status={status}
+                status={mainStatus}
                 highlight
                 showCard={showCard}
                 onOpenProfile={onOpenProfile}
                 onDeleteRequest={setDeleteTarget}
-                isOwnPost={!!currentAccountId && status.account.id === currentAccountId}
+                onEditRequest={setEditTarget}
+                isOwnPost={!!currentAccountId && mainStatus.account.id === currentAccountId}
               />
 
               {context?.descendants.map((s) => (
@@ -291,6 +326,7 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey
                   showCard={showCard}
                   onOpenProfile={onOpenProfile}
                   onDeleteRequest={setDeleteTarget}
+                  onEditRequest={setEditTarget}
                   isOwnPost={!!currentAccountId && s.account.id === currentAccountId}
                 />
               ))}
@@ -342,6 +378,17 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey
         </div>
       </div>,
       document.body
+    )}
+
+    {editTarget && (
+      <EditStatusModal
+        status={editTarget}
+        instanceUrl={instanceUrl}
+        accessToken={accessToken}
+        accountKey={accountKey}
+        onClose={() => setEditTarget(null)}
+        onEdited={handleEdited}
+      />
     )}
     </>
   )
