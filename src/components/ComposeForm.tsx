@@ -20,6 +20,7 @@ interface ComposeFormProps {
   inline?: boolean
   editStatus?: Status
   onEdited?: (updated: Status) => void
+  defaultVisibility?: Visibility
 }
 
 const MAX_CHARS = 500
@@ -51,12 +52,13 @@ function loadVisibility(accountKey?: string): Visibility {
   return (localStorage.getItem(visibilityStorageKey(accountKey)) as Visibility | null) ?? 'public'
 }
 
-export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, inReplyToId, initialText, onCancel, inline, editStatus, onEdited }: ComposeFormProps) {
+export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, inReplyToId, initialText, onCancel, inline, editStatus, onEdited, defaultVisibility }: ComposeFormProps) {
   const isEditMode = !!editStatus
+  const noSaveVisibility = isEditMode || defaultVisibility !== undefined
 
   const [text, setText] = useState(initialText ?? '')
   const [visibility, setVisibility] = useState<Visibility>(() =>
-    isEditMode ? (editStatus.visibility as Visibility) : loadVisibility(accountKey)
+    isEditMode ? (editStatus.visibility as Visibility) : (defaultVisibility ?? loadVisibility(accountKey))
   )
   const [cwEnabled, setCwEnabled] = useState(isEditMode ? !!editStatus.spoiler_text : false)
   const [cwText, setCwText] = useState('')
@@ -179,7 +181,7 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
 
   const handleVisibilityChange = (v: Visibility) => {
     setVisibility(v)
-    if (!isEditMode) {
+    if (!noSaveVisibility) {
       localStorage.setItem(visibilityStorageKey(accountKey), v)
     }
   }

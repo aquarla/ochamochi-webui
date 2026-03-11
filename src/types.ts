@@ -113,7 +113,14 @@ export interface Tag {
   history?: Array<{ day: string; uses: string; accounts: string }>
 }
 
-export type ColumnType = 'home' | 'local' | 'public' | 'tag' | 'list' | 'notifications' | 'favourites' | 'bookmarks' | 'scheduled' | 'search'
+export type ColumnType = 'home' | 'local' | 'public' | 'tag' | 'list' | 'notifications' | 'favourites' | 'bookmarks' | 'scheduled' | 'search' | 'conversations'
+
+export interface Conversation {
+  id: string
+  unread: boolean
+  accounts: Account[]
+  last_status: Status | null
+}
 
 export interface ScheduledStatus {
   id: string

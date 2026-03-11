@@ -19,6 +19,7 @@ function getStreamName(type: ColumnType, tag?: string, onlyMedia?: boolean, list
     case 'bookmarks':
     case 'scheduled':
     case 'search':
+    case 'conversations':
       return ''  // no streaming endpoint; useStreaming skips this type
   }
 }

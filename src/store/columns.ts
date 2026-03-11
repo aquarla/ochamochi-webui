@@ -72,5 +72,7 @@ export function getColumnLabel(col: ColumnConfig): string {
       if (col.searchType === 'accounts') return 'アカウント検索'
       if (col.searchType === 'hashtags') return 'タグ検索'
       return '投稿検索'
+    case 'conversations':
+      return '会話'
   }
 }

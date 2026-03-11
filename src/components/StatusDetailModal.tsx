@@ -16,6 +16,7 @@ interface StatusDetailModalProps {
   onOpenProfile?: (account: Account) => void
   onDelete?: (id: string) => void
   onUpdate?: (status: Status) => void
+  onReply?: (status: Status) => void
   currentAccountId?: string
 }
 
@@ -39,10 +40,11 @@ interface StatusRowProps {
   onOpenProfile?: (account: Account) => void
   onDeleteRequest?: (status: Status) => void
   onEditRequest?: (status: Status) => void
+  onReplyRequest?: (status: Status) => void
   isOwnPost?: boolean
 }
 
-function StatusRow({ status, highlight, slim, showCard, instanceUrl, accessToken, onOpenProfile, onDeleteRequest, onEditRequest, isOwnPost }: StatusRowProps) {
+function StatusRow({ status, highlight, slim, showCard, instanceUrl, accessToken, onOpenProfile, onDeleteRequest, onEditRequest, onReplyRequest, isOwnPost }: StatusRowProps) {
   const hasCw = !!status.spoiler_text
   const [cwOpen, setCwOpen] = useState(!hasCw)
   const [showLinkMenu, setShowLinkMenu] = useState(false)
@@ -187,6 +189,17 @@ function StatusRow({ status, highlight, slim, showCard, instanceUrl, accessToken
             </>
           )}
           <div className="flex items-center gap-2 ml-auto">
+            {onReplyRequest && (
+              <button
+                onClick={() => onReplyRequest(status)}
+                className="hover:text-blue-400 transition-colors"
+                title="返信"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                </svg>
+              </button>
+            )}
             {isOwnPost && onEditRequest && (
               <button
                 onClick={() => onEditRequest(status)}
@@ -259,7 +272,7 @@ function StatusRow({ status, highlight, slim, showCard, instanceUrl, accessToken
   )
 }
 
-export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey, onClose, onOpenProfile, onDelete, onUpdate, currentAccountId }: StatusDetailModalProps) {
+export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey, onClose, onOpenProfile, onDelete, onUpdate, onReply, currentAccountId }: StatusDetailModalProps) {
   const [context, setContext] = useState<StatusContext | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -372,6 +385,7 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey
                   onOpenProfile={onOpenProfile}
                   onDeleteRequest={setDeleteTarget}
                   onEditRequest={setEditTarget}
+                  onReplyRequest={onReply}
                   isOwnPost={!!currentAccountId && s.account.id === currentAccountId}
                 />
               ))}
@@ -385,6 +399,7 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey
                 onOpenProfile={onOpenProfile}
                 onDeleteRequest={setDeleteTarget}
                 onEditRequest={setEditTarget}
+                onReplyRequest={onReply}
                 isOwnPost={!!currentAccountId && mainStatus.account.id === currentAccountId}
               />
 
@@ -399,6 +414,7 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey
                   onOpenProfile={onOpenProfile}
                   onDeleteRequest={setDeleteTarget}
                   onEditRequest={setEditTarget}
+                  onReplyRequest={onReply}
                   isOwnPost={!!currentAccountId && s.account.id === currentAccountId}
                 />
               ))}

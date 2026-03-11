@@ -1,4 +1,4 @@
-import type { Status, Account, MastodonNotification, StatusContext, CustomEmoji, MediaAttachment, ScheduledStatus, Relationship, MastodonList, Tag } from '../types'
+import type { Status, Account, MastodonNotification, StatusContext, CustomEmoji, MediaAttachment, ScheduledStatus, Relationship, MastodonList, Tag, Conversation } from '../types'
 
 export class MastodonClient {
   constructor(
@@ -215,6 +215,13 @@ export class MastodonClient {
 
   async getCustomEmojis(): Promise<CustomEmoji[]> {
     return this.request<CustomEmoji[]>('/api/v1/custom_emojis')
+  }
+
+  async getConversations(params: { max_id?: string; limit?: number } = {}): Promise<Conversation[]> {
+    const qs = new URLSearchParams()
+    if (params.max_id) qs.set('max_id', params.max_id)
+    if (params.limit) qs.set('limit', String(params.limit))
+    return this.request<Conversation[]>(`/api/v1/conversations?${qs}`)
   }
 
   async getBookmarks(params: { max_id?: string; limit?: number } = {}): Promise<Status[]> {

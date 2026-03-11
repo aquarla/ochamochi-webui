@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { MastodonClient } from '../services/mastodon'
 import { emojifyText, emojifyHtml } from '../utils/emojify'
 import { ComposeForm } from './ComposeForm'
+import { MediaGrid } from './MediaGrid'
 import type { Status } from '../types'
 
 interface ReplyModalProps {
@@ -12,6 +13,7 @@ interface ReplyModalProps {
   accountKey?: string
   onClose: () => void
   onComposed: () => void
+  defaultVisibility?: 'public' | 'unlisted' | 'private' | 'direct'
 }
 
 function ThreadPost({ status, highlight, showConnector }: { status: Status; highlight?: boolean; showConnector?: boolean }) {
@@ -51,17 +53,22 @@ function ThreadPost({ status, highlight, showConnector }: { status: Status; high
           </div>
         )}
         {(!hasCw || cwOpen) && (
-          <div
-            className="text-gray-200 text-sm leading-relaxed prose prose-sm prose-invert max-w-none break-words [&_a]:text-blue-400 [&_p]:mb-1"
-            dangerouslySetInnerHTML={{ __html: emojifyHtml(status.content, status.emojis) }}
-          />
+          <>
+            <div
+              className="text-gray-200 text-sm leading-relaxed prose prose-sm prose-invert max-w-none break-words [&_a]:text-blue-400 [&_p]:mb-1"
+              dangerouslySetInnerHTML={{ __html: emojifyHtml(status.content, status.emojis) }}
+            />
+            {status.media_attachments.length > 0 && (
+              <MediaGrid attachments={status.media_attachments} sensitive={status.sensitive} />
+            )}
+          </>
         )}
       </div>
     </div>
   )
 }
 
-export function ReplyModal({ status, instanceUrl, accessToken, accountKey, onClose, onComposed }: ReplyModalProps) {
+export function ReplyModal({ status, instanceUrl, accessToken, accountKey, onClose, onComposed, defaultVisibility }: ReplyModalProps) {
   const [ancestors, setAncestors] = useState<Status[]>([])
   const threadEndRef = useRef<HTMLDivElement>(null)
 
@@ -120,6 +127,7 @@ export function ReplyModal({ status, instanceUrl, accessToken, accountKey, onClo
             initialText={`@${status.account.acct} `}
             onComposed={onComposed}
             onCancel={onClose}
+            defaultVisibility={defaultVisibility}
           />
         </div>
       </div>

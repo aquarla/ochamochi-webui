@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Column } from './Column'
 import { NotificationsColumn } from './NotificationsColumn'
 import { ComposeModal } from './ComposeModal'
+import { ConversationsColumn } from './ConversationsColumn'
 import { AddColumnModal } from './AddColumnModal'
 import { AddAccountModal } from './AddAccountModal'
 import { addColumn, removeColumn } from '../store/columns'
@@ -265,6 +266,19 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
               />
             ) : col.type === 'search' ? (
               <SearchColumn
+                key={col.id}
+                column={col}
+                instanceUrl={auth.instanceUrl!}
+                accessToken={auth.accessToken!}
+                accountKey={auth.activeAccountKey ?? undefined}
+                currentAccountId={auth.account?.id}
+                accounts={auth.accounts}
+                onRemove={handleRemoveColumn}
+                onUpdate={handleUpdateColumn}
+                onAddTagColumn={(tag) => handleAddColumn('tag', tag)}
+              />
+            ) : col.type === 'conversations' ? (
+              <ConversationsColumn
                 key={col.id}
                 column={col}
                 instanceUrl={auth.instanceUrl!}
