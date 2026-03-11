@@ -326,7 +326,7 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
         </p>
       )}
 
-      <div className="flex gap-3">
+      <div className="flex gap-3 items-start">
         <button
           onClick={() => onOpenProfile?.(displayStatus.account)}
           className={`flex-shrink-0 rounded-full ${onOpenProfile ? 'cursor-pointer hover:opacity-80 transition-opacity' : 'cursor-default'}`}
