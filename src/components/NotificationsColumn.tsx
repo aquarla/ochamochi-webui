@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { useNotifications } from '../hooks/useNotifications'
 import { NotificationItem } from './NotificationItem'
 import { UserProfileModal } from './UserProfileModal'
+import { StatusDetailModal } from './StatusDetailModal'
 import { loadSettings } from '../hooks/useSettings'
-import type { ColumnConfig, Account, MastodonNotification } from '../types'
+import type { ColumnConfig, Account, MastodonNotification, Status } from '../types'
 import type { StoredAccountEntry } from '../services/auth'
 
 interface NotificationsColumnProps {
@@ -15,10 +16,12 @@ interface NotificationsColumnProps {
   accounts?: StoredAccountEntry[]
   onRemove: (id: string) => void
   onUpdate: (column: ColumnConfig) => void
+  onAddTagColumn?: (tag: string) => void
 }
 
-export function NotificationsColumn({ column, instanceUrl, accessToken, accountKey, currentAccountId, accounts, onRemove, onUpdate }: NotificationsColumnProps) {
+export function NotificationsColumn({ column, instanceUrl, accessToken, accountKey, currentAccountId, accounts, onRemove, onUpdate, onAddTagColumn }: NotificationsColumnProps) {
   const [profileAccount, setProfileAccount] = useState<Account | null>(null)
+  const [detailStatus, setDetailStatus] = useState<Status | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const settings = loadSettings(accountKey)
@@ -114,7 +117,7 @@ export function NotificationsColumn({ column, instanceUrl, accessToken, accountK
         )}
 
         {visibleNotifications.map((n) => (
-          <NotificationItem key={n.id} notification={n} onOpenProfile={setProfileAccount} />
+          <NotificationItem key={n.id} notification={n} instanceUrl={instanceUrl} accessToken={accessToken} onOpenProfile={setProfileAccount} onAddTagColumn={onAddTagColumn} onOpenDetail={setDetailStatus} />
         ))}
 
         {loading && (
@@ -127,6 +130,18 @@ export function NotificationsColumn({ column, instanceUrl, accessToken, accountK
           <div className="p-3 text-gray-600 text-xs text-center">最後まで読み込みました</div>
         )}
       </div>
+
+      {detailStatus && (
+        <StatusDetailModal
+          status={detailStatus}
+          instanceUrl={instanceUrl}
+          accessToken={accessToken}
+          accountKey={accountKey}
+          currentAccountId={currentAccountId}
+          onClose={() => setDetailStatus(null)}
+          onOpenProfile={(account) => { setDetailStatus(null); setProfileAccount(account) }}
+        />
+      )}
 
       {profileAccount && (
         <UserProfileModal

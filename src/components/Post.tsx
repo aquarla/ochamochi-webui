@@ -98,18 +98,32 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
 
   useEffect(() => {
     const el = contentRef.current
-    if (!el || !onAddTagColumn) return
+    if (!el) return
     const handler = (e: MouseEvent) => {
       const link = (e.target as HTMLElement).closest('a') as HTMLAnchorElement | null
       if (!link) return
-      const m = link.href.match(/\/tags\/([^/?#]+)/)
-      if (!m) return
-      e.preventDefault()
-      onAddTagColumn(decodeURIComponent(m[1]))
+
+      // ハッシュタグリンク
+      const tagMatch = link.href.match(/\/tags\/([^/?#]+)/)
+      if (tagMatch && onAddTagColumn) {
+        e.preventDefault()
+        onAddTagColumn(decodeURIComponent(tagMatch[1]))
+        return
+      }
+
+      // メンションリンク
+      if (onOpenProfile) {
+        const mention = displayStatus.mentions.find((m) => link.href === m.url)
+        if (mention) {
+          e.preventDefault()
+          const client = new MastodonClient(instanceUrl, accessToken)
+          client.getAccountById(mention.id).then(onOpenProfile).catch(() => {})
+        }
+      }
     }
     el.addEventListener('click', handler)
     return () => el.removeEventListener('click', handler)
-  }, [onAddTagColumn])
+  }, [onAddTagColumn, onOpenProfile, displayStatus.mentions, instanceUrl, accessToken])
 
   // Truncate plain URL link text (Mastodon's invisible/ellipsis spans are handled via CSS classes)
   useEffect(() => {

@@ -252,6 +252,7 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
                 accounts={auth.accounts}
                 onRemove={handleRemoveColumn}
                 onUpdate={handleUpdateColumn}
+                onAddTagColumn={(tag) => handleAddColumn('tag', tag)}
               />
             ) : col.type === 'scheduled' ? (
               <ScheduledColumn

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { MastodonClient } from '../services/mastodon'
 import { emojifyText, emojifyHtml } from '../utils/emojify'
@@ -34,15 +34,34 @@ interface StatusRowProps {
   highlight?: boolean
   slim?: boolean
   showCard?: boolean
+  instanceUrl: string
+  accessToken: string
   onOpenProfile?: (account: Account) => void
   onDeleteRequest?: (status: Status) => void
   onEditRequest?: (status: Status) => void
   isOwnPost?: boolean
 }
 
-function StatusRow({ status, highlight, slim, showCard, onOpenProfile, onDeleteRequest, onEditRequest, isOwnPost }: StatusRowProps) {
+function StatusRow({ status, highlight, slim, showCard, instanceUrl, accessToken, onOpenProfile, onDeleteRequest, onEditRequest, isOwnPost }: StatusRowProps) {
   const hasCw = !!status.spoiler_text
   const [cwOpen, setCwOpen] = useState(!hasCw)
+  const contentRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const el = contentRef.current
+    if (!el || !onOpenProfile) return
+    const handler = (e: MouseEvent) => {
+      const link = (e.target as HTMLElement).closest('a') as HTMLAnchorElement | null
+      if (!link) return
+      const mention = status.mentions.find((m) => link.href === m.url)
+      if (!mention) return
+      e.preventDefault()
+      const client = new MastodonClient(instanceUrl, accessToken)
+      client.getAccountById(mention.id).then(onOpenProfile).catch(() => {})
+    }
+    el.addEventListener('click', handler)
+    return () => el.removeEventListener('click', handler)
+  }, [onOpenProfile, status.mentions, instanceUrl, accessToken])
 
   return (
     <div className={`flex gap-3 px-4 py-3 ${highlight ? 'bg-gray-750 border-l-2 border-blue-500' : 'border-b border-gray-700/60'}`}>
@@ -107,6 +126,7 @@ function StatusRow({ status, highlight, slim, showCard, onOpenProfile, onDeleteR
         {cwOpen && (
           <>
             <div
+              ref={contentRef}
               className="text-gray-200 text-sm leading-relaxed prose prose-sm prose-invert max-w-none break-words [&_a]:text-blue-400 [&_a:hover]:text-blue-300 [&_p]:mb-1"
               dangerouslySetInnerHTML={{ __html: emojifyHtml(status.content, status.emojis) }}
             />
@@ -301,6 +321,8 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey
                   status={s}
                   slim
                   showCard={showCard}
+                  instanceUrl={instanceUrl}
+                  accessToken={accessToken}
                   onOpenProfile={onOpenProfile}
                   onDeleteRequest={setDeleteTarget}
                   onEditRequest={setEditTarget}
@@ -312,6 +334,8 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey
                 status={mainStatus}
                 highlight
                 showCard={showCard}
+                instanceUrl={instanceUrl}
+                accessToken={accessToken}
                 onOpenProfile={onOpenProfile}
                 onDeleteRequest={setDeleteTarget}
                 onEditRequest={setEditTarget}
@@ -324,6 +348,8 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey
                   status={s}
                   slim
                   showCard={showCard}
+                  instanceUrl={instanceUrl}
+                  accessToken={accessToken}
                   onOpenProfile={onOpenProfile}
                   onDeleteRequest={setDeleteTarget}
                   onEditRequest={setEditTarget}

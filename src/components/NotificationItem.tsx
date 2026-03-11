@@ -1,9 +1,15 @@
-import type { MastodonNotification, Account, AdminReport } from '../types'
+import { useEffect, useRef } from 'react'
+import type { MastodonNotification, Account, AdminReport, Status } from '../types'
 import { emojifyText, emojifyHtml } from '../utils/emojify'
+import { MastodonClient } from '../services/mastodon'
 
 interface NotificationItemProps {
   notification: MastodonNotification
+  instanceUrl: string
+  accessToken: string
   onOpenProfile?: (account: Account) => void
+  onAddTagColumn?: (tag: string) => void
+  onOpenDetail?: (status: Status) => void
 }
 
 function formatDate(dateStr: string): string {
@@ -56,10 +62,40 @@ function ReportSummary({ report, onOpenProfile }: { report: AdminReport; onOpenP
   )
 }
 
-export function NotificationItem({ notification, onOpenProfile }: NotificationItemProps) {
+export function NotificationItem({ notification, instanceUrl, accessToken, onOpenProfile, onAddTagColumn, onOpenDetail }: NotificationItemProps) {
   const { account, type, created_at, status } = notification
   const meta = TYPE_META[type] ?? { label: type, color: 'text-gray-400' }
   const displayNameHtml = emojifyText(account.display_name || account.username, account.emojis)
+  const contentRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const el = contentRef.current
+    if (!el || !status) return
+    const handler = (e: MouseEvent) => {
+      const link = (e.target as HTMLElement).closest('a') as HTMLAnchorElement | null
+      if (!link) return
+
+      // ハッシュタグ
+      const tagMatch = link.href.match(/\/tags\/([^/?#]+)/)
+      if (tagMatch && onAddTagColumn) {
+        e.preventDefault()
+        onAddTagColumn(decodeURIComponent(tagMatch[1]))
+        return
+      }
+
+      // メンション
+      if (onOpenProfile) {
+        const mention = status.mentions.find((m) => link.href === m.url)
+        if (mention) {
+          e.preventDefault()
+          const client = new MastodonClient(instanceUrl, accessToken)
+          client.getAccountById(mention.id).then(onOpenProfile).catch(() => {})
+        }
+      }
+    }
+    el.addEventListener('click', handler)
+    return () => el.removeEventListener('click', handler)
+  }, [onOpenProfile, onAddTagColumn, status, instanceUrl, accessToken])
 
   return (
     <article className="border-b border-gray-700 p-3 hover:bg-gray-750 transition-colors">
@@ -80,7 +116,17 @@ export function NotificationItem({ notification, onOpenProfile }: NotificationIt
           <div className="flex items-baseline gap-2">
             <span className="font-medium text-white text-sm truncate" dangerouslySetInnerHTML={{ __html: displayNameHtml }} />
             <span className={`text-xs font-medium ${meta.color}`}>{meta.label}</span>
-            <span className="text-gray-600 text-xs ml-auto flex-shrink-0">{formatDate(created_at)}</span>
+            {status && onOpenDetail && (type === 'mention' || type === 'favourite' || type === 'reblog') ? (
+              <button
+                type="button"
+                onClick={() => onOpenDetail(status)}
+                className="text-gray-600 text-xs ml-auto flex-shrink-0 hover:text-blue-400 transition-colors"
+              >
+                {formatDate(created_at)}
+              </button>
+            ) : (
+              <span className="text-gray-600 text-xs ml-auto flex-shrink-0">{formatDate(created_at)}</span>
+            )}
           </div>
           <span className="text-gray-500 text-xs">@{account.acct}</span>
         </div>
@@ -88,6 +134,7 @@ export function NotificationItem({ notification, onOpenProfile }: NotificationIt
 
       {status && (
         <div
+          ref={contentRef}
           className="text-gray-400 text-xs leading-relaxed pl-10 line-clamp-3 break-words [&_a]:text-blue-400 [&_p]:inline"
           dangerouslySetInnerHTML={{
             __html: status.spoiler_text
