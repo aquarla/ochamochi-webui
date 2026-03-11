@@ -492,10 +492,20 @@ export function UserProfileModal({
                       className="w-16 h-16 rounded-full border-4 border-gray-800 bg-gray-700 mb-2"
                     />
                     <div className="min-w-0">
-                      <p
-                        className="font-bold text-white text-base leading-tight break-words"
-                        dangerouslySetInnerHTML={{ __html: emojifyText(account.display_name || account.username, account.emojis) }}
-                      />
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p
+                          className="font-bold text-white text-base leading-tight break-words"
+                          dangerouslySetInnerHTML={{ __html: emojifyText(account.display_name || account.username, account.emojis) }}
+                        />
+                        {account.bot && (
+                          <span className="inline-flex items-center gap-0.5 text-xs text-blue-300 bg-blue-900/50 border border-blue-700 rounded px-1.5 py-0.5 flex-shrink-0">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18" />
+                            </svg>
+                            Bot
+                          </span>
+                        )}
+                      </div>
                       <p className="text-gray-400 text-sm break-all">@{account.acct}</p>
                       {relationship?.followed_by && (
                         <span className="inline-block mt-1 text-xs text-gray-400 bg-gray-700 rounded px-1.5 py-0.5">フォローされています</span>
@@ -557,11 +567,24 @@ export function UserProfileModal({
                               onClick={() => setShowMenu(false)}
                               className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-600 hover:text-white transition-colors flex items-center gap-2"
                             >
-                              元のページを開く
+                              元のサイトで開く
                               <svg className="w-3 h-3 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                               </svg>
                             </a>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(account.url)
+                                setShowMenu(false)
+                              }}
+                              className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-600 hover:text-white transition-colors flex items-center gap-2 border-t border-gray-600"
+                            >
+                              元のサイトへのリンクをコピー
+                              <svg className="w-3 h-3 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                              </svg>
+                            </button>
                             {relationship.muting ? (
                               <button
                                 onClick={() => { setShowMenu(false); setShowUnmuteDialog(true) }}

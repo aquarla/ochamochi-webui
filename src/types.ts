@@ -24,6 +24,7 @@ export interface Account {
   url: string
   note: string
   locked: boolean
+  bot: boolean
   followers_count: number
   following_count: number
   statuses_count: number
