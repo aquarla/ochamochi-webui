@@ -39,6 +39,8 @@ export function NotificationsColumn({ column, instanceUrl, accessToken, accountK
       favourite: `${name} があなたの投稿をお気に入りしました`,
       poll: 'アンケートが終了しました',
       update: `${name} が投稿を編集しました`,
+      'admin.sign_up': `${name} が新規登録しました`,
+      'admin.report': `${name} が通報しました`,
     }
     const title = titles[n.type] ?? `${name} からの通知`
     const body = n.status?.content ? n.status.content.replace(/<[^>]+>/g, '').trim() : undefined

@@ -136,6 +136,16 @@ export type NotificationType =
   | 'follow_request'
   | 'poll'
   | 'update'
+  | 'admin.sign_up'
+  | 'admin.report'
+
+export interface AdminReport {
+  id: string
+  action_taken: boolean
+  category: string
+  comment: string
+  target_account: Account
+}
 
 export interface MastodonNotification {
   id: string
@@ -143,6 +153,7 @@ export interface MastodonNotification {
   created_at: string
   account: Account
   status?: Status
+  report?: AdminReport
 }
 
 export interface ColumnConfig {

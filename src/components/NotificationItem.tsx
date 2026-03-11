@@ -1,4 +1,4 @@
-import type { MastodonNotification, Account } from '../types'
+import type { MastodonNotification, Account, AdminReport } from '../types'
 import { emojifyText, emojifyHtml } from '../utils/emojify'
 
 interface NotificationItemProps {
@@ -29,6 +29,31 @@ const TYPE_META: Record<
   follow_request: { label: 'フォローリクエスト', color: 'text-orange-400' },
   poll:           { label: 'アンケート終了', color: 'text-gray-400' },
   update:         { label: '編集',       color: 'text-gray-400' },
+  'admin.sign_up': { label: '新規登録',  color: 'text-teal-400' },
+  'admin.report':  { label: '通報',      color: 'text-red-400' },
+}
+
+function ReportSummary({ report, onOpenProfile }: { report: AdminReport; onOpenProfile?: (account: Account) => void }) {
+  return (
+    <div className="pl-10 mt-1 space-y-0.5">
+      <div className="flex items-center gap-1.5">
+        <span className="text-gray-500 text-xs">対象:</span>
+        <button
+          type="button"
+          onClick={() => onOpenProfile?.(report.target_account)}
+          className="flex items-center gap-1 hover:opacity-80 transition-opacity"
+        >
+          <img src={report.target_account.avatar_static} alt="" className="w-4 h-4 rounded-full bg-gray-700" />
+          <span className="text-gray-300 text-xs truncate">
+            {report.target_account.display_name || report.target_account.username}
+          </span>
+        </button>
+      </div>
+      {report.comment && (
+        <p className="text-gray-400 text-xs line-clamp-2 break-words">{report.comment}</p>
+      )}
+    </div>
+  )
 }
 
 export function NotificationItem({ notification, onOpenProfile }: NotificationItemProps) {
@@ -70,6 +95,9 @@ export function NotificationItem({ notification, onOpenProfile }: NotificationIt
               : emojifyHtml(status.content, status.emojis),
           }}
         />
+      )}
+      {notification.report && (
+        <ReportSummary report={notification.report} onOpenProfile={onOpenProfile} />
       )}
     </article>
   )
