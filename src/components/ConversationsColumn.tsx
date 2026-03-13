@@ -310,8 +310,8 @@ export function ConversationsColumn({ column, instanceUrl, accessToken, accountK
           accessToken={accessToken}
           accountKey={accountKey}
           currentAccountId={currentAccountId}
+          accounts={accounts}
           onClose={() => setDetailStatus(null)}
-          onOpenProfile={(acc) => { setDetailStatus(null); setProfileAccount(acc) }}
           onReply={(s) => { setDetailStatus(null); setReplyStatus(s) }}
         />
       )}

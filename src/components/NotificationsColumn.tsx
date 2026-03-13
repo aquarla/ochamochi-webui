@@ -138,8 +138,8 @@ export function NotificationsColumn({ column, instanceUrl, accessToken, accountK
           accessToken={accessToken}
           accountKey={accountKey}
           currentAccountId={currentAccountId}
+          accounts={accounts}
           onClose={() => setDetailStatus(null)}
-          onOpenProfile={(account) => { setDetailStatus(null); setProfileAccount(account) }}
         />
       )}
 

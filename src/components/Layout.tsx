@@ -11,10 +11,12 @@ import { SettingsModal } from './SettingsModal'
 import { ScheduledColumn } from './ScheduledColumn'
 import { SearchColumn } from './SearchColumn'
 import { UserProfileModal } from './UserProfileModal'
+import { StatusUrlModal } from './StatusUrlModal'
+import { StatusDetailModal } from './StatusDetailModal'
 import { loadSettings } from '../hooks/useSettings'
 import type { AppSettings } from '../hooks/useSettings'
 import type { AuthContext } from '../hooks/useAuth'
-import type { ColumnConfig, ColumnType } from '../types'
+import type { ColumnConfig, ColumnType, Status } from '../types'
 
 interface LayoutProps {
   auth: AuthContext
@@ -36,6 +38,8 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
   const [showAddAccountModal, setShowAddAccountModal] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showSelfProfile, setShowSelfProfile] = useState(false)
+  const [showUrlModal, setShowUrlModal] = useState(false)
+  const [urlStatus, setUrlStatus] = useState<Status | null>(null)
   const accountMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -126,6 +130,16 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 0v10m0-10a2 2 0 012-2h2a2 2 0 012 2v10a2 2 0 01-2 2h-2a2 2 0 01-2-2" />
             </svg>
             カラム追加
+          </button>
+
+          <button
+            onClick={() => setShowUrlModal(true)}
+            className="text-gray-400 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-gray-700"
+            title="投稿URLを開く"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
           </button>
 
           <button
@@ -339,6 +353,27 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
           accountKey={auth.activeAccountKey ?? undefined}
           instanceUrl={auth.instanceUrl ?? undefined}
           onSave={setSettings}
+        />
+      )}
+
+      {showUrlModal && (
+        <StatusUrlModal
+          instanceUrl={auth.instanceUrl!}
+          accessToken={auth.accessToken!}
+          onOpen={(status) => { setShowUrlModal(false); setUrlStatus(status) }}
+          onClose={() => setShowUrlModal(false)}
+        />
+      )}
+
+      {urlStatus && (
+        <StatusDetailModal
+          status={urlStatus}
+          instanceUrl={auth.instanceUrl!}
+          accessToken={auth.accessToken!}
+          accountKey={auth.activeAccountKey ?? undefined}
+          currentAccountId={auth.account?.id}
+          accounts={auth.accounts}
+          onClose={() => setUrlStatus(null)}
         />
       )}
     </div>

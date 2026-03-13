@@ -349,8 +349,8 @@ export function Column({ column, instanceUrl, accessToken, accountKey, onRemove,
           accessToken={accessToken}
           accountKey={accountKey}
           currentAccountId={currentAccountId}
+          accounts={accounts}
           onClose={() => setDetailStatus(null)}
-          onOpenProfile={handleOpenProfile}
           onDelete={removeStatus}
           onUpdate={updateStatus}
         />

@@ -319,10 +319,10 @@ export function SearchColumn({
           accessToken={accessToken}
           accountKey={accountKey}
           currentAccountId={currentAccountId}
+          accounts={accounts}
           onClose={() => setDetailStatus(null)}
           onDelete={handleDeleteStatus}
           onUpdate={handleUpdateStatus}
-          onOpenProfile={handleOpenProfile}
         />
       )}
 

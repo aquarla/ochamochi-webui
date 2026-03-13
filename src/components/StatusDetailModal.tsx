@@ -4,8 +4,11 @@ import { MastodonClient } from '../services/mastodon'
 import { emojifyText, emojifyHtml } from '../utils/emojify'
 import { MediaGrid } from './MediaGrid'
 import { EditStatusModal } from './EditStatusModal'
+import { ReplyModal } from './ReplyModal'
+import { UserProfileModal } from './UserProfileModal'
 import { loadSettings } from '../hooks/useSettings'
 import type { Status, StatusContext, Account } from '../types'
+import type { StoredAccountEntry } from '../services/auth'
 
 interface StatusDetailModalProps {
   status: Status
@@ -18,6 +21,7 @@ interface StatusDetailModalProps {
   onUpdate?: (status: Status) => void
   onReply?: (status: Status) => void
   currentAccountId?: string
+  accounts?: StoredAccountEntry[]
 }
 
 function formatDateFull(dateStr: string): string {
@@ -41,13 +45,78 @@ interface StatusRowProps {
   onDeleteRequest?: (status: Status) => void
   onEditRequest?: (status: Status) => void
   onReplyRequest?: (status: Status) => void
+  onUpdate?: (status: Status) => void
   isOwnPost?: boolean
 }
 
-function StatusRow({ status, highlight, slim, showCard, instanceUrl, accessToken, onOpenProfile, onDeleteRequest, onEditRequest, onReplyRequest, isOwnPost }: StatusRowProps) {
+function StatusRow({ status, highlight, slim, showCard, instanceUrl, accessToken, onOpenProfile, onDeleteRequest, onEditRequest, onReplyRequest, onUpdate, isOwnPost }: StatusRowProps) {
   const hasCw = !!status.spoiler_text
   const [cwOpen, setCwOpen] = useState(!hasCw)
   const [showLinkMenu, setShowLinkMenu] = useState(false)
+  const [actionLoading, setActionLoading] = useState(false)
+  const [localStatus, setLocalStatus] = useState(status)
+  const [replyOpen, setReplyOpen] = useState(false)
+
+  const applyUpdate = (partial: Partial<Status>) =>
+    setLocalStatus((s) => ({ ...s, ...partial }))
+
+  const handleFavourite = async () => {
+    if (actionLoading) return
+    const wasFavourited = localStatus.favourited
+    applyUpdate({ favourited: !wasFavourited, favourites_count: localStatus.favourites_count + (wasFavourited ? -1 : 1) })
+    setActionLoading(true)
+    try {
+      const client = new MastodonClient(instanceUrl, accessToken)
+      const updated = wasFavourited
+        ? await client.unfavouriteStatus(localStatus.id)
+        : await client.favouriteStatus(localStatus.id)
+      setLocalStatus(updated)
+      onUpdate?.(updated)
+    } catch {
+      applyUpdate({ favourited: wasFavourited, favourites_count: localStatus.favourites_count })
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleReblog = async () => {
+    if (actionLoading) return
+    const wasReblogged = localStatus.reblogged
+    applyUpdate({ reblogged: !wasReblogged, reblogs_count: localStatus.reblogs_count + (wasReblogged ? -1 : 1) })
+    setActionLoading(true)
+    try {
+      const client = new MastodonClient(instanceUrl, accessToken)
+      const updated = wasReblogged
+        ? await client.unreblogStatus(localStatus.id)
+        : await client.reblogStatus(localStatus.id)
+      const source = !wasReblogged && updated.reblog ? updated.reblog : updated
+      setLocalStatus(source)
+      onUpdate?.(source)
+    } catch {
+      applyUpdate({ reblogged: wasReblogged, reblogs_count: localStatus.reblogs_count })
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleBookmark = async () => {
+    if (actionLoading) return
+    const wasBookmarked = localStatus.bookmarked
+    applyUpdate({ bookmarked: !wasBookmarked })
+    setActionLoading(true)
+    try {
+      const client = new MastodonClient(instanceUrl, accessToken)
+      const updated = wasBookmarked
+        ? await client.unbookmarkStatus(localStatus.id)
+        : await client.bookmarkStatus(localStatus.id)
+      setLocalStatus(updated)
+      onUpdate?.(updated)
+    } catch {
+      applyUpdate({ bookmarked: wasBookmarked })
+    } finally {
+      setActionLoading(false)
+    }
+  }
   const contentRef = useRef<HTMLDivElement>(null)
   const linkMenuRef = useRef<HTMLDivElement>(null)
 
@@ -79,6 +148,7 @@ function StatusRow({ status, highlight, slim, showCard, instanceUrl, accessToken
   }, [onOpenProfile, status.mentions, instanceUrl, accessToken])
 
   return (
+    <>
     <div className={`flex gap-3 px-4 py-3 ${highlight ? 'bg-gray-750 border-l-2 border-blue-500' : 'border-b border-gray-700/60'}`}>
       <button
         onClick={() => onOpenProfile?.(status.account)}
@@ -180,29 +250,58 @@ function StatusRow({ status, highlight, slim, showCard, instanceUrl, accessToken
           </>
         )}
 
-        <div className="flex items-center mt-2 gap-4 text-gray-400 text-xs">
+        <div className="mt-2 text-gray-400 text-xs">
           {highlight && (
-            <>
-              <span>{status.replies_count} 返信</span>
-              <span>{status.reblogs_count} ブースト</span>
-              <span>{status.favourites_count} お気に入り</span>
-            </>
+            <div className="flex items-center gap-4 mb-2">
+              <span>{localStatus.replies_count} 返信</span>
+              <span>{localStatus.reblogs_count} ブースト</span>
+              <span>{localStatus.favourites_count} お気に入り</span>
+            </div>
           )}
-          <div className="flex items-center gap-2 ml-auto">
-            {onReplyRequest && (
-              <button
-                onClick={() => onReplyRequest(status)}
-                className="hover:text-blue-400 transition-colors"
-                title="返信"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                </svg>
-              </button>
-            )}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => { onReplyRequest ? onReplyRequest(localStatus) : setReplyOpen(true) }}
+              className={`flex items-center gap-1 hover:text-blue-400 transition-colors ${replyOpen ? 'text-blue-400' : ''}`}
+              title="返信"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+              </svg>
+            </button>
+            <button
+              onClick={handleReblog}
+              disabled={actionLoading}
+              className={`flex items-center gap-1 hover:text-green-400 transition-colors ${localStatus.reblogged ? 'text-green-400' : ''}`}
+              title="ブースト"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+            <button
+              onClick={handleFavourite}
+              disabled={actionLoading}
+              className={`flex items-center gap-1 hover:text-yellow-400 transition-colors ${localStatus.favourited ? 'text-yellow-400' : ''}`}
+              title="お気に入り"
+            >
+              <svg className="w-3.5 h-3.5" fill={localStatus.favourited ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              </svg>
+            </button>
+            <button
+              onClick={handleBookmark}
+              disabled={actionLoading}
+              className={`flex items-center gap-1 hover:text-blue-400 transition-colors ${localStatus.bookmarked ? 'text-blue-400' : ''}`}
+              title="ブックマーク"
+            >
+              <svg className="w-3.5 h-3.5" fill={localStatus.bookmarked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+              </svg>
+            </button>
+            <div className="flex items-center gap-2 ml-auto">
             {isOwnPost && onEditRequest && (
               <button
-                onClick={() => onEditRequest(status)}
+                onClick={() => onEditRequest(localStatus)}
                 className="hover:text-blue-400 transition-colors"
                 title="編集"
               >
@@ -213,7 +312,7 @@ function StatusRow({ status, highlight, slim, showCard, instanceUrl, accessToken
             )}
             {isOwnPost && onDeleteRequest && (
               <button
-                onClick={() => onDeleteRequest(status)}
+                onClick={() => onDeleteRequest(localStatus)}
                 className="hover:text-red-400 transition-colors"
                 title="削除"
               >
@@ -265,14 +364,26 @@ function StatusRow({ status, highlight, slim, showCard, instanceUrl, accessToken
                 )}
               </div>
             )}
+            </div>
           </div>
         </div>
       </div>
     </div>
+
+    {replyOpen && (
+      <ReplyModal
+        status={localStatus}
+        instanceUrl={instanceUrl}
+        accessToken={accessToken}
+        onClose={() => setReplyOpen(false)}
+        onComposed={() => setReplyOpen(false)}
+      />
+    )}
+    </>
   )
 }
 
-export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey, onClose, onOpenProfile, onDelete, onUpdate, onReply, currentAccountId }: StatusDetailModalProps) {
+export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey, onClose, onDelete, onUpdate, onReply, currentAccountId, accounts }: StatusDetailModalProps) {
   const [context, setContext] = useState<StatusContext | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -280,6 +391,7 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [editTarget, setEditTarget] = useState<Status | null>(null)
   const [mainStatus, setMainStatus] = useState<Status>(status)
+  const [profileAccount, setProfileAccount] = useState<Account | null>(null)
   const showCard = loadSettings(accountKey).showPreviewCard
 
   useEffect(() => {
@@ -382,10 +494,11 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey
                   showCard={showCard}
                   instanceUrl={instanceUrl}
                   accessToken={accessToken}
-                  onOpenProfile={onOpenProfile}
+                  onOpenProfile={setProfileAccount}
                   onDeleteRequest={setDeleteTarget}
                   onEditRequest={setEditTarget}
                   onReplyRequest={onReply}
+                  onUpdate={(updated) => setContext((prev) => prev ? { ...prev, ancestors: prev.ancestors.map((a) => a.id === updated.id ? updated : a) } : null)}
                   isOwnPost={!!currentAccountId && s.account.id === currentAccountId}
                 />
               ))}
@@ -396,10 +509,11 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey
                 showCard={showCard}
                 instanceUrl={instanceUrl}
                 accessToken={accessToken}
-                onOpenProfile={onOpenProfile}
+                onOpenProfile={setProfileAccount}
                 onDeleteRequest={setDeleteTarget}
                 onEditRequest={setEditTarget}
                 onReplyRequest={onReply}
+                onUpdate={(updated) => { setMainStatus(updated); onUpdate?.(updated) }}
                 isOwnPost={!!currentAccountId && mainStatus.account.id === currentAccountId}
               />
 
@@ -411,10 +525,11 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey
                   showCard={showCard}
                   instanceUrl={instanceUrl}
                   accessToken={accessToken}
-                  onOpenProfile={onOpenProfile}
+                  onOpenProfile={setProfileAccount}
                   onDeleteRequest={setDeleteTarget}
                   onEditRequest={setEditTarget}
                   onReplyRequest={onReply}
+                  onUpdate={(updated) => setContext((prev) => prev ? { ...prev, descendants: prev.descendants.map((d) => d.id === updated.id ? updated : d) } : null)}
                   isOwnPost={!!currentAccountId && s.account.id === currentAccountId}
                 />
               ))}
@@ -476,6 +591,19 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey
         accountKey={accountKey}
         onClose={() => setEditTarget(null)}
         onEdited={handleEdited}
+      />
+    )}
+
+    {profileAccount && (
+      <UserProfileModal
+        account={profileAccount}
+        instanceUrl={instanceUrl}
+        accessToken={accessToken}
+        accountKey={accountKey}
+        currentAccountId={currentAccountId}
+        accounts={accounts}
+        onClose={() => setProfileAccount(null)}
+        onOpenProfile={setProfileAccount}
       />
     )}
     </>
