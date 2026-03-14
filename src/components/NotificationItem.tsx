@@ -115,7 +115,7 @@ export function NotificationItem({ notification, instanceUrl, accessToken, onOpe
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2">
             <span className="font-medium text-white text-sm truncate" dangerouslySetInnerHTML={{ __html: displayNameHtml }} />
-            <span className={`text-xs font-medium ${meta.color}`}>{meta.label}</span>
+            <span className={`text-xs font-medium whitespace-nowrap flex-shrink-0 ${meta.color}`}>{meta.label}</span>
             {status && onOpenDetail && (type === 'mention' || type === 'favourite' || type === 'reblog') ? (
               <button
                 type="button"
