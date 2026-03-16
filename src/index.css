@@ -266,6 +266,7 @@ img.custom-emoji-stamp {
 [data-theme="nord"] .bg-gray-600 { background-color: #4c566a; }
 [data-theme="nord"] .bg-gray-800\/90 { background-color: rgba(59,66,82,0.93); }
 [data-theme="nord"] .bg-gray-700\/40 { background-color: rgba(67,76,94,0.4); }
+[data-theme="nord"] .bg-gray-700\/60 { background-color: rgba(100,112,138,0.6); }
 [data-theme="nord"] .hover\:bg-gray-750:hover { background-color: #404959; }
 [data-theme="nord"] .hover\:bg-gray-700:hover { background-color: #434c5e; }
 [data-theme="nord"] .hover\:bg-gray-600:hover { background-color: #4c566a; }

@@ -118,6 +118,13 @@ export class MastodonClient {
     return this.request<Status>(`/api/v1/statuses/${id}/unfavourite`, { method: 'POST' })
   }
 
+  async votePoll(pollId: string, choices: number[]): Promise<import('../types').Poll> {
+    return this.request(`/api/v1/polls/${pollId}/votes`, {
+      method: 'POST',
+      body: JSON.stringify({ choices }),
+    })
+  }
+
   async getStatusContext(id: string): Promise<StatusContext> {
     return this.request<StatusContext>(`/api/v1/statuses/${id}/context`)
   }

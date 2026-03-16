@@ -78,6 +78,25 @@ export interface Status {
   tags: Array<{ name: string; url: string }>
   emojis: CustomEmoji[]
   card?: PreviewCard | null
+  poll?: Poll | null
+}
+
+export interface PollOption {
+  title: string
+  votes_count: number | null
+}
+
+export interface Poll {
+  id: string
+  expires_at: string | null
+  expired: boolean
+  multiple: boolean
+  votes_count: number
+  voters_count: number | null
+  voted: boolean | null
+  own_votes: number[] | null
+  options: PollOption[]
+  emojis: CustomEmoji[]
 }
 
 export interface Application {
