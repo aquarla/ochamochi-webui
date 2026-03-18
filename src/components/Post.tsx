@@ -424,7 +424,7 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
   }
 
   return (
-    <article className="border-b border-gray-700 p-3 hover:bg-gray-750 transition-colors">
+    <article className="border-b border-gray-700 p-3">
       {pinned && (
         <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">

@@ -98,7 +98,7 @@ export function NotificationItem({ notification, instanceUrl, accessToken, onOpe
   }, [onOpenProfile, onAddTagColumn, status, instanceUrl, accessToken])
 
   return (
-    <article className="border-b border-gray-700 p-3 hover:bg-gray-750 transition-colors">
+    <article className="border-b border-gray-700 p-3">
       <div className="flex items-start gap-2 mb-1.5">
         <button
           type="button"

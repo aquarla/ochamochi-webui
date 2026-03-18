@@ -76,7 +76,7 @@ function ConversationItem({ conversation, instanceUrl, accessToken, onOpenDetail
 
   return (
     <article
-      className={`border-b border-gray-700 p-3 hover:bg-gray-750 transition-colors ${unread ? 'bg-blue-900/10' : ''}`}
+      className={`border-b border-gray-700 p-3 ${unread ? 'bg-blue-900/10' : ''}`}
     >
       {/* 参加者アバター */}
       <div className="flex items-start gap-2 mb-2">
