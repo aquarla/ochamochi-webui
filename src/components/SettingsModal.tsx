@@ -310,6 +310,15 @@ function PrivacySettings({
           onChange={(v) => onChange({ ...settings, allowCrossAccountAction: v })}
         />
       </SettingRow>
+      <SettingRow
+        label="バックグラウンド通知"
+        description="他のアカウントを表示中もこのアカウントの通知を受け取り、アイコンにバッジを表示します（通知カラムを追加している場合のみ有効）"
+      >
+        <ToggleSwitch
+          checked={settings.backgroundNotification}
+          onChange={(v) => onChange({ ...settings, backgroundNotification: v })}
+        />
+      </SettingRow>
     </div>
   )
 }

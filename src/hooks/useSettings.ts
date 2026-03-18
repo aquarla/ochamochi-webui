@@ -12,6 +12,7 @@ export interface AppSettings {
   fontSize: FontSize
   columnWidth: ColumnWidth
   allowCrossAccountAction: boolean
+  backgroundNotification: boolean
   showPreviewCard: boolean
   truncateUrl: boolean
 }
@@ -27,6 +28,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   fontSize: 'medium',
   columnWidth: 'medium',
   allowCrossAccountAction: true,
+  backgroundNotification: false,
   showPreviewCard: true,
   truncateUrl: true,
 }

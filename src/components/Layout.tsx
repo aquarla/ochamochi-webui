@@ -14,6 +14,7 @@ import { UserProfileModal } from './UserProfileModal'
 import { StatusUrlModal } from './StatusUrlModal'
 import { StatusDetailModal } from './StatusDetailModal'
 import { loadSettings } from '../hooks/useSettings'
+import { useBackgroundNotifications } from '../hooks/useBackgroundNotifications'
 import type { AppSettings } from '../hooks/useSettings'
 import type { AuthContext } from '../hooks/useAuth'
 import type { ColumnConfig, ColumnType, Status } from '../types'
@@ -38,6 +39,8 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
   const [showAddAccountModal, setShowAddAccountModal] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showSelfProfile, setShowSelfProfile] = useState(false)
+  const { badgeCounts, clearBadge } = useBackgroundNotifications(auth.accounts, auth.activeAccountKey)
+
   const [showUrlModal, setShowUrlModal] = useState(false)
   const [urlStatus, setUrlStatus] = useState<Status | null>(null)
   const accountMenuRef = useRef<HTMLDivElement>(null)
@@ -84,6 +87,7 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
   }
 
   const handleSwitchAccount = (accountKey: string) => {
+    clearBadge(accountKey)
     auth.switchAccount(accountKey)
     setShowAccountMenu(false)
   }
@@ -159,11 +163,16 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
                 onClick={() => setShowAccountMenu((v) => !v)}
                 className="flex items-center gap-2 rounded-lg px-2 py-1 hover:bg-gray-700 transition-colors"
               >
-                <img
-                  src={auth.account.avatar_static}
-                  alt={auth.account.display_name || auth.account.username}
-                  className="w-7 h-7 rounded-full bg-gray-700"
-                />
+                <div className="relative">
+                  <img
+                    src={auth.account.avatar_static}
+                    alt={auth.account.display_name || auth.account.username}
+                    className="w-7 h-7 rounded-full bg-gray-700"
+                  />
+                  {Object.values(badgeCounts).some((v) => v > 0) && (
+                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border border-gray-800" />
+                  )}
+                </div>
                 <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -179,11 +188,18 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
                         onClick={() => handleSwitchAccount(entry.accountKey)}
                         className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-700 transition-colors text-left"
                       >
-                        <img
-                          src={entry.account.avatar_static}
-                          alt={entry.account.display_name || entry.account.username}
-                          className="w-8 h-8 rounded-full bg-gray-700 flex-shrink-0"
-                        />
+                        <div className="relative flex-shrink-0">
+                          <img
+                            src={entry.account.avatar_static}
+                            alt={entry.account.display_name || entry.account.username}
+                            className="w-8 h-8 rounded-full bg-gray-700"
+                          />
+                          {(badgeCounts[entry.accountKey] ?? 0) > 0 && (
+                            <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none">
+                              {badgeCounts[entry.accountKey] > 99 ? '99+' : badgeCounts[entry.accountKey]}
+                            </span>
+                          )}
+                        </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-white text-sm font-medium truncate">
                             {entry.account.display_name || entry.account.username}
