@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { loadApp, exchangeCodeForToken } from '../services/auth'
 import type { AuthContext } from '../hooks/useAuth'
 
@@ -8,8 +8,12 @@ interface OAuthCallbackProps {
 
 export function OAuthCallback({ auth }: OAuthCallbackProps) {
   const [error, setError] = useState<string | null>(null)
+  const processedRef = useRef(false)
 
   useEffect(() => {
+    if (processedRef.current) return
+    processedRef.current = true
+
     const params = new URLSearchParams(window.location.search)
     const code = params.get('code')
     const errorParam = params.get('error')
