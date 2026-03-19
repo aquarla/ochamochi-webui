@@ -303,19 +303,6 @@ export function ConversationsColumn({ column, instanceUrl, accessToken, accountK
         />
       )}
 
-      {detailStatus && (
-        <StatusDetailModal
-          status={detailStatus}
-          instanceUrl={instanceUrl}
-          accessToken={accessToken}
-          accountKey={accountKey}
-          currentAccountId={currentAccountId}
-          accounts={accounts}
-          onClose={() => setDetailStatus(null)}
-          onReply={(s) => { setDetailStatus(null); setReplyStatus(s) }}
-        />
-      )}
-
       {profileAccount && (
         <UserProfileModal
           account={profileAccount}
@@ -326,6 +313,20 @@ export function ConversationsColumn({ column, instanceUrl, accessToken, accountK
           accounts={accounts}
           onClose={() => setProfileAccount(null)}
           onOpenProfile={setProfileAccount}
+          onOpenDetail={setDetailStatus}
+        />
+      )}
+
+      {detailStatus && (
+        <StatusDetailModal
+          status={detailStatus}
+          instanceUrl={instanceUrl}
+          accessToken={accessToken}
+          accountKey={accountKey}
+          currentAccountId={currentAccountId}
+          accounts={accounts}
+          onClose={() => setDetailStatus(null)}
+          onReply={(s) => { setDetailStatus(null); setReplyStatus(s) }}
         />
       )}
     </div>

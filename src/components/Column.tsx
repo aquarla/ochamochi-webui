@@ -342,6 +342,20 @@ export function Column({ column, instanceUrl, accessToken, accountKey, onRemove,
         )}
       </div>
 
+      {profileAccount && (
+        <UserProfileModal
+          account={profileAccount}
+          instanceUrl={instanceUrl}
+          accessToken={accessToken}
+          accountKey={accountKey}
+          currentAccountId={currentAccountId}
+          onClose={() => setProfileAccount(null)}
+          onOpenDetail={setDetailStatus}
+          onOpenProfile={handleOpenProfile}
+          accounts={accounts}
+        />
+      )}
+
       {detailStatus && (
         <StatusDetailModal
           status={detailStatus}
@@ -353,20 +367,6 @@ export function Column({ column, instanceUrl, accessToken, accountKey, onRemove,
           onClose={() => setDetailStatus(null)}
           onDelete={removeStatus}
           onUpdate={updateStatus}
-        />
-      )}
-
-      {profileAccount && (
-        <UserProfileModal
-          account={profileAccount}
-          instanceUrl={instanceUrl}
-          accessToken={accessToken}
-          accountKey={accountKey}
-          currentAccountId={currentAccountId}
-          onClose={() => setProfileAccount(null)}
-          onOpenDetail={(s) => { setProfileAccount(null); setDetailStatus(s) }}
-          onOpenProfile={handleOpenProfile}
-          accounts={accounts}
         />
       )}
     </div>

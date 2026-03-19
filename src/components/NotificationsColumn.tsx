@@ -131,18 +131,6 @@ export function NotificationsColumn({ column, instanceUrl, accessToken, accountK
         )}
       </div>
 
-      {detailStatus && (
-        <StatusDetailModal
-          status={detailStatus}
-          instanceUrl={instanceUrl}
-          accessToken={accessToken}
-          accountKey={accountKey}
-          currentAccountId={currentAccountId}
-          accounts={accounts}
-          onClose={() => setDetailStatus(null)}
-        />
-      )}
-
       {profileAccount && (
         <UserProfileModal
           account={profileAccount}
@@ -153,6 +141,19 @@ export function NotificationsColumn({ column, instanceUrl, accessToken, accountK
           accounts={accounts}
           onClose={() => setProfileAccount(null)}
           onOpenProfile={setProfileAccount}
+          onOpenDetail={setDetailStatus}
+        />
+      )}
+
+      {detailStatus && (
+        <StatusDetailModal
+          status={detailStatus}
+          instanceUrl={instanceUrl}
+          accessToken={accessToken}
+          accountKey={accountKey}
+          currentAccountId={currentAccountId}
+          accounts={accounts}
+          onClose={() => setDetailStatus(null)}
         />
       )}
     </div>

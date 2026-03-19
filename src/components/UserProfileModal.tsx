@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { MastodonClient } from '../services/mastodon'
 import { emojifyText, emojifyHtml } from '../utils/emojify'
 import { Post } from './Post'
-import type { Account, Relationship, Status } from '../types'
+import type { Account, Relationship, Status, MediaAttachment } from '../types'
 import type { StoredAccountEntry } from '../services/auth'
 
 interface UserProfileModalProps {
@@ -20,7 +20,7 @@ interface UserProfileModalProps {
 const LIMIT = 20
 const LIST_LIMIT = 40
 
-type ModalView = 'profile' | 'following' | 'followers'
+type ModalView = 'profile' | 'following' | 'followers' | 'media'
 
 const MUTE_DURATION_OPTIONS = [
   { value: '0',      label: '無期限' },
@@ -63,6 +63,12 @@ export function UserProfileModal({
   const [listHasMore, setListHasMore] = useState(true)
   const [listPrivate, setListPrivate] = useState(false)
   const [listFollowingInProgress, setListFollowingInProgress] = useState<Set<string>>(new Set())
+
+  // Media view state
+  const [mediaItems, setMediaItems] = useState<Array<{ attachment: MediaAttachment; status: Status }>>([])
+  const [mediaMaxId, setMediaMaxId] = useState<string | undefined>(undefined)
+  const [mediaHasMore, setMediaHasMore] = useState(true)
+  const [mediaLoading, setMediaLoading] = useState(false)
 
   // Menu / mute / block state
   const [showMenu, setShowMenu] = useState(false)
@@ -140,13 +146,16 @@ export function UserProfileModal({
     }
   }
 
-  // Profile scroll
+  // Profile/media scroll
   useEffect(() => {
-    if (view !== 'profile') return
+    if (view === 'following' || view === 'followers') return
     const el = scrollRef.current
     if (!el) return
     const handler = () => {
-      if (el.scrollHeight - el.scrollTop - el.clientHeight < 200) loadMore()
+      if (el.scrollHeight - el.scrollTop - el.clientHeight < 200) {
+        if (view === 'media') loadMoreMedia()
+        else loadMore()
+      }
     }
     el.addEventListener('scroll', handler, { passive: true })
     return () => el.removeEventListener('scroll', handler)
@@ -154,7 +163,7 @@ export function UserProfileModal({
 
   // List scroll
   useEffect(() => {
-    if (view === 'profile') return
+    if (view !== 'following' && view !== 'followers') return
     const el = listScrollRef.current
     if (!el) return
     const handler = () => {
@@ -311,8 +320,44 @@ export function UserProfileModal({
   }
 
   const loadMoreList = () => {
-    if (listLoading || !listHasMore || view === 'profile') return
+    if (listLoading || !listHasMore || (view !== 'following' && view !== 'followers')) return
     fetchListPage(view as 'following' | 'followers', listMaxId)
+  }
+
+  const loadMediaPage = async (maxId?: string) => {
+    setMediaLoading(true)
+    try {
+      const c = new MastodonClient(instanceUrl, accessToken)
+      const fetched = await c.getAccountStatuses(initialAccount.id, {
+        max_id: maxId,
+        limit: LIMIT,
+        only_media: true,
+      })
+      const items = fetched.flatMap((s) =>
+        s.media_attachments.map((att) => ({ attachment: att, status: s }))
+      )
+      if (maxId) {
+        setMediaItems((prev) => [...prev, ...items])
+      } else {
+        setMediaItems(items)
+      }
+      setMediaHasMore(fetched.length === LIMIT)
+      if (fetched.length > 0) setMediaMaxId(fetched[fetched.length - 1].id)
+    } catch {
+      // ignore
+    } finally {
+      setMediaLoading(false)
+    }
+  }
+
+  const loadMoreMedia = () => {
+    if (mediaLoading || !mediaHasMore) return
+    loadMediaPage(mediaMaxId)
+  }
+
+  const handleOpenMedia = () => {
+    setView('media')
+    if (mediaItems.length === 0) loadMediaPage(undefined)
   }
 
   const handleListFollow = async (accountId: string) => {
@@ -348,7 +393,7 @@ export function UserProfileModal({
         className="bg-gray-800 rounded-xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {view !== 'profile' ? (
+        {(view === 'following' || view === 'followers') ? (
           /* ---- List view ---- */
           <>
             <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-700 flex-shrink-0">
@@ -362,7 +407,7 @@ export function UserProfileModal({
                 </svg>
               </button>
               <h2 className="text-white font-semibold text-sm flex-1">
-                {view === 'followers' ? 'フォロワー' : 'フォロー中'}
+                {view === 'followers' ? 'フォロワー' : view === 'following' ? 'フォロー中' : ''}
               </h2>
               <button
                 onClick={onClose}
@@ -663,8 +708,70 @@ export function UserProfileModal({
                 </div>
               </div>
 
-              <div className="border-t border-gray-700">
-                {initialLoading ? (
+              {/* Tabs */}
+              <div className="flex border-b border-gray-700">
+                <button
+                  onClick={() => setView('profile')}
+                  className={`flex-1 py-2 text-sm font-medium transition-colors ${view === 'profile' ? 'text-white border-b-2 border-blue-500 -mb-px' : 'text-gray-400 hover:text-gray-200'}`}
+                >
+                  投稿
+                </button>
+                <button
+                  onClick={handleOpenMedia}
+                  className={`flex-1 py-2 text-sm font-medium transition-colors ${view === 'media' ? 'text-white border-b-2 border-blue-500 -mb-px' : 'text-gray-400 hover:text-gray-200'}`}
+                >
+                  メディア
+                </button>
+              </div>
+
+              <div>
+                {view === 'media' ? (
+                  <>
+                    <div className="grid grid-cols-3 gap-0.5">
+                      {mediaItems.map(({ attachment, status }, i) => (
+                        <button
+                          key={`${status.id}-${attachment.id}-${i}`}
+                          onClick={() => onOpenDetail?.(status)}
+                          className="aspect-square overflow-hidden bg-gray-700 relative group"
+                        >
+                          {attachment.type === 'video' || attachment.type === 'gifv' ? (
+                            <>
+                              <img
+                                src={attachment.preview_url}
+                                alt={attachment.description ?? ''}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                              />
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                                <svg className="w-8 h-8 text-white opacity-80" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M8 5v14l11-7z" />
+                                </svg>
+                              </div>
+                            </>
+                          ) : (
+                            <img
+                              src={attachment.preview_url || attachment.url}
+                              alt={attachment.description ?? ''}
+                              className="w-full h-full object-cover group-hover:opacity-80 transition-opacity"
+                              loading="lazy"
+                            />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                    {mediaItems.length === 0 && !mediaLoading && (
+                      <div className="p-8 text-gray-500 text-sm text-center">メディアがありません</div>
+                    )}
+                    {mediaLoading && (
+                      <div className="flex justify-center py-4">
+                        <div className="animate-spin w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full" />
+                      </div>
+                    )}
+                    {!mediaHasMore && mediaItems.length > 0 && (
+                      <div className="p-3 text-gray-600 text-xs text-center">最後まで読み込みました</div>
+                    )}
+                  </>
+                ) : initialLoading ? (
                   <div className="flex justify-center py-8">
                     <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full" />
                   </div>

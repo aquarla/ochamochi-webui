@@ -285,13 +285,14 @@ export class MastodonClient {
 
   async getAccountStatuses(
     id: string,
-    params: { max_id?: string; limit?: number; pinned?: boolean; exclude_replies?: boolean } = {},
+    params: { max_id?: string; limit?: number; pinned?: boolean; exclude_replies?: boolean; only_media?: boolean } = {},
   ): Promise<Status[]> {
     const qs = new URLSearchParams()
     if (params.max_id) qs.set('max_id', params.max_id)
     if (params.limit) qs.set('limit', String(params.limit))
     if (params.pinned) qs.set('pinned', 'true')
     if (params.exclude_replies !== undefined) qs.set('exclude_replies', String(params.exclude_replies))
+    if (params.only_media) qs.set('only_media', 'true')
     return this.request<Status[]>(`/api/v1/accounts/${id}/statuses?${qs}`)
   }
 }

@@ -312,6 +312,20 @@ export function SearchColumn({
         )}
       </div>
 
+      {profileAccount && (
+        <UserProfileModal
+          account={profileAccount}
+          instanceUrl={instanceUrl}
+          accessToken={accessToken}
+          accountKey={accountKey}
+          currentAccountId={currentAccountId}
+          accounts={accounts}
+          onClose={() => setProfileAccount(null)}
+          onOpenDetail={setDetailStatus}
+          onOpenProfile={setProfileAccount}
+        />
+      )}
+
       {detailStatus && (
         <StatusDetailModal
           status={detailStatus}
@@ -323,18 +337,6 @@ export function SearchColumn({
           onClose={() => setDetailStatus(null)}
           onDelete={handleDeleteStatus}
           onUpdate={handleUpdateStatus}
-        />
-      )}
-
-      {profileAccount && (
-        <UserProfileModal
-          account={profileAccount}
-          instanceUrl={instanceUrl}
-          accessToken={accessToken}
-          accountKey={accountKey}
-          currentAccountId={currentAccountId}
-          accounts={accounts}
-          onClose={() => setProfileAccount(null)}
         />
       )}
     </div>

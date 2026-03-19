@@ -392,6 +392,7 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey
   const [editTarget, setEditTarget] = useState<Status | null>(null)
   const [mainStatus, setMainStatus] = useState<Status>(status)
   const [profileAccount, setProfileAccount] = useState<Account | null>(null)
+  const [nestedDetailStatus, setNestedDetailStatus] = useState<Status | null>(null)
   const showCard = loadSettings(accountKey).showPreviewCard
 
   useEffect(() => {
@@ -604,6 +605,20 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey
         accounts={accounts}
         onClose={() => setProfileAccount(null)}
         onOpenProfile={setProfileAccount}
+        onOpenDetail={setNestedDetailStatus}
+      />
+    )}
+
+    {nestedDetailStatus && (
+      <StatusDetailModal
+        status={nestedDetailStatus}
+        instanceUrl={instanceUrl}
+        accessToken={accessToken}
+        accountKey={accountKey}
+        currentAccountId={currentAccountId}
+        accounts={accounts}
+        onClose={() => setNestedDetailStatus(null)}
+        onReply={onReply}
       />
     )}
     </>
