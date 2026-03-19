@@ -220,6 +220,14 @@ export class MastodonClient {
     return status
   }
 
+  async searchResolveUrl(url: string): Promise<{ status?: Status; account?: Account }> {
+    const qs = new URLSearchParams({ q: url, resolve: 'true', limit: '1' })
+    const result = await this.request<{ statuses: Status[]; accounts: Account[] }>(`/api/v2/search?${qs}`)
+    if (result.statuses[0]) return { status: result.statuses[0] }
+    if (result.accounts[0]) return { account: result.accounts[0] }
+    throw new Error('投稿またはアカウントが見つかりませんでした')
+  }
+
   async getCustomEmojis(): Promise<CustomEmoji[]> {
     return this.request<CustomEmoji[]>('/api/v1/custom_emojis')
   }

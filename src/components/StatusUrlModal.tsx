@@ -1,15 +1,16 @@
 import { useState, useRef, useEffect } from 'react'
 import { MastodonClient } from '../services/mastodon'
-import type { Status } from '../types'
+import type { Status, Account } from '../types'
 
 interface StatusUrlModalProps {
   instanceUrl: string
   accessToken: string
   onOpen: (status: Status) => void
+  onOpenAccount?: (account: Account) => void
   onClose: () => void
 }
 
-export function StatusUrlModal({ instanceUrl, accessToken, onOpen, onClose }: StatusUrlModalProps) {
+export function StatusUrlModal({ instanceUrl, accessToken, onOpen, onOpenAccount, onClose }: StatusUrlModalProps) {
   const [url, setUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -31,8 +32,12 @@ export function StatusUrlModal({ instanceUrl, accessToken, onOpen, onClose }: St
     setError(null)
     try {
       const client = new MastodonClient(instanceUrl, accessToken)
-      const status = await client.searchResolveStatus(trimmed)
-      onOpen(status)
+      const result = await client.searchResolveUrl(trimmed)
+      if (result.status) {
+        onOpen(result.status)
+      } else if (result.account) {
+        onOpenAccount?.(result.account)
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally {
@@ -50,7 +55,7 @@ export function StatusUrlModal({ instanceUrl, accessToken, onOpen, onClose }: St
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-white font-semibold">投稿URLを開く</h2>
+          <h2 className="text-white font-semibold">URLを開く</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-white transition-colors"
@@ -61,6 +66,7 @@ export function StatusUrlModal({ instanceUrl, accessToken, onOpen, onClose }: St
             </svg>
           </button>
         </div>
+        <p className="text-gray-400 text-xs mb-3">投稿またはアカウントのURLを入力してください。</p>
         <form onSubmit={handleSubmit} className="space-y-3">
           <input
             ref={inputRef}

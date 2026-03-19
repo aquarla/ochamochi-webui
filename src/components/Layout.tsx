@@ -17,7 +17,7 @@ import { loadSettings } from '../hooks/useSettings'
 import { useBackgroundNotifications } from '../hooks/useBackgroundNotifications'
 import type { AppSettings } from '../hooks/useSettings'
 import type { AuthContext } from '../hooks/useAuth'
-import type { ColumnConfig, ColumnType, Status } from '../types'
+import type { ColumnConfig, ColumnType, Status, Account } from '../types'
 
 interface LayoutProps {
   auth: AuthContext
@@ -43,6 +43,7 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
 
   const [showUrlModal, setShowUrlModal] = useState(false)
   const [urlStatus, setUrlStatus] = useState<Status | null>(null)
+  const [urlAccount, setUrlAccount] = useState<Account | null>(null)
   const [selfProfileDetailStatus, setSelfProfileDetailStatus] = useState<Status | null>(null)
   const accountMenuRef = useRef<HTMLDivElement>(null)
 
@@ -391,7 +392,21 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
           instanceUrl={auth.instanceUrl!}
           accessToken={auth.accessToken!}
           onOpen={(status) => { setShowUrlModal(false); setUrlStatus(status) }}
+          onOpenAccount={(account) => { setShowUrlModal(false); setUrlAccount(account) }}
           onClose={() => setShowUrlModal(false)}
+        />
+      )}
+
+      {urlAccount && (
+        <UserProfileModal
+          account={urlAccount}
+          instanceUrl={auth.instanceUrl!}
+          accessToken={auth.accessToken!}
+          accountKey={auth.activeAccountKey ?? undefined}
+          currentAccountId={auth.account?.id}
+          accounts={auth.accounts}
+          onClose={() => setUrlAccount(null)}
+          onOpenDetail={(s) => { setUrlAccount(null); setUrlStatus(s) }}
         />
       )}
 
