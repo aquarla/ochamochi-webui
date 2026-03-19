@@ -12,7 +12,7 @@ export async function registerApp(instanceUrl: string): Promise<Application> {
       client_name: APP_NAME,
       redirect_uris: REDIRECT_URI,
       scopes: SCOPES,
-      website: 'https://iwatedon.net/',
+      website: 'https://ochamochi.iwatedon.net/',
     }),
   })
   if (!res.ok) {
