@@ -43,6 +43,7 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
 
   const [showUrlModal, setShowUrlModal] = useState(false)
   const [urlStatus, setUrlStatus] = useState<Status | null>(null)
+  const [selfProfileDetailStatus, setSelfProfileDetailStatus] = useState<Status | null>(null)
   const accountMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -360,6 +361,19 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
           currentAccountId={auth.account.id}
           onClose={() => setShowSelfProfile(false)}
           accounts={auth.accounts}
+          onOpenDetail={setSelfProfileDetailStatus}
+        />
+      )}
+
+      {selfProfileDetailStatus && (
+        <StatusDetailModal
+          status={selfProfileDetailStatus}
+          instanceUrl={auth.instanceUrl!}
+          accessToken={auth.accessToken!}
+          accountKey={auth.activeAccountKey ?? undefined}
+          currentAccountId={auth.account?.id}
+          accounts={auth.accounts}
+          onClose={() => setSelfProfileDetailStatus(null)}
         />
       )}
 
