@@ -519,7 +519,7 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
             <>
               <div
                 ref={contentRef}
-                className={`text-gray-200 text-sm leading-relaxed prose prose-sm prose-invert max-w-none break-words [&_a]:text-blue-400 [&_a:hover]:text-blue-300 [&_p]:mb-1${truncateUrl ? " [&_.invisible]:hidden [&_.ellipsis]:after:content-['…']" : ''}`}
+                className={`text-gray-200 text-sm leading-relaxed prose prose-sm prose-invert max-w-none break-all [&_pre]:whitespace-pre-wrap [&_pre]:break-all [&_a]:text-blue-400 [&_a:hover]:text-blue-300 [&_p]:mb-1${truncateUrl ? " [&_.invisible]:hidden [&_.ellipsis]:after:content-['…']" : ''}`}
                 dangerouslySetInnerHTML={{ __html: emojifyHtml(displayStatus.content, displayStatus.emojis) }}
               />
 

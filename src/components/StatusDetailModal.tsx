@@ -212,7 +212,7 @@ function StatusRow({ status, highlight, slim, showCard, instanceUrl, accessToken
           <>
             <div
               ref={contentRef}
-              className="text-gray-200 text-sm leading-relaxed prose prose-sm prose-invert max-w-none break-words [&_a]:text-blue-400 [&_a:hover]:text-blue-300 [&_p]:mb-1"
+              className="text-gray-200 text-sm leading-relaxed prose prose-sm prose-invert max-w-none break-all [&_pre]:whitespace-pre-wrap [&_pre]:break-all [&_a]:text-blue-400 [&_a:hover]:text-blue-300 [&_p]:mb-1"
               dangerouslySetInnerHTML={{ __html: emojifyHtml(status.content, status.emojis) }}
             />
             <MediaGrid
