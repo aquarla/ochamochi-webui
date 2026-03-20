@@ -1,6 +1,8 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { createStream } from '../services/streaming'
 import type { Status, ColumnType } from '../types'
+
+export type StreamStatus = 'connecting' | 'connected' | 'disconnected'
 
 interface UseStreamingOptions {
   instanceUrl: string
@@ -13,6 +15,13 @@ interface UseStreamingOptions {
   onDelete: (id: string) => void
 }
 
+interface UseStreamingResult {
+  streamStatus: StreamStatus
+  reconnect: () => void
+}
+
+const NO_STREAM_TYPES: ColumnType[] = ['favourites', 'bookmarks', 'scheduled', 'search', 'conversations']
+
 export function useStreaming({
   instanceUrl,
   accessToken,
@@ -22,20 +31,19 @@ export function useStreaming({
   onlyMedia,
   onNew,
   onDelete,
-}: UseStreamingOptions): void {
+}: UseStreamingOptions): UseStreamingResult {
   const onNewRef = useRef(onNew)
   const onDeleteRef = useRef(onDelete)
+  const [reconnectKey, setReconnectKey] = useState(0)
+  const [streamStatus, setStreamStatus] = useState<StreamStatus>('connecting')
+
+  useEffect(() => { onNewRef.current = onNew }, [onNew])
+  useEffect(() => { onDeleteRef.current = onDelete }, [onDelete])
 
   useEffect(() => {
-    onNewRef.current = onNew
-  }, [onNew])
+    if (NO_STREAM_TYPES.includes(type)) return
 
-  useEffect(() => {
-    onDeleteRef.current = onDelete
-  }, [onDelete])
-
-  useEffect(() => {
-    if (type === 'favourites' || type === 'bookmarks' || type === 'scheduled') return  // no streaming endpoint
+    setStreamStatus('connecting')
 
     const ws = createStream(instanceUrl, accessToken, type, tag, (event) => {
       if (event.event === 'update') {
@@ -50,8 +58,16 @@ export function useStreaming({
       }
     }, undefined, onlyMedia, listId)
 
+    ws.addEventListener('open', () => setStreamStatus('connected'))
+    ws.addEventListener('close', () => setStreamStatus('disconnected'))
+    ws.addEventListener('error', () => setStreamStatus('disconnected'))
+
     return () => {
       ws.close()
     }
-  }, [instanceUrl, accessToken, type, tag, listId, onlyMedia])
+  }, [instanceUrl, accessToken, type, tag, listId, onlyMedia, reconnectKey])
+
+  const reconnect = useCallback(() => setReconnectKey((k) => k + 1), [])
+
+  return { streamStatus, reconnect }
 }

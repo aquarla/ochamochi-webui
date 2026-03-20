@@ -200,7 +200,7 @@ export function Column({ column, instanceUrl, accessToken, accountKey, onRemove,
     }
   }, [prependStatus, updateStatus, instanceUrl, accessToken])
 
-  useStreaming({
+  const { streamStatus, reconnect } = useStreaming({
     instanceUrl,
     accessToken,
     type: column.type,
@@ -234,11 +234,24 @@ export function Column({ column, instanceUrl, accessToken, accountKey, onRemove,
     <div className="flex-shrink-0 w-80 flex flex-col bg-gray-800 border-r border-gray-700">
       {/* Column header */}
       <div className="flex items-center justify-between gap-1 px-3 py-2.5 border-b border-gray-700 bg-gray-800/90 sticky top-0 z-10">
-        <h2
-          className="text-white font-semibold text-sm truncate min-w-0 cursor-pointer hover:text-gray-300 transition-colors"
-          title={label}
-          onClick={() => scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
-        >{label}</h2>
+        <div className="flex items-center gap-1.5 min-w-0">
+          <h2
+            className="text-white font-semibold text-sm truncate min-w-0 cursor-pointer hover:text-gray-300 transition-colors"
+            title={label}
+            onClick={() => scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
+          >{label}</h2>
+          {streamStatus === 'disconnected' && (
+            <button
+              onClick={reconnect}
+              title="ストリーミング切断中。クリックで再接続"
+              className="flex-shrink-0 text-yellow-400 hover:text-yellow-300 transition-colors"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+              </svg>
+            </button>
+          )}
+        </div>
         <div className="flex items-center gap-1">
           {isTagColumn && (
             <button
