@@ -15,6 +15,7 @@ export interface AppSettings {
   backgroundNotification: boolean
   showPreviewCard: boolean
   truncateUrl: boolean
+  showQuote: boolean
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -31,6 +32,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   backgroundNotification: false,
   showPreviewCard: true,
   truncateUrl: true,
+  showQuote: false,
 }
 
 function storageKey(accountKey?: string | null) {

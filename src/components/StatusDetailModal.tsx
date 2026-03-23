@@ -7,6 +7,7 @@ import { EditStatusModal } from './EditStatusModal'
 import { ReplyModal } from './ReplyModal'
 import { UserProfileModal } from './UserProfileModal'
 import { loadSettings } from '../hooks/useSettings'
+import { QuotePost } from './QuotePost'
 import type { Status, StatusContext, Account } from '../types'
 import type { StoredAccountEntry } from '../services/auth'
 
@@ -39,9 +40,11 @@ interface StatusRowProps {
   highlight?: boolean
   slim?: boolean
   showCard?: boolean
+  showQuote?: boolean
   instanceUrl: string
   accessToken: string
   onOpenProfile?: (account: Account) => void
+  onOpenDetail?: (status: Status) => void
   onDeleteRequest?: (status: Status) => void
   onEditRequest?: (status: Status) => void
   onReplyRequest?: (status: Status) => void
@@ -49,7 +52,7 @@ interface StatusRowProps {
   isOwnPost?: boolean
 }
 
-function StatusRow({ status, highlight, slim, showCard, instanceUrl, accessToken, onOpenProfile, onDeleteRequest, onEditRequest, onReplyRequest, onUpdate, isOwnPost }: StatusRowProps) {
+function StatusRow({ status, highlight, slim, showCard, showQuote, instanceUrl, accessToken, onOpenProfile, onOpenDetail, onDeleteRequest, onEditRequest, onReplyRequest, onUpdate, isOwnPost }: StatusRowProps) {
   const hasCw = !!status.spoiler_text
   const [cwOpen, setCwOpen] = useState(!hasCw)
   const [showLinkMenu, setShowLinkMenu] = useState(false)
@@ -212,7 +215,7 @@ function StatusRow({ status, highlight, slim, showCard, instanceUrl, accessToken
           <>
             <div
               ref={contentRef}
-              className="text-gray-200 text-sm leading-relaxed prose prose-sm prose-invert max-w-none break-all [overflow-wrap:anywhere] [&_p]:break-all [&_a]:break-all [&_pre]:whitespace-pre-wrap [&_pre]:break-all [&_a]:text-blue-400 [&_a:hover]:text-blue-300 [&_p]:mb-1"
+              className={`text-gray-200 text-sm leading-relaxed prose prose-sm prose-invert max-w-none break-all [overflow-wrap:anywhere] [&_p]:break-all [&_a]:break-all [&_pre]:whitespace-pre-wrap [&_pre]:break-all [&_a]:text-blue-400 [&_a:hover]:text-blue-300 [&_p]:mb-1${showQuote ? ' [&_.quote-inline]:hidden' : ''}`}
               dangerouslySetInnerHTML={{ __html: emojifyHtml(status.content, status.emojis) }}
             />
             <MediaGrid
@@ -220,6 +223,13 @@ function StatusRow({ status, highlight, slim, showCard, instanceUrl, accessToken
               sensitive={status.sensitive}
               thumbnailHeight="h-40"
             />
+            {showQuote && status.quote?.quoted_status && (
+              <QuotePost
+                status={status.quote.quoted_status}
+                onOpenDetail={onOpenDetail}
+              />
+            )}
+
             {showCard && status.card?.title && (
               <a
                 href={status.card.url}
@@ -394,6 +404,7 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey
   const [profileAccount, setProfileAccount] = useState<Account | null>(null)
   const [nestedDetailStatus, setNestedDetailStatus] = useState<Status | null>(null)
   const showCard = loadSettings(accountKey).showPreviewCard
+  const showQuote = loadSettings(accountKey).showQuote
 
   useEffect(() => {
     const client = new MastodonClient(instanceUrl, accessToken)
@@ -493,9 +504,11 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey
                   status={s}
                   slim
                   showCard={showCard}
+                  showQuote={showQuote}
                   instanceUrl={instanceUrl}
                   accessToken={accessToken}
                   onOpenProfile={setProfileAccount}
+                  onOpenDetail={setNestedDetailStatus}
                   onDeleteRequest={setDeleteTarget}
                   onEditRequest={setEditTarget}
                   onReplyRequest={onReply}
@@ -508,9 +521,11 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey
                 status={mainStatus}
                 highlight
                 showCard={showCard}
+                showQuote={showQuote}
                 instanceUrl={instanceUrl}
                 accessToken={accessToken}
                 onOpenProfile={setProfileAccount}
+                onOpenDetail={setNestedDetailStatus}
                 onDeleteRequest={setDeleteTarget}
                 onEditRequest={setEditTarget}
                 onReplyRequest={onReply}
@@ -524,9 +539,11 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey
                   status={s}
                   slim
                   showCard={showCard}
+                  showQuote={showQuote}
                   instanceUrl={instanceUrl}
                   accessToken={accessToken}
                   onOpenProfile={setProfileAccount}
+                  onOpenDetail={setNestedDetailStatus}
                   onDeleteRequest={setDeleteTarget}
                   onEditRequest={setEditTarget}
                   onReplyRequest={onReply}

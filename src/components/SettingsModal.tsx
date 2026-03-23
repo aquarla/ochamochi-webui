@@ -208,6 +208,12 @@ function DisplaySettings({
           onChange={(v) => onChange({ ...settings, truncateUrl: v })}
         />
       </SettingRow>
+      <SettingRow label="引用投稿を表示" description="引用を含む投稿に引用元の内容をカード表示する">
+        <ToggleSwitch
+          checked={settings.showQuote}
+          onChange={(v) => onChange({ ...settings, showQuote: v })}
+        />
+      </SettingRow>
 
       <SectionTitle>フォント・サイズ</SectionTitle>
       <SettingRow label="フォントサイズ" description="タイムライン上のテキストサイズ">

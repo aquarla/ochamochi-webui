@@ -79,6 +79,7 @@ export interface Status {
   emojis: CustomEmoji[]
   card?: PreviewCard | null
   poll?: Poll | null
+  quote?: { state: string; quoted_status: Status | null } | null
 }
 
 export interface PollOption {

@@ -8,6 +8,7 @@ import { ReplyModal } from './ReplyModal'
 import { MediaGrid } from './MediaGrid'
 import type { StoredAccountEntry } from '../services/auth'
 import { loadSettings } from '../hooks/useSettings'
+import { QuotePost } from './QuotePost'
 
 interface PostProps {
   status: Status
@@ -519,7 +520,7 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
             <>
               <div
                 ref={contentRef}
-                className={`text-gray-200 text-sm leading-relaxed prose prose-sm prose-invert max-w-none break-all [overflow-wrap:anywhere] [&_p]:break-all [&_a]:break-all [&_pre]:whitespace-pre-wrap [&_pre]:break-all [&_a]:text-blue-400 [&_a:hover]:text-blue-300 [&_p]:mb-1${truncateUrl ? " [&_.invisible]:hidden [&_.ellipsis]:after:content-['…']" : ''}`}
+                className={`text-gray-200 text-sm leading-relaxed prose prose-sm prose-invert max-w-none break-all [overflow-wrap:anywhere] [&_p]:break-all [&_a]:break-all [&_pre]:whitespace-pre-wrap [&_pre]:break-all [&_a]:text-blue-400 [&_a:hover]:text-blue-300 [&_p]:mb-1${truncateUrl ? " [&_.invisible]:hidden [&_.ellipsis]:after:content-['…']" : ''}${loadSettings(accountKey).showQuote ? ' [&_.quote-inline]:hidden' : ''}`}
                 dangerouslySetInnerHTML={{ __html: emojifyHtml(displayStatus.content, displayStatus.emojis) }}
               />
 
@@ -537,6 +538,13 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
                     const next = { ...displayStatus, poll: updatedPoll }
                     onUpdate(isReblog ? { ...status, reblog: next } : { ...status, ...next })
                   }}
+                />
+              )}
+
+              {loadSettings(accountKey).showQuote && displayStatus.quote?.quoted_status && (
+                <QuotePost
+                  status={displayStatus.quote.quoted_status}
+                  onOpenDetail={onOpenDetail}
                 />
               )}
 
