@@ -1,7 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { MastodonClient } from '../services/mastodon'
-import { EmojiPicker } from './EmojiPicker'
-import type { Status } from '../types'
+import { EmojiPicker, emojiCache, emojiFetching } from './EmojiPicker'
+import { UNICODE_EMOJI } from '../data/unicodeEmoji'
+import type { Status, CustomEmoji } from '../types'
+
+type EmojiSuggestion =
+  | { kind: 'custom'; emoji: CustomEmoji }
+  | { kind: 'unicode'; shortcode: string; char: string }
 
 interface AttachmentItem {
   mediaId: string
@@ -78,6 +84,10 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const cwRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [emojiSuggestions, setEmojiSuggestions] = useState<EmojiSuggestion[]>([])
+  const [emojiTriggerStart, setEmojiTriggerStart] = useState(-1)
+  const [emojiSelectedIndex, setEmojiSelectedIndex] = useState(0)
+  const [emojiDropdownPos, setEmojiDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null)
 
   // 編集モード: 投稿の本文ソースを取得して初期値に設定
   useEffect(() => {
@@ -125,6 +135,21 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
     const urls = attachments.filter((a) => !a.isExisting).map((a) => a.previewUrl)
     return () => urls.forEach((u) => URL.revokeObjectURL(u))
   }, [])
+
+  // カスタム絵文字をキャッシュしておく（補完用）
+  useEffect(() => {
+    if (emojiCache[instanceUrl] || emojiFetching[instanceUrl]) return
+    emojiFetching[instanceUrl] = true
+    const client = new MastodonClient(instanceUrl, accessToken)
+    client.getCustomEmojis()
+      .then((data) => {
+        emojiCache[instanceUrl] = data
+          .filter((e) => e.visible_in_picker !== false)
+          .sort((a, b) => a.shortcode.localeCompare(b.shortcode))
+      })
+      .catch(() => {})
+      .finally(() => { emojiFetching[instanceUrl] = false })
+  }, [instanceUrl, accessToken])
 
   const remaining = MAX_CHARS - text.length - (cwEnabled ? cwText.length : 0)
   const isOverLimit = remaining < 0
@@ -174,6 +199,28 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (emojiSuggestions.length > 0) {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        setEmojiSuggestions([])
+        return
+      }
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setEmojiSelectedIndex((i) => Math.min(i + 1, emojiSuggestions.length - 1))
+        return
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setEmojiSelectedIndex((i) => Math.max(i - 1, 0))
+        return
+      }
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault()
+        insertEmojiSuggestion(emojiSuggestions[emojiSelectedIndex])
+        return
+      }
+    }
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
       handleSubmit(e as unknown as React.FormEvent)
     }
@@ -184,6 +231,56 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
     if (!noSaveVisibility) {
       localStorage.setItem(visibilityStorageKey(accountKey), v)
     }
+  }
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value
+    setText(value)
+    const cursor = e.target.selectionStart ?? value.length
+    const before = value.slice(0, cursor)
+    const match = before.match(/:(\w{2,})$/)
+    if (match) {
+      const query = match[1].toLowerCase()
+      const customMatches: EmojiSuggestion[] = (emojiCache[instanceUrl] ?? [])
+        .filter((em) => em.shortcode.toLowerCase().includes(query))
+        .slice(0, 8)
+        .map((em) => ({ kind: 'custom', emoji: em }))
+      const unicodeMatches: EmojiSuggestion[] = UNICODE_EMOJI
+        .filter((em) => em.shortcode.toLowerCase().includes(query))
+        .slice(0, 8 - customMatches.length)
+        .map((em) => ({ kind: 'unicode', shortcode: em.shortcode, char: em.emoji }))
+      const suggestions = [...customMatches, ...unicodeMatches].slice(0, 8)
+      if (suggestions.length > 0) {
+        setEmojiSuggestions(suggestions)
+        setEmojiTriggerStart(cursor - match[1].length - 1)
+        setEmojiSelectedIndex(0)
+        const rect = e.target.getBoundingClientRect()
+        setEmojiDropdownPos({ top: rect.top, left: rect.left, width: rect.width })
+        return
+      }
+    }
+    setEmojiSuggestions([])
+    setEmojiTriggerStart(-1)
+    setEmojiDropdownPos(null)
+  }
+
+  const insertEmojiSuggestion = (suggestion: EmojiSuggestion) => {
+    const el = textareaRef.current
+    if (!el) return
+    const cursor = el.selectionStart ?? text.length
+    const shortcode = suggestion.kind === 'custom'
+      ? `:${suggestion.emoji.shortcode}:`
+      : suggestion.char
+    const next = text.slice(0, emojiTriggerStart) + shortcode + text.slice(cursor)
+    setText(next)
+    setEmojiSuggestions([])
+    setEmojiTriggerStart(-1)
+    setEmojiDropdownPos(null)
+    const newCursor = emojiTriggerStart + shortcode.length
+    requestAnimationFrame(() => {
+      el.focus()
+      el.setSelectionRange(newCursor, newCursor)
+    })
   }
 
   const insertEmoji = (emoji: string) => {
@@ -288,7 +385,7 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
       <textarea
         ref={textareaRef}
         value={text}
-        onChange={(e) => setText(e.target.value)}
+        onChange={handleTextChange}
         onKeyDown={handleKeyDown}
         onPaste={handlePaste}
         placeholder={
@@ -305,6 +402,33 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
         className="w-full bg-gray-700 text-white placeholder-gray-500 border border-gray-600 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         disabled={loading || sourceLoading}
       />
+      {emojiSuggestions.length > 0 && emojiDropdownPos && createPortal(
+        <div
+          className="fixed bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-[9999] overflow-hidden"
+          style={{
+            bottom: window.innerHeight - emojiDropdownPos.top + 4,
+            left: emojiDropdownPos.left,
+            width: emojiDropdownPos.width,
+          }}
+        >
+          {emojiSuggestions.map((s, i) => (
+            <button
+              key={s.kind === 'custom' ? `c:${s.emoji.shortcode}` : `u:${s.shortcode}`}
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); insertEmojiSuggestion(s) }}
+              className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left transition-colors ${i === emojiSelectedIndex ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700'}`}
+            >
+              {s.kind === 'custom' ? (
+                <img src={s.emoji.static_url} alt={s.emoji.shortcode} className="w-5 h-5 object-contain flex-shrink-0" />
+              ) : (
+                <span className="w-5 h-5 flex items-center justify-center text-base leading-none flex-shrink-0">{s.char}</span>
+              )}
+              <span className="text-xs">:{s.kind === 'custom' ? s.emoji.shortcode : s.shortcode}:</span>
+            </button>
+          ))}
+        </div>,
+        document.body
+      )}
 
       {attachments.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1">

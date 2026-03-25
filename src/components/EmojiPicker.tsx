@@ -3,7 +3,8 @@ import { MastodonClient } from '../services/mastodon'
 import type { CustomEmoji } from '../types'
 
 // Per-instance cache (survives component unmount within the session)
-const emojiCache: Record<string, CustomEmoji[]> = {}
+export const emojiCache: Record<string, CustomEmoji[]> = {}
+export const emojiFetching: Record<string, boolean> = {}
 
 const UNICODE_CATEGORIES: { label: string; emoji: string[] }[] = [
   {
