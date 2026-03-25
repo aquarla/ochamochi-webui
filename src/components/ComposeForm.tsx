@@ -88,6 +88,11 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
   const [emojiTriggerStart, setEmojiTriggerStart] = useState(-1)
   const [emojiSelectedIndex, setEmojiSelectedIndex] = useState(0)
   const [emojiDropdownPos, setEmojiDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null)
+  const [hashtagSuggestions, setHashtagSuggestions] = useState<string[]>([])
+  const [hashtagTriggerStart, setHashtagTriggerStart] = useState(-1)
+  const [hashtagSelectedIndex, setHashtagSelectedIndex] = useState(0)
+  const [hashtagDropdownPos, setHashtagDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null)
+  const hashtagDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // 編集モード: 投稿の本文ソースを取得して初期値に設定
   useEffect(() => {
@@ -221,6 +226,28 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
         return
       }
     }
+    if (hashtagSuggestions.length > 0) {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        setHashtagSuggestions([])
+        return
+      }
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setHashtagSelectedIndex((i) => Math.min(i + 1, hashtagSuggestions.length - 1))
+        return
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setHashtagSelectedIndex((i) => Math.max(i - 1, 0))
+        return
+      }
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault()
+        insertHashtagSuggestion(hashtagSuggestions[hashtagSelectedIndex])
+        return
+      }
+    }
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
       handleSubmit(e as unknown as React.FormEvent)
     }
@@ -262,6 +289,49 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
     setEmojiSuggestions([])
     setEmojiTriggerStart(-1)
     setEmojiDropdownPos(null)
+
+    // ハッシュタグ補完
+    const hashMatch = before.match(/#(\S+)$/)
+    if (hashMatch) {
+      const query = hashMatch[1]
+      const triggerStart = cursor - query.length - 1
+      const rect = e.target.getBoundingClientRect()
+      setHashtagTriggerStart(triggerStart)
+      setHashtagSelectedIndex(0)
+      setHashtagDropdownPos({ top: rect.top, left: rect.left, width: rect.width })
+      if (hashtagDebounceRef.current) clearTimeout(hashtagDebounceRef.current)
+      hashtagDebounceRef.current = setTimeout(async () => {
+        try {
+          const client = new MastodonClient(instanceUrl, accessToken)
+          const result = await client.search(query, 'hashtags', { limit: 8 })
+          setHashtagSuggestions(result.hashtags.map((t) => t.name))
+        } catch {
+          setHashtagSuggestions([])
+        }
+      }, 300)
+      return
+    }
+    setHashtagSuggestions([])
+    setHashtagTriggerStart(-1)
+    setHashtagDropdownPos(null)
+    if (hashtagDebounceRef.current) clearTimeout(hashtagDebounceRef.current)
+  }
+
+  const insertHashtagSuggestion = (tag: string) => {
+    const el = textareaRef.current
+    if (!el) return
+    const cursor = el.selectionStart ?? text.length
+    const inserted = `#${tag} `
+    const next = text.slice(0, hashtagTriggerStart) + inserted + text.slice(cursor)
+    setText(next)
+    setHashtagSuggestions([])
+    setHashtagTriggerStart(-1)
+    setHashtagDropdownPos(null)
+    const newCursor = hashtagTriggerStart + inserted.length
+    requestAnimationFrame(() => {
+      el.focus()
+      el.setSelectionRange(newCursor, newCursor)
+    })
   }
 
   const insertEmojiSuggestion = (suggestion: EmojiSuggestion) => {
@@ -424,6 +494,29 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
                 <span className="w-5 h-5 flex items-center justify-center text-base leading-none flex-shrink-0">{s.char}</span>
               )}
               <span className="text-xs">:{s.kind === 'custom' ? s.emoji.shortcode : s.shortcode}:</span>
+            </button>
+          ))}
+        </div>,
+        document.body
+      )}
+      {hashtagSuggestions.length > 0 && hashtagDropdownPos && createPortal(
+        <div
+          className="fixed bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-[9999] overflow-hidden"
+          style={{
+            bottom: window.innerHeight - hashtagDropdownPos.top + 4,
+            left: hashtagDropdownPos.left,
+            width: hashtagDropdownPos.width,
+          }}
+        >
+          {hashtagSuggestions.map((tag, i) => (
+            <button
+              key={tag}
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); insertHashtagSuggestion(tag) }}
+              className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left transition-colors ${i === hashtagSelectedIndex ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700'}`}
+            >
+              <span className="text-blue-400 flex-shrink-0">#</span>
+              <span className="text-xs">{tag}</span>
             </button>
           ))}
         </div>,
