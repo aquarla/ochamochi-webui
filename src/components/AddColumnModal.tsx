@@ -91,6 +91,8 @@ export function AddColumnModal({ onAdd, onClose, instanceUrl, accessToken }: Add
                 onChange={(e) => setTag(e.target.value)}
                 placeholder="mastodon (# 不要)"
                 className="w-full bg-gray-700 text-white placeholder-gray-500 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                autoComplete="off"
+                data-1p-ignore
                 autoFocus
               />
             </div>
