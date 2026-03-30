@@ -214,3 +214,11 @@ export interface StreamEvent {
   event: string
   payload: string
 }
+
+export interface WordFilter {
+  id: string
+  pattern: string
+  isRegex: boolean
+  expiresAt?: string  // ISO 8601、省略で無期限
+  createdAt: string
+}

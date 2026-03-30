@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { MastodonClient } from '../services/mastodon'
 import { emojifyText, emojifyHtml } from '../utils/emojify'
+import { useWordFilters } from '../hooks/useWordFilters'
+import { isFiltered } from '../utils/wordFilterMatch'
 import { StatusDetailModal } from './StatusDetailModal'
 import { UserProfileModal } from './UserProfileModal'
 import { ReplyModal } from './ReplyModal'
@@ -156,6 +158,7 @@ export function ConversationsColumn({ column, instanceUrl, accessToken, accountK
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [hasMore, setHasMore] = useState(true)
+  const { filters: wordFilters } = useWordFilters(accountKey)
   const [detailStatus, setDetailStatus] = useState<Status | null>(null)
   const [replyStatus, setReplyStatus] = useState<Status | null>(null)
   const [profileAccount, setProfileAccount] = useState<Account | null>(null)
@@ -270,7 +273,7 @@ export function ConversationsColumn({ column, instanceUrl, accessToken, accountK
         {conversations.length === 0 && !loading && !error && (
           <div className="p-4 text-gray-500 text-sm text-center">会話がありません</div>
         )}
-        {conversations.map((conv) => (
+        {conversations.filter((conv) => !conv.last_status || !isFiltered(conv.last_status, wordFilters)).map((conv) => (
           <ConversationItem
             key={conv.id}
             conversation={conv}

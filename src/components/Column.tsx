@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTimeline } from '../hooks/useTimeline'
 import { useStreaming } from '../hooks/useStreaming'
+import { useWordFilters } from '../hooks/useWordFilters'
+import { isFiltered } from '../utils/wordFilterMatch'
 import { getColumnLabel } from '../store/columns'
 import { Post } from './Post'
 import { StatusDetailModal } from './StatusDetailModal'
@@ -180,8 +182,11 @@ export function Column({ column, instanceUrl, accessToken, accountKey, onRemove,
 
   const tagFilterCount = (column.tagAny?.length ?? 0) + (column.tagAll?.length ?? 0) + (column.tagNone?.length ?? 0)
 
-  const { statuses, loading, error, hasMore, loadMore, prependStatus, removeStatus, removeByAccountId, updateStatus } =
+  const { statuses: rawStatuses, loading, error, hasMore, loadMore, prependStatus, removeStatus, removeByAccountId, updateStatus } =
     useTimeline(instanceUrl, accessToken, column.type, column.tag, supportsMediaFilter ? onlyMedia : undefined, tagFilters, column.listId)
+
+  const { filters: wordFilters } = useWordFilters(accountKey)
+  const statuses = rawStatuses.filter((s) => !isFiltered(s, wordFilters))
 
   const handleNewStatus = useCallback((status: Status) => {
     prependStatus(status)

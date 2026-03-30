@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNotifications } from '../hooks/useNotifications'
+import { useWordFilters } from '../hooks/useWordFilters'
+import { isFiltered } from '../utils/wordFilterMatch'
 import { NotificationItem } from './NotificationItem'
 import { UserProfileModal } from './UserProfileModal'
 import { StatusDetailModal } from './StatusDetailModal'
@@ -52,11 +54,13 @@ export function NotificationsColumn({ column, instanceUrl, accessToken, accountK
 
   const { notifications, loading, error, hasMore, loadMore } = useNotifications(instanceUrl, accessToken, handleNewNotification)
 
+  const { filters: wordFilters } = useWordFilters(accountKey)
   const visibleNotifications = notifications.filter((n) => {
-    if (n.type === 'mention') return settings.notifyMention
-    if (n.type === 'follow' || n.type === 'follow_request') return settings.notifyFollow
-    if (n.type === 'reblog') return settings.notifyReblog
-    if (n.type === 'favourite') return settings.notifyFavourite
+    if (n.type === 'mention') { if (!settings.notifyMention) return false }
+    else if (n.type === 'follow' || n.type === 'follow_request') { if (!settings.notifyFollow) return false }
+    else if (n.type === 'reblog') { if (!settings.notifyReblog) return false }
+    else if (n.type === 'favourite') { if (!settings.notifyFavourite) return false }
+    if (n.status) return !isFiltered(n.status, wordFilters)
     return true
   })
 
