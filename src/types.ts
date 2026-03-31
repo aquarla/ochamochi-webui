@@ -125,6 +125,8 @@ export interface PreviewCard {
 export interface MastodonList {
   id: string
   title: string
+  exclusive: boolean
+  replies_policy: 'followed' | 'list' | 'none'
 }
 
 export interface Tag {

@@ -257,6 +257,51 @@ export class MastodonClient {
     return this.request<MastodonList[]>('/api/v1/lists')
   }
 
+  async createList(title: string, exclusive: boolean, replies_policy: 'followed' | 'list' | 'none'): Promise<MastodonList> {
+    return this.request<MastodonList>('/api/v1/lists', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, exclusive, replies_policy }),
+    })
+  }
+
+  async updateList(id: string, title: string, exclusive: boolean, replies_policy: 'followed' | 'list' | 'none'): Promise<MastodonList> {
+    return this.request<MastodonList>(`/api/v1/lists/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, exclusive, replies_policy }),
+    })
+  }
+
+  async deleteList(id: string): Promise<void> {
+    await this.request<unknown>(`/api/v1/lists/${id}`, { method: 'DELETE' })
+  }
+
+  async getListAccounts(id: string): Promise<Account[]> {
+    return this.request<Account[]>(`/api/v1/lists/${id}/accounts?limit=0`)
+  }
+
+  async addListAccounts(id: string, accountIds: string[]): Promise<void> {
+    await this.request<unknown>(`/api/v1/lists/${id}/accounts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ account_ids: accountIds }),
+    })
+  }
+
+  async removeListAccounts(id: string, accountIds: string[]): Promise<void> {
+    await this.request<unknown>(`/api/v1/lists/${id}/accounts`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ account_ids: accountIds }),
+    })
+  }
+
+  async searchFollowing(query: string, limit = 8): Promise<Account[]> {
+    const qs = new URLSearchParams({ q: query, following: 'true', limit: String(limit) })
+    return this.request<Account[]>(`/api/v1/accounts/search?${qs}`)
+  }
+
   async getListTimeline(listId: string, params: { max_id?: string; limit?: number } = {}): Promise<Status[]> {
     const qs = new URLSearchParams()
     if (params.max_id) qs.set('max_id', params.max_id)

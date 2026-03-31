@@ -8,6 +8,7 @@ import { AddAccountModal } from './AddAccountModal'
 import { addColumn, removeColumn } from '../store/columns'
 import { useTheme } from '../hooks/useTheme'
 import { SettingsModal } from './SettingsModal'
+import { ListManagerModal } from './ListManagerModal'
 import { ScheduledColumn } from './ScheduledColumn'
 import { SearchColumn } from './SearchColumn'
 import { UserProfileModal } from './UserProfileModal'
@@ -38,6 +39,7 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
   const [showAccountMenu, setShowAccountMenu] = useState(false)
   const [showAddAccountModal, setShowAddAccountModal] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [showListManager, setShowListManager] = useState(false)
   const [showSelfProfile, setShowSelfProfile] = useState(false)
   const { badgeCounts, clearBadge } = useBackgroundNotifications(auth.accounts, auth.activeAccountKey)
 
@@ -149,6 +151,16 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
           </button>
 
           <button
+            onClick={() => setShowListManager(true)}
+            className="text-gray-400 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-gray-700"
+            title="リスト管理"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+            </svg>
+          </button>
+
+          <button
             onClick={() => setShowSettings(true)}
             className="text-gray-400 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-gray-700"
             title="設定"
@@ -253,6 +265,7 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
           instanceUrl={auth.instanceUrl!}
           accessToken={auth.accessToken!}
           accountKey={auth.activeAccountKey ?? undefined}
+          account={auth.account}
           onComposed={() => setShowCompose(false)}
           onClose={() => setShowCompose(false)}
         />
@@ -384,6 +397,14 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
           accountKey={auth.activeAccountKey ?? undefined}
           instanceUrl={auth.instanceUrl ?? undefined}
           onSave={setSettings}
+        />
+      )}
+
+      {showListManager && auth.instanceUrl && auth.accessToken && (
+        <ListManagerModal
+          instanceUrl={auth.instanceUrl}
+          accessToken={auth.accessToken}
+          onClose={() => setShowListManager(false)}
         />
       )}
 
