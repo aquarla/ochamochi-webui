@@ -7,6 +7,7 @@ import { getColumnLabel } from '../store/columns'
 import { Post } from './Post'
 import { StatusDetailModal } from './StatusDetailModal'
 import { UserProfileModal } from './UserProfileModal'
+import { NotestockColumn } from './NotestockColumn'
 import { MastodonClient } from '../services/mastodon'
 import type { ColumnConfig, Status, Account } from '../types'
 import type { StoredAccountEntry } from '../services/auth'
@@ -20,6 +21,7 @@ interface ColumnProps {
   onUpdate: (column: ColumnConfig) => void
   onAddTagColumn?: (tag: string) => void
   currentAccountId?: string
+  currentAcct?: string
   accounts?: StoredAccountEntry[]
 }
 
@@ -162,7 +164,24 @@ function TagFilterPanel({ column, onApply }: TagFilterPanelProps) {
 
 // ---- Column ----
 
-export function Column({ column, instanceUrl, accessToken, accountKey, onRemove, onUpdate, onAddTagColumn, currentAccountId, accounts }: ColumnProps) {
+export function Column({ column, instanceUrl, accessToken, accountKey, onRemove, onUpdate, onAddTagColumn, currentAccountId, currentAcct, accounts }: ColumnProps) {
+  if (column.type === 'notestock') {
+    return (
+      <NotestockColumn
+        column={column}
+        instanceUrl={instanceUrl}
+        accessToken={accessToken}
+        accountKey={accountKey}
+        onRemove={onRemove}
+        onUpdate={onUpdate}
+        onAddTagColumn={onAddTagColumn}
+        currentAccountId={currentAccountId}
+        currentAcct={currentAcct}
+        accounts={accounts}
+      />
+    )
+  }
+
   const [detailStatus, setDetailStatus] = useState<Status | null>(null)
   const [profileAccount, setProfileAccount] = useState<Account | null>(null)
   const [showTagFilter, setShowTagFilter] = useState(false)

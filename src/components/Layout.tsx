@@ -78,8 +78,8 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
     return () => document.removeEventListener('keydown', handler)
   }, [])
 
-  const handleAddColumn = (type: ColumnType, tag?: string, listId?: string, listTitle?: string, searchType?: 'accounts' | 'statuses' | 'hashtags') => {
-    onColumnsChange(addColumn(columns, type, tag, listId, listTitle, searchType))
+  const handleAddColumn = (type: ColumnType, tag?: string, listId?: string, listTitle?: string, searchType?: 'accounts' | 'statuses' | 'hashtags', notestockQuery?: string, notestockAcctMode?: 'all' | 'self' | 'custom', notestockAcct?: string, notestockIncludePrivate?: boolean, notestockMaxDt?: string) => {
+    onColumnsChange(addColumn(columns, type, tag, listId, listTitle, searchType, notestockQuery, notestockAcctMode, notestockAcct, notestockIncludePrivate, notestockMaxDt))
   }
 
   const handleRemoveColumn = (id: string) => {
@@ -346,6 +346,7 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
                 onUpdate={handleUpdateColumn}
                 onAddTagColumn={(tag) => handleAddColumn('tag', tag)}
                 currentAccountId={auth.account?.id}
+                currentAcct={auth.account?.acct}
                 accounts={auth.accounts}
               />
             )
@@ -359,6 +360,8 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
           onClose={() => setShowAddModal(false)}
           instanceUrl={auth.instanceUrl ?? undefined}
           accessToken={auth.accessToken ?? undefined}
+          currentAcct={auth.account?.acct}
+          accountKey={auth.activeAccountKey ?? undefined}
         />
       )}
 

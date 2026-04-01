@@ -135,7 +135,7 @@ export interface Tag {
   history?: Array<{ day: string; uses: string; accounts: string }>
 }
 
-export type ColumnType = 'home' | 'local' | 'public' | 'tag' | 'list' | 'notifications' | 'favourites' | 'bookmarks' | 'scheduled' | 'search' | 'conversations'
+export type ColumnType = 'home' | 'local' | 'public' | 'tag' | 'list' | 'notifications' | 'favourites' | 'bookmarks' | 'scheduled' | 'search' | 'conversations' | 'notestock'
 
 export interface Conversation {
   id: string
@@ -199,6 +199,11 @@ export interface ColumnConfig {
   locked?: boolean
   searchType?: 'accounts' | 'statuses' | 'hashtags'
   searchQuery?: string
+  notestockQuery?: string
+  notestockAcctMode?: 'all' | 'self' | 'custom'
+  notestockAcct?: string
+  notestockMaxDt?: string
+  notestockIncludePrivate?: boolean
 }
 
 export interface AuthState {

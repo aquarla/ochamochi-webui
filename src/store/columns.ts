@@ -40,8 +40,13 @@ export function addColumn(
   listId?: string,
   listTitle?: string,
   searchType?: 'accounts' | 'statuses' | 'hashtags',
+  notestockQuery?: string,
+  notestockAcctMode?: 'all' | 'self' | 'custom',
+  notestockAcct?: string,
+  notestockIncludePrivate?: boolean,
+  notestockMaxDt?: string,
 ): ColumnConfig[] {
-  return [...columns, { id: generateId(), type, tag, listId, listTitle, searchType }]
+  return [...columns, { id: generateId(), type, tag, listId, listTitle, searchType, notestockQuery, notestockAcctMode, notestockAcct, notestockIncludePrivate, notestockMaxDt }]
 }
 
 export function removeColumn(columns: ColumnConfig[], id: string): ColumnConfig[] {
@@ -74,5 +79,14 @@ export function getColumnLabel(col: ColumnConfig): string {
       return '投稿検索'
     case 'conversations':
       return '会話'
+    case 'notestock': {
+      const mode = col.notestockAcctMode ?? 'all'
+      const acctPart = mode === 'self' ? '自分' : mode === 'custom' && col.notestockAcct ? `@${col.notestockAcct}` : ''
+      const queryPart = col.notestockQuery ?? ''
+      if (acctPart && queryPart) return `${acctPart}: ${queryPart}`
+      if (acctPart) return acctPart
+      if (queryPart) return `notestock: ${queryPart}`
+      return 'notestock'
+    }
   }
 }

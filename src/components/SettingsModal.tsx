@@ -5,6 +5,7 @@ import { useTheme } from '../hooks/useTheme'
 import type { Theme } from '../hooks/useTheme'
 import { useWordFilters } from '../hooks/useWordFilters'
 import type { WordFilter } from '../types'
+import { loadNotestockToken, saveNotestockToken } from '../store/notestockToken'
 
 interface SettingsModalProps {
   onClose: () => void
@@ -13,7 +14,7 @@ interface SettingsModalProps {
   onSave?: (settings: AppSettings) => void
 }
 
-type GroupId = 'general' | 'display' | 'notifications' | 'privacy' | 'filters'
+type GroupId = 'general' | 'display' | 'notifications' | 'privacy' | 'filters' | 'notestock'
 
 interface SettingsGroup {
   id: GroupId
@@ -65,6 +66,15 @@ const groups: SettingsGroup[] = [
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
+      </svg>
+    ),
+  },
+  {
+    id: 'notestock',
+    label: 'notestock',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
       </svg>
     ),
   },
@@ -307,6 +317,7 @@ const groupTitles: Record<GroupId, string> = {
   notifications: '通知',
   privacy: 'プライバシー',
   filters: 'フィルター',
+  notestock: 'notestock',
 }
 
 function FiltersSettings({ accountKey }: { accountKey?: string }) {
@@ -413,6 +424,57 @@ function FiltersSettings({ accountKey }: { accountKey?: string }) {
   )
 }
 
+function NotestockSettings({ accountKey }: { accountKey?: string }) {
+  const [token, setToken] = useState(() => loadNotestockToken(accountKey))
+  const [saved, setSaved] = useState(false)
+
+  const handleSave = () => {
+    saveNotestockToken(token, accountKey)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
+
+  return (
+    <div>
+      <SectionTitle>APIトークン</SectionTitle>
+      <p className="text-gray-400 text-xs mb-3">
+        notestockのAPIトークンを設定すると、非公開投稿を含む検索が利用できます。
+        トークンはnotestockの設定ページから取得してください。
+      </p>
+      <div className="space-y-2">
+        <input
+          type="password"
+          value={token}
+          onChange={(e) => { setToken(e.target.value); setSaved(false) }}
+          placeholder="APIトークンを入力"
+          className="w-full bg-gray-700 text-white placeholder-gray-500 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+          data-1p-ignore
+          autoComplete="off"
+        />
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleSave}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg px-4 py-2 transition-colors"
+          >
+            {saved ? '保存しました' : '保存'}
+          </button>
+          {token && (
+            <button
+              type="button"
+              onClick={() => { setToken(''); saveNotestockToken('', accountKey); setSaved(false) }}
+              className="text-gray-400 hover:text-red-400 text-sm transition-colors px-3 py-2"
+            >
+              削除
+            </button>
+          )}
+        </div>
+      </div>
+      <p className="text-gray-600 text-xs mt-3">トークンはこのデバイスのみに保存されます。</p>
+    </div>
+  )
+}
+
 function PrivacySettings({
   settings,
   onChange,
@@ -461,6 +523,7 @@ export function SettingsModal({ onClose, accountKey, instanceUrl, onSave }: Sett
     notifications: <NotificationsSettings settings={settings} onChange={handleSettingsChange} />,
     privacy: <PrivacySettings settings={settings} onChange={handleSettingsChange} />,
     filters: <FiltersSettings accountKey={accountKey} />,
+    notestock: <NotestockSettings accountKey={accountKey} />,
   }
 
   return (

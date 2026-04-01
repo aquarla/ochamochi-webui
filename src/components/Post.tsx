@@ -24,6 +24,7 @@ interface PostProps {
   currentAccountId?: string
   pinned?: boolean
   accounts?: StoredAccountEntry[]
+  resolveOnAction?: boolean
 }
 
 function formatDate(dateStr: string): string {
@@ -166,7 +167,7 @@ function PollView({ poll, instanceUrl, accessToken, onVote }: PollViewProps) {
 
 // ---- Post ----
 
-export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, onDelete, onOpenDetail, onOpenProfile, onAddTagColumn, onMuteAccount, currentAccountId, pinned, accounts }: PostProps) {
+export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, onDelete, onOpenDetail, onOpenProfile, onAddTagColumn, onMuteAccount, currentAccountId, pinned, accounts, resolveOnAction }: PostProps) {
   const [actionLoading, setActionLoading] = useState(false)
   const [replyOpen, setReplyOpen] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
@@ -187,6 +188,7 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
   const [showBoostDialog, setShowBoostDialog] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
+  const resolvedIdRef = useRef<string | null>(null)
 
   // Accounts eligible for "import to another server" (exclude the current viewing account)
   const importableAccounts = (accounts ?? []).filter(
@@ -336,6 +338,15 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
     }
   }
 
+  const getStatusId = async (): Promise<string> => {
+    if (!resolveOnAction) return displayStatus.id
+    if (resolvedIdRef.current) return resolvedIdRef.current
+    const client = new MastodonClient(instanceUrl, accessToken)
+    const resolved = await client.searchResolveStatus(displayStatus.url ?? displayStatus.uri)
+    resolvedIdRef.current = resolved.id
+    return resolved.id
+  }
+
   const applyUpdate = (patch: Partial<typeof displayStatus>) => {
     const next = { ...displayStatus, ...patch }
     onUpdate(isReblog ? { ...status, reblog: next } : { ...status, ...next })
@@ -352,9 +363,10 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
     })
     const client = new MastodonClient(instanceUrl, accessToken)
     try {
+      const id = await getStatusId()
       const updated = wasFavourited
-        ? await client.unfavouriteStatus(displayStatus.id)
-        : await client.favouriteStatus(displayStatus.id)
+        ? await client.unfavouriteStatus(id)
+        : await client.favouriteStatus(id)
       onUpdate(isReblog ? { ...status, reblog: updated } : { ...status, ...updated })
     } catch {
       applyUpdate({ favourited: wasFavourited, favourites_count: displayStatus.favourites_count })
@@ -379,9 +391,10 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
     applyUpdate({ bookmarked: !wasBookmarked })
     const client = new MastodonClient(instanceUrl, accessToken)
     try {
+      const id = await getStatusId()
       const updated = wasBookmarked
-        ? await client.unbookmarkStatus(displayStatus.id)
-        : await client.bookmarkStatus(displayStatus.id)
+        ? await client.unbookmarkStatus(id)
+        : await client.bookmarkStatus(id)
       onUpdate(isReblog ? { ...status, reblog: updated } : { ...status, ...updated })
     } catch {
       applyUpdate({ bookmarked: wasBookmarked })
@@ -401,9 +414,10 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
     })
     const client = new MastodonClient(instanceUrl, accessToken)
     try {
+      const id = await getStatusId()
       const updated = wasReblogged
-        ? await client.unreblogStatus(displayStatus.id)
-        : await client.reblogStatus(displayStatus.id)
+        ? await client.unreblogStatus(id)
+        : await client.reblogStatus(id)
       // reblogStatus returns the new reblog wrapper; the original is in updated.reblog
       // unreblogStatus returns the original directly
       const source = !wasReblogged && updated.reblog ? updated.reblog : updated

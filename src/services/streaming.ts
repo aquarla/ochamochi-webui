@@ -20,6 +20,7 @@ function getStreamName(type: ColumnType, tag?: string, onlyMedia?: boolean, list
     case 'scheduled':
     case 'search':
     case 'conversations':
+    case 'notestock':
       return ''  // no streaming endpoint; useStreaming skips this type
   }
 }
