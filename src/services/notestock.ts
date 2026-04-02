@@ -167,7 +167,9 @@ export async function searchNotestock(params: {
   const data = (await res.json()) as NotestockSearchResponse
   const rawStatuses = data.statuses ?? []
   const statuses = rawStatuses.map(convertStatus)
-  const nextMaxDt = parseLinkNextMaxDt(res.headers.get('Link'))
+  const nextMaxDt =
+    parseLinkNextMaxDt(res.headers.get('Link')) ??
+    (rawStatuses.length > 0 ? rawStatuses[rawStatuses.length - 1].published : undefined)
   return {
     statuses,
     nextMaxDt,
