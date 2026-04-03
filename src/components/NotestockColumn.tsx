@@ -4,6 +4,7 @@ import { useWordFilters } from '../hooks/useWordFilters'
 import { isFiltered } from '../utils/wordFilterMatch'
 import { loadNotestockToken } from '../store/notestockToken'
 import { getColumnLabel } from '../store/columns'
+import { MastodonClient } from '../services/mastodon'
 import { Post } from './Post'
 import { StatusDetailModal } from './StatusDetailModal'
 import { UserProfileModal } from './UserProfileModal'
@@ -211,6 +212,21 @@ export function NotestockColumn({
     setProfileAccount(account)
   }, [])
 
+  const handleOpenDetail = useCallback(async (status: Status) => {
+    const url = status.url ?? status.uri
+    if (!url || !url.startsWith('http')) {
+      setDetailStatus(status)
+      return
+    }
+    try {
+      const client = new MastodonClient(instanceUrl, accessToken)
+      const resolved = await client.searchResolveStatus(url)
+      setDetailStatus(resolved)
+    } catch {
+      setDetailStatus(status)
+    }
+  }, [instanceUrl, accessToken])
+
   const scrollRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
 
@@ -333,7 +349,7 @@ export function NotestockColumn({
             accessToken={accessToken}
             accountKey={accountKey}
             onUpdate={updateStatus}
-            onOpenDetail={setDetailStatus}
+            onOpenDetail={handleOpenDetail}
             onOpenProfile={handleOpenProfile}
             onAddTagColumn={onAddTagColumn}
             currentAccountId={currentAccountId}
