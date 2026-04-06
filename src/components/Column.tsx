@@ -236,18 +236,16 @@ export function Column({ column, instanceUrl, accessToken, accountKey, onRemove,
   })
 
   const scrollRef = useRef<HTMLDivElement>(null)
-  const sentinelRef = useRef<HTMLDivElement>(null)
 
   // Infinite scroll
   useEffect(() => {
-    const el = sentinelRef.current
+    const el = scrollRef.current
     if (!el) return
-    const observer = new IntersectionObserver(
-      (entries) => { if (entries[0].isIntersecting) loadMore() },
-      { rootMargin: '200px' },
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
+    const handler = () => {
+      if (el.scrollHeight - el.scrollTop - el.clientHeight < 200) loadMore()
+    }
+    el.addEventListener('scroll', handler, { passive: true })
+    return () => el.removeEventListener('scroll', handler)
   }, [loadMore])
 
   // コンテンツがコンテナを埋めていない場合に追加ロード
@@ -383,8 +381,6 @@ export function Column({ column, instanceUrl, accessToken, accountKey, onRemove,
         {!hasMore && statuses.length > 0 && (
           <div className="p-3 text-gray-600 text-xs text-center">最後まで読み込みました</div>
         )}
-
-        <div ref={sentinelRef} />
       </div>
 
       {profileAccount && (
