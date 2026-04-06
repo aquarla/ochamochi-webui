@@ -228,17 +228,15 @@ export function NotestockColumn({
   }, [instanceUrl, accessToken])
 
   const scrollRef = useRef<HTMLDivElement>(null)
-  const sentinelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const el = sentinelRef.current
+    const el = scrollRef.current
     if (!el) return
-    const observer = new IntersectionObserver(
-      (entries) => { if (entries[0].isIntersecting) loadMore() },
-      { rootMargin: '200px' },
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
+    const handler = () => {
+      if (el.scrollHeight - el.scrollTop - el.clientHeight < 200) loadMore()
+    }
+    el.addEventListener('scroll', handler, { passive: true })
+    return () => el.removeEventListener('scroll', handler)
   }, [loadMore])
 
   // データ取得後、コンテナが埋まっていなければ追加ロード
@@ -367,8 +365,6 @@ export function NotestockColumn({
         {!hasMore && statuses.length > 0 && (
           <div className="p-3 text-gray-600 text-xs text-center">最後まで読み込みました</div>
         )}
-
-        <div ref={sentinelRef} />
       </div>
 
       {profileAccount && (
