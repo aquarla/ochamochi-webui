@@ -397,3 +397,16 @@ img.custom-emoji-stamp {
 [data-theme="horizon-bright"] .bg-blue-600:not(:disabled) {
   color: #ffffff;
 }
+
+/* CW text: yellow-300 is unreadable on light backgrounds */
+[data-theme="light"] .text-yellow-300,
+[data-theme="sepia"] .text-yellow-300,
+[data-theme="horizon-bright"] .text-yellow-300 {
+  color: #92400e;
+}
+
+[data-theme="light"] .placeholder-yellow-700::placeholder,
+[data-theme="sepia"] .placeholder-yellow-700::placeholder,
+[data-theme="horizon-bright"] .placeholder-yellow-700::placeholder {
+  color: #b45309;
+}
