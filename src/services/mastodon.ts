@@ -79,6 +79,12 @@ export class MastodonClient {
     spoiler_text?: string
     media_ids?: string[]
     scheduled_at?: string
+    poll?: {
+      options: string[]
+      expires_in: number
+      multiple?: boolean
+      hide_totals?: boolean
+    }
   }): Promise<Status> {
     return this.request<Status>('/api/v1/statuses', {
       method: 'POST',

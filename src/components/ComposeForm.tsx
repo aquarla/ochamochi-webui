@@ -81,6 +81,10 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
   const [scheduledAt, setScheduledAt] = useState<string>('')
   const [showSchedulePicker, setShowSchedulePicker] = useState(false)
   const [pendingSchedule, setPendingSchedule] = useState<string>('')
+  const [pollEnabled, setPollEnabled] = useState(false)
+  const [pollOptions, setPollOptions] = useState<string[]>(['', ''])
+  const [pollExpiresIn, setPollExpiresIn] = useState(86400)
+  const [pollMultiple, setPollMultiple] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const cwRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -158,7 +162,8 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
 
   const remaining = MAX_CHARS - text.length - (cwEnabled ? cwText.length : 0)
   const isOverLimit = remaining < 0
-  const canSubmit = (text.trim().length > 0 || attachments.length > 0) && !isOverLimit && !loading && !uploading && !sourceLoading
+  const pollValid = !pollEnabled || pollOptions.filter((o) => o.trim()).length >= 2
+  const canSubmit = (text.trim().length > 0 || attachments.length > 0) && !isOverLimit && !loading && !uploading && !sourceLoading && pollValid
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -186,6 +191,11 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
           sensitive: cwEnabled,
           media_ids: attachments.length > 0 ? attachments.map((a) => a.mediaId) : undefined,
           scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : undefined,
+          poll: pollEnabled ? {
+            options: pollOptions.map((o) => o.trim()).filter(Boolean),
+            expires_in: pollExpiresIn,
+            multiple: pollMultiple,
+          } : undefined,
         })
         attachments.forEach((a) => URL.revokeObjectURL(a.previewUrl))
         setText('')
@@ -193,6 +203,9 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
         setCwText('')
         setAttachments([])
         setScheduledAt('')
+        setPollEnabled(false)
+        setPollOptions(['', ''])
+        setPollMultiple(false)
         onComposed?.()
       }
     } catch (e) {
@@ -373,7 +386,7 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
       .filter((item) => item.kind === 'file' && item.type.startsWith('image/'))
       .map((item) => item.getAsFile())
       .filter((f): f is File => f !== null)
-    if (files.length === 0) return
+    if (files.length === 0 || pollEnabled) return
     e.preventDefault()
     const slots = 4 - attachments.length
     const toUpload = files.slice(0, slots)
@@ -554,6 +567,69 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
         <EmojiPicker instanceUrl={instanceUrl} accessToken={accessToken} onSelect={insertEmoji} />
       )}
 
+      {pollEnabled && !isEditMode && (
+        <div className="mt-2 space-y-1.5">
+          {pollOptions.map((opt, i) => (
+            <div key={i} className="flex items-center gap-1.5">
+              <input
+                type="text"
+                value={opt}
+                onChange={(e) => setPollOptions((prev) => prev.map((o, j) => j === i ? e.target.value : o))}
+                placeholder={`選択肢 ${i + 1}`}
+                className="flex-1 bg-gray-700 text-white placeholder-gray-500 border border-gray-600 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                disabled={loading}
+              />
+              {pollOptions.length > 2 && (
+                <button
+                  type="button"
+                  onClick={() => setPollOptions((prev) => prev.filter((_, j) => j !== i))}
+                  className="text-gray-500 hover:text-red-400 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          ))}
+          {pollOptions.length < 4 && (
+            <button
+              type="button"
+              onClick={() => setPollOptions((prev) => [...prev, ''])}
+              className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+            >
+              + 選択肢を追加
+            </button>
+          )}
+          <div className="flex items-center gap-3 pt-1">
+            <select
+              value={pollExpiresIn}
+              onChange={(e) => setPollExpiresIn(Number(e.target.value))}
+              className="bg-gray-700 text-gray-300 border border-gray-600 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+              disabled={loading}
+            >
+              <option value={300}>5分</option>
+              <option value={1800}>30分</option>
+              <option value={3600}>1時間</option>
+              <option value={21600}>6時間</option>
+              <option value={86400}>1日</option>
+              <option value={259200}>3日</option>
+              <option value={604800}>7日</option>
+            </select>
+            <label className="flex items-center gap-1.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={pollMultiple}
+                onChange={(e) => setPollMultiple(e.target.checked)}
+                className="accent-blue-500"
+                disabled={loading}
+              />
+              <span className="text-xs text-gray-400">複数選択</span>
+            </label>
+          </div>
+        </div>
+      )}
+
       {!isEditMode && scheduledAt && (
         <div className="flex items-center gap-1.5 mt-1.5">
           <svg className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -580,7 +656,7 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
             onClick={() => fileInputRef.current?.click()}
             className="border-gray-600 text-gray-400 hover:border-gray-500 hover:text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed border rounded px-2 py-1 transition-colors"
             title="画像を添付"
-            disabled={loading || uploading || attachments.length >= 4 || sourceLoading}
+            disabled={loading || uploading || attachments.length >= 4 || sourceLoading || pollEnabled}
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -632,6 +708,24 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+          )}
+
+          {!isEditMode && (
+            <button
+              type="button"
+              onClick={() => setPollEnabled((v) => !v)}
+              className={`px-2 py-1 rounded border transition-colors ${
+                pollEnabled
+                  ? 'bg-blue-600 border-blue-500 text-white'
+                  : 'border-gray-600 text-gray-400 hover:border-gray-500 hover:text-gray-300'
+              }`}
+              title="アンケート"
+              disabled={loading || attachments.length > 0}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </button>
           )}
