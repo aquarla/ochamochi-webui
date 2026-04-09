@@ -71,6 +71,7 @@ function ThreadPost({ status, highlight, showConnector }: { status: Status; high
 export function ReplyModal({ status, instanceUrl, accessToken, accountKey, onClose, onComposed, defaultVisibility }: ReplyModalProps) {
   const [ancestors, setAncestors] = useState<Status[]>([])
   const threadEndRef = useRef<HTMLDivElement>(null)
+  const backdropMouseDown = useRef(false)
 
   useEffect(() => {
     const client = new MastodonClient(instanceUrl, accessToken)
@@ -87,7 +88,8 @@ export function ReplyModal({ status, instanceUrl, accessToken, accountKey, onClo
   return createPortal(
     <div
       className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
-      onClick={onClose}
+      onMouseDown={(e) => { backdropMouseDown.current = e.target === e.currentTarget }}
+      onMouseUp={(e) => { if (backdropMouseDown.current && e.target === e.currentTarget) onClose() }}
     >
       <div
         className="bg-gray-800 rounded-xl shadow-2xl w-full max-w-xl flex flex-col overflow-hidden"
