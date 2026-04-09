@@ -22,6 +22,7 @@ interface ComposeFormProps {
   onComposed?: () => void
   inReplyToId?: string
   initialText?: string
+  initialCwText?: string
   onCancel?: () => void
   inline?: boolean
   editStatus?: Status
@@ -58,7 +59,7 @@ function loadVisibility(accountKey?: string): Visibility {
   return (localStorage.getItem(visibilityStorageKey(accountKey)) as Visibility | null) ?? 'public'
 }
 
-export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, inReplyToId, initialText, onCancel, inline, editStatus, onEdited, defaultVisibility }: ComposeFormProps) {
+export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, inReplyToId, initialText, initialCwText, onCancel, inline, editStatus, onEdited, defaultVisibility }: ComposeFormProps) {
   const isEditMode = !!editStatus
   const noSaveVisibility = isEditMode || defaultVisibility !== undefined
 
@@ -66,8 +67,8 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
   const [visibility, setVisibility] = useState<Visibility>(() =>
     isEditMode ? (editStatus.visibility as Visibility) : (defaultVisibility ?? loadVisibility(accountKey))
   )
-  const [cwEnabled, setCwEnabled] = useState(isEditMode ? !!editStatus.spoiler_text : false)
-  const [cwText, setCwText] = useState('')
+  const [cwEnabled, setCwEnabled] = useState(isEditMode ? !!editStatus.spoiler_text : !!initialCwText)
+  const [cwText, setCwText] = useState(initialCwText ?? '')
   const [loading, setLoading] = useState(false)
   const [sourceLoading, setSourceLoading] = useState(isEditMode)
   const [error, setError] = useState<string | null>(null)
@@ -135,7 +136,7 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
   }, [])
 
   useEffect(() => {
-    if (cwEnabled) {
+    if (cwEnabled && !initialCwText) {
       cwRef.current?.focus()
     }
   }, [cwEnabled])

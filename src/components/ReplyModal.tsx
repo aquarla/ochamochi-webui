@@ -125,6 +125,7 @@ export function ReplyModal({ status, instanceUrl, accessToken, accountKey, onClo
             accountKey={accountKey}
             inReplyToId={status.id}
             initialText={`@${status.account.acct} `}
+            initialCwText={status.spoiler_text || undefined}
             onComposed={onComposed}
             onCancel={onClose}
             defaultVisibility={defaultVisibility}
