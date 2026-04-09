@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { ComposeForm } from './ComposeForm'
 import type { Account } from '../types'
@@ -12,10 +13,12 @@ interface ComposeModalProps {
 }
 
 export function ComposeModal({ instanceUrl, accessToken, accountKey, account, onClose, onComposed }: ComposeModalProps) {
+  const backdropMouseDown = useRef(false)
   return createPortal(
     <div
       className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
-      onClick={onClose}
+      onMouseDown={(e) => { backdropMouseDown.current = e.target === e.currentTarget }}
+      onMouseUp={(e) => { if (backdropMouseDown.current && e.target === e.currentTarget) onClose() }}
     >
       <div
         className="bg-gray-800 rounded-xl shadow-2xl w-full max-w-xl flex flex-col overflow-hidden"
