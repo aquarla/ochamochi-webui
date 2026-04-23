@@ -165,6 +165,16 @@ function PollView({ poll, instanceUrl, accessToken, onVote }: PollViewProps) {
   )
 }
 
+function getScrollParent(el: HTMLElement): HTMLElement {
+  let cur = el.parentElement
+  while (cur && cur !== document.documentElement) {
+    const { overflow, overflowY } = window.getComputedStyle(cur)
+    if (/auto|scroll/.test(overflow + overflowY)) return cur
+    cur = cur.parentElement
+  }
+  return document.documentElement
+}
+
 // ---- Post ----
 
 export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, onDelete, onOpenDetail, onOpenProfile, onAddTagColumn, onMuteAccount, currentAccountId, pinned, accounts, resolveOnAction }: PostProps) {
@@ -218,6 +228,24 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
+  }, [showMenu])
+
+  useEffect(() => {
+    if (!showMenu) return
+    const updatePos = () => {
+      if (!menuButtonRef.current) return
+      const r = menuButtonRef.current.getBoundingClientRect()
+      const scrollParent = getScrollParent(menuButtonRef.current)
+      const cr = scrollParent.getBoundingClientRect()
+      if (r.bottom < cr.top || r.top > cr.bottom) {
+        setShowMenu(false)
+        setExpandedSection(null)
+        return
+      }
+      setMenuPos({ top: r.bottom + 4, left: r.left })
+    }
+    window.addEventListener('scroll', updatePos, { capture: true, passive: true })
+    return () => window.removeEventListener('scroll', updatePos, { capture: true })
   }, [showMenu])
 
   useEffect(() => {
