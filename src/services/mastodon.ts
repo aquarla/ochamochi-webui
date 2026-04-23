@@ -1,5 +1,11 @@
 import type { Status, Account, MastodonNotification, StatusContext, CustomEmoji, MediaAttachment, ScheduledStatus, Relationship, MastodonList, Tag, Conversation } from '../types'
 
+function parseLinkNext(link: string | null): string | undefined {
+  if (!link) return undefined
+  const match = link.match(/<[^>]*[?&]max_id=([^&>]+)[^>]*>;\s*rel="next"/)
+  return match?.[1]
+}
+
 export class MastodonClient {
   constructor(
     private instanceUrl: string,
@@ -21,6 +27,24 @@ export class MastodonClient {
       throw new Error(`${res.status} ${res.statusText}: ${text}`)
     }
     return res.json() as Promise<T>
+  }
+
+  private async requestWithCursor<T>(path: string, options: RequestInit = {}): Promise<{ data: T; nextMaxId?: string }> {
+    const url = `${this.instanceUrl}${path}`
+    const res = await fetch(url, {
+      ...options,
+      headers: {
+        Authorization: `Bearer ${this.accessToken}`,
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+    })
+    if (!res.ok) {
+      const text = await res.text()
+      throw new Error(`${res.status} ${res.statusText}: ${text}`)
+    }
+    const data = await res.json() as T
+    return { data, nextMaxId: parseLinkNext(res.headers.get('link')) }
   }
 
   async getHomeTimeline(params: { max_id?: string; limit?: number } = {}): Promise<Status[]> {
@@ -245,18 +269,18 @@ export class MastodonClient {
     return this.request<Conversation[]>(`/api/v1/conversations?${qs}`)
   }
 
-  async getBookmarks(params: { max_id?: string; limit?: number } = {}): Promise<Status[]> {
+  async getBookmarks(params: { max_id?: string; limit?: number } = {}): Promise<{ data: Status[]; nextMaxId?: string }> {
     const qs = new URLSearchParams()
     if (params.max_id) qs.set('max_id', params.max_id)
     if (params.limit) qs.set('limit', String(params.limit))
-    return this.request<Status[]>(`/api/v1/bookmarks?${qs}`)
+    return this.requestWithCursor<Status[]>(`/api/v1/bookmarks?${qs}`)
   }
 
-  async getFavourites(params: { max_id?: string; limit?: number } = {}): Promise<Status[]> {
+  async getFavourites(params: { max_id?: string; limit?: number } = {}): Promise<{ data: Status[]; nextMaxId?: string }> {
     const qs = new URLSearchParams()
     if (params.max_id) qs.set('max_id', params.max_id)
     if (params.limit) qs.set('limit', String(params.limit))
-    return this.request<Status[]>(`/api/v1/favourites?${qs}`)
+    return this.requestWithCursor<Status[]>(`/api/v1/favourites?${qs}`)
   }
 
   async getLists(): Promise<MastodonList[]> {

@@ -13,22 +13,26 @@ async function fetchTimeline(
   params: { max_id?: string; limit?: number; only_media?: boolean },
   tagFilters?: TagFilters,
   listId?: string,
-): Promise<Status[]> {
+): Promise<{ items: Status[]; nextCursor?: string }> {
   switch (type) {
     case 'home':
-      return client.getHomeTimeline(params)
+      return { items: await client.getHomeTimeline(params) }
     case 'local':
-      return client.getLocalTimeline(params)
+      return { items: await client.getLocalTimeline(params) }
     case 'public':
-      return client.getPublicTimeline(params)
+      return { items: await client.getPublicTimeline(params) }
     case 'tag':
-      return client.getTagTimeline(tag ?? '', { ...params, ...tagFilters })
+      return { items: await client.getTagTimeline(tag ?? '', { ...params, ...tagFilters }) }
     case 'list':
-      return client.getListTimeline(listId ?? '', params)
-    case 'favourites':
-      return client.getFavourites(params)
-    case 'bookmarks':
-      return client.getBookmarks(params)
+      return { items: await client.getListTimeline(listId ?? '', params) }
+    case 'favourites': {
+      const { data, nextMaxId } = await client.getFavourites(params)
+      return { items: data, nextCursor: nextMaxId }
+    }
+    case 'bookmarks': {
+      const { data, nextMaxId } = await client.getBookmarks(params)
+      return { items: data, nextCursor: nextMaxId }
+    }
     default:
       throw new Error(`useTimeline does not support column type: ${type as string}`)
   }
@@ -48,6 +52,8 @@ export function useTimeline(
   const [error, setError] = useState<string | null>(null)
   const [hasMore, setHasMore] = useState(true)
   const clientRef = useRef(new MastodonClient(instanceUrl, accessToken))
+  const nextCursorRef = useRef<string | undefined>(undefined)
+  const isLinkPaginated = type === 'bookmarks' || type === 'favourites'
 
   useEffect(() => {
     clientRef.current = new MastodonClient(instanceUrl, accessToken)
@@ -61,9 +67,10 @@ export function useTimeline(
     setError(null)
     try {
       const filters: TagFilters | undefined = tagFiltersKey ? JSON.parse(tagFiltersKey) : undefined
-      const items = await fetchTimeline(clientRef.current, type, tag, { limit: PAGE_LIMIT, only_media: onlyMedia }, filters, listId)
+      const { items, nextCursor } = await fetchTimeline(clientRef.current, type, tag, { limit: PAGE_LIMIT, only_media: onlyMedia }, filters, listId)
+      nextCursorRef.current = nextCursor
       setStatuses(items)
-      setHasMore(items.length > 0)
+      setHasMore(isLinkPaginated ? !!nextCursor : items.length > 0)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally {
@@ -75,25 +82,28 @@ export function useTimeline(
   useEffect(() => {
     setStatuses([])
     setHasMore(true)
+    nextCursorRef.current = undefined
     load()
   }, [load])
 
   const loadMore = useCallback(async () => {
     if (loading || !hasMore || statuses.length === 0) return
-    const lastId = statuses[statuses.length - 1].id
+    const maxId = isLinkPaginated ? nextCursorRef.current : statuses[statuses.length - 1].id
+    if (!maxId) return
     setLoading(true)
     try {
       const filters: TagFilters | undefined = tagFiltersKey ? JSON.parse(tagFiltersKey) : undefined
-      const items = await fetchTimeline(clientRef.current, type, tag, {
-        max_id: lastId,
+      const { items, nextCursor } = await fetchTimeline(clientRef.current, type, tag, {
+        max_id: maxId,
         limit: PAGE_LIMIT,
         only_media: onlyMedia,
       }, filters, listId)
+      nextCursorRef.current = nextCursor
       setStatuses((prev) => {
         const existingIds = new Set(prev.map((s) => s.id))
         return [...prev, ...items.filter((s) => !existingIds.has(s.id))]
       })
-      setHasMore(items.length > 0)
+      setHasMore(isLinkPaginated ? !!nextCursor : items.length > 0)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally {
