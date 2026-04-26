@@ -734,8 +734,9 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
           <select
             value={visibility}
             onChange={(e) => handleVisibilityChange(e.target.value as Visibility)}
-            className="bg-gray-700 text-gray-300 border border-gray-600 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-            disabled={loading || sourceLoading}
+            className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-gray-300"
+            disabled={loading || sourceLoading || isEditMode}
+            title={isEditMode ? '公開範囲は編集できません' : undefined}
           >
             <option value="public">公開</option>
             <option value="unlisted">未収載</option>
