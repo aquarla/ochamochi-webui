@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { loadSettings, saveSettings } from '../hooks/useSettings'
 import type { AppSettings } from '../hooks/useSettings'
 import { useTheme } from '../hooks/useTheme'
@@ -6,6 +6,7 @@ import type { Theme } from '../hooks/useTheme'
 import { useWordFilters } from '../hooks/useWordFilters'
 import type { WordFilter } from '../types'
 import { loadNotestockToken, saveNotestockToken } from '../store/notestockToken'
+import { exportData, importData } from '../store/dataPortability'
 
 interface SettingsModalProps {
   onClose: () => void
@@ -14,7 +15,7 @@ interface SettingsModalProps {
   onSave?: (settings: AppSettings) => void
 }
 
-type GroupId = 'general' | 'display' | 'notifications' | 'privacy' | 'filters' | 'notestock'
+type GroupId = 'general' | 'display' | 'notifications' | 'privacy' | 'filters' | 'notestock' | 'data'
 
 interface SettingsGroup {
   id: GroupId
@@ -75,6 +76,15 @@ const groups: SettingsGroup[] = [
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+    ),
+  },
+  {
+    id: 'data',
+    label: 'データ',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
       </svg>
     ),
   },
@@ -318,6 +328,7 @@ const groupTitles: Record<GroupId, string> = {
   privacy: 'プライバシー',
   filters: 'フィルター',
   notestock: 'notestock',
+  data: 'データ',
 }
 
 function FiltersSettings({ accountKey }: { accountKey?: string }) {
@@ -475,6 +486,143 @@ function NotestockSettings({ accountKey }: { accountKey?: string }) {
   )
 }
 
+function DataSettings() {
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [importState, setImportState] = useState<'idle' | 'confirm' | 'done' | 'error'>('idle')
+  const [errorMsg, setErrorMsg] = useState('')
+  const [pendingJson, setPendingJson] = useState('')
+
+  const handleExport = () => {
+    exportData()
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string
+      try {
+        JSON.parse(text)
+        setPendingJson(text)
+        setImportState('confirm')
+        setErrorMsg('')
+      } catch {
+        setImportState('error')
+        setErrorMsg('ファイルの形式が正しくありません')
+      }
+    }
+    reader.readAsText(file)
+    e.target.value = ''
+  }
+
+  const handleImportConfirm = () => {
+    try {
+      importData(pendingJson)
+      setImportState('done')
+    } catch (err) {
+      setImportState('error')
+      setErrorMsg(err instanceof Error ? err.message : 'インポートに失敗しました')
+    }
+  }
+
+  return (
+    <div>
+      <SectionTitle>エクスポート</SectionTitle>
+      <p className="text-gray-400 text-xs mb-3">
+        全アカウントのログイン情報・カラム設定・各種設定をJSONファイルとして保存します。
+        アクセストークンが含まれるため、ファイルは安全に管理してください。
+      </p>
+      <button
+        type="button"
+        onClick={handleExport}
+        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg px-4 py-2 transition-colors"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+        設定をエクスポート
+      </button>
+
+      <SectionTitle>インポート</SectionTitle>
+      <p className="text-gray-400 text-xs mb-3">
+        エクスポートしたJSONファイルを読み込みます。
+        現在の設定・アカウント情報はすべて上書きされます。
+      </p>
+
+      {importState === 'idle' && (
+        <>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json,application/json"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-2 bg-gray-600 hover:bg-gray-500 text-white text-sm font-medium rounded-lg px-4 py-2 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            ファイルを選択
+          </button>
+        </>
+      )}
+
+      {importState === 'confirm' && (
+        <div className="bg-yellow-900/30 border border-yellow-600/50 rounded-lg p-4 space-y-3">
+          <p className="text-yellow-300 text-sm font-medium">現在のすべての設定・アカウント情報が上書きされます。続行しますか？</p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => { setImportState('idle'); setPendingJson('') }}
+              className="flex-1 px-3 py-1.5 text-sm text-gray-300 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+            >
+              キャンセル
+            </button>
+            <button
+              type="button"
+              onClick={handleImportConfirm}
+              className="flex-1 px-3 py-1.5 text-sm text-white bg-yellow-600 hover:bg-yellow-700 rounded-lg transition-colors"
+            >
+              インポートする
+            </button>
+          </div>
+        </div>
+      )}
+
+      {importState === 'done' && (
+        <div className="bg-green-900/30 border border-green-600/50 rounded-lg p-4 space-y-3">
+          <p className="text-green-300 text-sm font-medium">インポートが完了しました。設定を反映するにはページを再読み込みしてください。</p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="w-full px-3 py-1.5 text-sm text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
+          >
+            ページを再読み込み
+          </button>
+        </div>
+      )}
+
+      {importState === 'error' && (
+        <div className="bg-red-900/30 border border-red-600/50 rounded-lg p-4 space-y-3">
+          <p className="text-red-300 text-sm">{errorMsg}</p>
+          <button
+            type="button"
+            onClick={() => setImportState('idle')}
+            className="text-xs text-gray-400 hover:text-gray-200 transition-colors"
+          >
+            戻る
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function PrivacySettings({
   settings,
   onChange,
@@ -524,6 +672,7 @@ export function SettingsModal({ onClose, accountKey, instanceUrl, onSave }: Sett
     privacy: <PrivacySettings settings={settings} onChange={handleSettingsChange} />,
     filters: <FiltersSettings accountKey={accountKey} />,
     notestock: <NotestockSettings accountKey={accountKey} />,
+    data: <DataSettings />,
   }
 
   return (
