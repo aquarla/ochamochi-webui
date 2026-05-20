@@ -275,7 +275,7 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
     }
     el.addEventListener('click', handler)
     return () => el.removeEventListener('click', handler)
-  }, [onAddTagColumn, onOpenProfile, displayStatus.mentions, instanceUrl, accessToken])
+  }, [onAddTagColumn, onOpenProfile, displayStatus.mentions, instanceUrl, accessToken, cwOpen])
 
   // Truncate plain URL link text (Mastodon's invisible/ellipsis spans are handled via CSS classes)
   useEffect(() => {
@@ -295,7 +295,7 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
         link.removeAttribute('data-orig-url')
       }
     })
-  }, [truncateUrl])
+  }, [truncateUrl, cwOpen])
 
   const isOwnPost = !!currentAccountId && displayStatus.account.id === currentAccountId
 
