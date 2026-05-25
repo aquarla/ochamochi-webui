@@ -625,10 +625,10 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
                 const contentLower = content.toLowerCase()
                 const hiddenTags = displayStatus.tags.filter((t) => {
                   const nameLower = t.name.toLowerCase()
-                  const encoded = encodeURIComponent(t.name)
+                  const encodedLower = encodeURIComponent(nameLower).toLowerCase()
                   return (
                     !contentLower.includes(`/tags/${nameLower}`) &&
-                    !content.includes(`/tags/${encoded}`)
+                    !contentLower.includes(`/tags/${encodedLower}`)
                   )
                 })
                 if (hiddenTags.length === 0) return null
