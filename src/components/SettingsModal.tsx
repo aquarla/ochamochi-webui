@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { loadSettings, saveSettings } from '../hooks/useSettings'
 import type { AppSettings } from '../hooks/useSettings'
 import { useTheme } from '../hooks/useTheme'
@@ -6,6 +6,7 @@ import type { Theme } from '../hooks/useTheme'
 import { useWordFilters } from '../hooks/useWordFilters'
 import type { WordFilter } from '../types'
 import { loadNotestockToken, saveNotestockToken } from '../store/notestockToken'
+import { fetchInstanceVersion } from '../services/mastodon'
 import { exportData, importData } from '../store/dataPortability'
 
 interface SettingsModalProps {
@@ -160,11 +161,23 @@ function GeneralSettings({
   onChange: (s: AppSettings) => void
   instanceUrl?: string
 }) {
+  const [serverVersion, setServerVersion] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!instanceUrl) return
+    fetchInstanceVersion(instanceUrl).then(setServerVersion)
+  }, [instanceUrl])
+
   return (
     <div>
       {instanceUrl && (
         <>
           <SectionTitle>Mastodon</SectionTitle>
+          <SettingRow label="サーバーバージョン" description={instanceUrl}>
+            <span className="text-gray-300 text-sm font-mono">
+              {serverVersion ?? '…'}
+            </span>
+          </SettingRow>
           <SettingRow label="Mastodon設定画面" description="サーバーの設定ページを開きます">
             <a
               href={`${instanceUrl}/settings/preferences`}

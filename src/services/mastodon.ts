@@ -6,6 +6,17 @@ function parseLinkNext(link: string | null): string | undefined {
   return match?.[1]
 }
 
+export async function fetchInstanceVersion(instanceUrl: string): Promise<string | null> {
+  try {
+    const res = await fetch(`${instanceUrl}/api/v1/instance`)
+    if (!res.ok) return null
+    const data = await res.json() as { version?: string }
+    return data.version ?? null
+  } catch {
+    return null
+  }
+}
+
 export class MastodonClient {
   constructor(
     private instanceUrl: string,
