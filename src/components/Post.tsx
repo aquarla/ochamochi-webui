@@ -297,6 +297,18 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
     })
   }, [truncateUrl, cwOpen])
 
+  const COLLAPSE_HEIGHT = 300
+  const [isTall, setIsTall] = useState(false)
+  const [contentExpanded, setContentExpanded] = useState(false)
+
+  useEffect(() => {
+    const el = contentRef.current
+    if (!el) return
+    const tall = el.scrollHeight > COLLAPSE_HEIGHT
+    setIsTall(tall)
+    if (!tall) setContentExpanded(false)
+  }, [displayStatus.content, cwOpen])
+
   const isOwnPost = !!currentAccountId && displayStatus.account.id === currentAccountId
 
   const handleDelete = async () => {
@@ -563,10 +575,27 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
           {(!hasCw || cwOpen) && (
             <>
               <div
-                ref={contentRef}
-                className={`text-gray-200 text-sm leading-relaxed prose prose-sm prose-invert max-w-none break-all [overflow-wrap:anywhere] [&_p]:break-all [&_a]:break-all [&_pre]:whitespace-pre-wrap [&_pre]:break-all [&_a]:text-blue-400 [&_a:hover]:text-blue-300 [&_p]:mb-1${truncateUrl ? " [&_.invisible]:hidden [&_.ellipsis]:after:content-['…']" : ''}${loadSettings(accountKey).showQuote ? ' [&_.quote-inline]:hidden' : ''}`}
-                dangerouslySetInnerHTML={{ __html: emojifyHtml(displayStatus.content, displayStatus.emojis) }}
-              />
+                className={isTall && !contentExpanded ? 'relative max-h-[300px] overflow-hidden' : 'relative'}
+                style={isTall && !contentExpanded ? {
+                  WebkitMaskImage: 'linear-gradient(to bottom, black 60%, transparent)',
+                  maskImage: 'linear-gradient(to bottom, black 60%, transparent)',
+                } : undefined}
+              >
+                <div
+                  ref={contentRef}
+                  className={`text-gray-200 text-sm leading-relaxed prose prose-sm prose-invert max-w-none break-all [overflow-wrap:anywhere] [&_p]:break-all [&_a]:break-all [&_pre]:whitespace-pre-wrap [&_pre]:break-all [&_a]:text-blue-400 [&_a:hover]:text-blue-300 [&_p]:mb-1${truncateUrl ? " [&_.invisible]:hidden [&_.ellipsis]:after:content-['…']" : ''}${loadSettings(accountKey).showQuote ? ' [&_.quote-inline]:hidden' : ''}`}
+                  dangerouslySetInnerHTML={{ __html: emojifyHtml(displayStatus.content, displayStatus.emojis) }}
+                />
+              </div>
+              {isTall && (
+                <button
+                  type="button"
+                  onClick={() => setContentExpanded((v) => !v)}
+                  className="text-xs text-blue-400 hover:text-blue-300 transition-colors mt-1"
+                >
+                  {contentExpanded ? '折りたたむ' : '続きを読む'}
+                </button>
+              )}
 
               <MediaGrid
                 attachments={displayStatus.media_attachments}
