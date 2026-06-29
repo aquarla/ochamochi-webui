@@ -78,6 +78,37 @@ export function useAuth(): AuthContext {
         saveActiveAccountKey(firstKey)
       }
     }
+
+    // バックグラウンドでアカウント情報を再取得してアバターなどを最新化する
+    const entries = Object.values(existingAccounts)
+    if (entries.length === 0) return
+    Promise.allSettled(
+      entries.map(async (entry) => {
+        const client = new MastodonClient(entry.instanceUrl, entry.accessToken)
+        const account = await client.getAccount()
+        return { ...entry, account }
+      }),
+    ).then((results) => {
+      setAllAccounts((prev) => {
+        const next = { ...prev }
+        let changed = false
+        results.forEach((result) => {
+          if (result.status === 'fulfilled') {
+            const updated = result.value
+            if (
+              next[updated.accountKey]?.account?.avatar !== updated.account.avatar ||
+              next[updated.accountKey]?.account?.display_name !== updated.account.display_name ||
+              next[updated.accountKey]?.account?.username !== updated.account.username
+            ) {
+              next[updated.accountKey] = updated
+              changed = true
+            }
+          }
+        })
+        if (changed) saveAllAccounts(next)
+        return changed ? next : prev
+      })
+    })
   }, [addAccount])
 
   const switchAccount = useCallback((accountKey: string) => {
