@@ -194,6 +194,7 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
   const [showEditModal, setShowEditModal] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
+  const [pinLoading, setPinLoading] = useState(false)
   const [showFavDialog, setShowFavDialog] = useState(false)
   const [showBoostDialog, setShowBoostDialog] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -323,6 +324,23 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
       // ignore
     } finally {
       setDeleteLoading(false)
+    }
+  }
+
+  const handlePin = async () => {
+    if (pinLoading) return
+    setPinLoading(true)
+    try {
+      const client = new MastodonClient(instanceUrl, accessToken)
+      const updated = pinned
+        ? await client.unpinStatus(displayStatus.id)
+        : await client.pinStatus(displayStatus.id)
+      onUpdate?.(updated)
+      setShowMenu(false)
+    } catch {
+      // ignore
+    } finally {
+      setPinLoading(false)
     }
   }
 
@@ -798,6 +816,20 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
                       </svg>
                       元のサイトへのリンクをコピー
                     </button>
+
+                    {isOwnPost && (
+                      <button
+                        type="button"
+                        onClick={handlePin}
+                        disabled={pinLoading}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-300 hover:bg-gray-700 hover:text-white transition-colors border-t border-gray-700 disabled:opacity-50"
+                      >
+                        <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                        </svg>
+                        {pinLoading ? '処理中…' : pinned ? 'プロフィールの固定表示を解除' : 'プロフィールに固定表示'}
+                      </button>
+                    )}
 
                     {!isOwnPost && (
                       <>

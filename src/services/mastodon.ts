@@ -253,6 +253,14 @@ export class MastodonClient {
     await this.request<unknown>(`/api/v1/statuses/${id}`, { method: 'DELETE' })
   }
 
+  async pinStatus(id: string): Promise<Status> {
+    return this.request<Status>(`/api/v1/statuses/${id}/pin`, { method: 'POST' })
+  }
+
+  async unpinStatus(id: string): Promise<Status> {
+    return this.request<Status>(`/api/v1/statuses/${id}/unpin`, { method: 'POST' })
+  }
+
   async searchResolveStatus(url: string): Promise<Status> {
     const qs = new URLSearchParams({ q: url, resolve: 'true', limit: '1' })
     const result = await this.request<{ statuses: Status[] }>(`/api/v2/search?${qs}`)
