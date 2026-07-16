@@ -514,7 +514,7 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
           </svg>
           <button
             onClick={() => onOpenProfile?.(status.account)}
-            className={onOpenProfile ? 'hover:text-gray-300 transition-colors' : 'cursor-default'}
+            className={`max-w-[12rem] truncate inline-block align-bottom ${onOpenProfile ? 'hover:text-gray-300 transition-colors' : 'cursor-default'}`}
             dangerouslySetInnerHTML={{ __html: emojifyText(status.account.display_name || status.account.username, status.account.emojis) }}
           /> がブースト
         </p>
