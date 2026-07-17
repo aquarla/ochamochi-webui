@@ -116,7 +116,7 @@ export function NotificationItem({ notification, instanceUrl, accessToken, onOpe
           <div className="flex items-baseline gap-2">
             <span className="font-medium text-white text-sm truncate" dangerouslySetInnerHTML={{ __html: displayNameHtml }} />
             <span className={`text-xs font-medium whitespace-nowrap flex-shrink-0 ${meta.color}`}>{meta.label}</span>
-            {status && onOpenDetail && (type === 'mention' || type === 'favourite' || type === 'reblog') ? (
+            {status && onOpenDetail && (type === 'mention' || type === 'favourite' || type === 'reblog' || type === 'poll' || type === 'update') ? (
               <button
                 type="button"
                 onClick={() => onOpenDetail(status)}
