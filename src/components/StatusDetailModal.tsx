@@ -8,6 +8,7 @@ import { ReplyModal } from './ReplyModal'
 import { UserProfileModal } from './UserProfileModal'
 import { loadSettings } from '../hooks/useSettings'
 import { QuotePost } from './QuotePost'
+import { PollView } from './PollView'
 import type { Status, StatusContext, Account } from '../types'
 import type { StoredAccountEntry } from '../services/auth'
 
@@ -225,6 +226,18 @@ function StatusRow({ status, highlight, slim, showCard, showQuote, instanceUrl, 
               sensitive={status.sensitive}
               thumbnailHeight="h-40"
             />
+            {localStatus.poll && (
+              <PollView
+                poll={localStatus.poll}
+                instanceUrl={instanceUrl}
+                accessToken={accessToken}
+                onVote={(updatedPoll) => {
+                  const next = { ...localStatus, poll: updatedPoll }
+                  setLocalStatus(next)
+                  onUpdate?.(next)
+                }}
+              />
+            )}
             {showQuote && status.quote?.quoted_status && (
               <QuotePost
                 status={status.quote.quoted_status}
