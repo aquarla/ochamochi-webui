@@ -422,7 +422,17 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
                 className="font-medium text-white text-sm truncate"
                 dangerouslySetInnerHTML={{ __html: emojifyText(displayStatus.account.display_name || displayStatus.account.username, displayStatus.account.emojis) }}
               />
-              <div className="text-gray-500 text-xs truncate">@{displayStatus.account.acct}</div>
+              <div className="text-gray-500 text-xs truncate flex items-center gap-1">
+                @{displayStatus.account.acct}
+                {displayStatus.in_reply_to_id && (
+                  <span className="flex items-center gap-0.5 text-gray-600 flex-shrink-0">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                    </svg>
+                    返信
+                  </span>
+                )}
+              </div>
             </div>
             <span className="flex items-center gap-1 flex-shrink-0 text-gray-600">
               {displayStatus.visibility === 'public' && (
