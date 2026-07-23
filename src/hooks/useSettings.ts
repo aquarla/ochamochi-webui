@@ -1,5 +1,6 @@
 export type FontSize = 'small' | 'medium' | 'large'
 export type ColumnWidth = 'narrow' | 'medium' | 'wide'
+export type EmojiStyle = 'default' | 'twemoji' | 'blobmoji'
 
 export interface AppSettings {
   confirmFavourite: boolean
@@ -16,6 +17,7 @@ export interface AppSettings {
   showPreviewCard: boolean
   truncateUrl: boolean
   showQuote: boolean
+  emojiStyle: EmojiStyle
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -33,6 +35,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   showPreviewCard: true,
   truncateUrl: true,
   showQuote: false,
+  emojiStyle: 'default',
 }
 
 function storageKey(accountKey?: string | null) {

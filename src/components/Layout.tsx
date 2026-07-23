@@ -16,6 +16,7 @@ import { StatusUrlModal } from './StatusUrlModal'
 import { StatusDetailModal } from './StatusDetailModal'
 import { loadSettings } from '../hooks/useSettings'
 import { useBackgroundNotifications } from '../hooks/useBackgroundNotifications'
+import { setActiveEmojiStyle } from '../utils/emojify'
 import type { AppSettings } from '../hooks/useSettings'
 import type { AuthContext } from '../hooks/useAuth'
 import type { ColumnConfig, ColumnType, Status, Account } from '../types'
@@ -31,7 +32,9 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
   const [settings, setSettings] = useState<AppSettings>(() => loadSettings(auth.activeAccountKey))
 
   useEffect(() => {
-    setSettings(loadSettings(auth.activeAccountKey))
+    const s = loadSettings(auth.activeAccountKey)
+    setActiveEmojiStyle(s.emojiStyle)
+    setSettings(s)
   }, [auth.activeAccountKey])
 
   const [showAddModal, setShowAddModal] = useState(false)
@@ -399,7 +402,7 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
           onClose={() => setShowSettings(false)}
           accountKey={auth.activeAccountKey ?? undefined}
           instanceUrl={auth.instanceUrl ?? undefined}
-          onSave={setSettings}
+          onSave={(s) => { setSettings(s); setActiveEmojiStyle(s.emojiStyle) }}
         />
       )}
 

@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { loadSettings, saveSettings } from '../hooks/useSettings'
-import type { AppSettings } from '../hooks/useSettings'
+import type { AppSettings, EmojiStyle } from '../hooks/useSettings'
 import { useTheme } from '../hooks/useTheme'
 import type { Theme } from '../hooks/useTheme'
 import { useWordFilters } from '../hooks/useWordFilters'
@@ -256,6 +256,19 @@ function DisplaySettings({
         <ToggleSwitch
           checked={settings.showQuote}
           onChange={(v) => onChange({ ...settings, showQuote: v })}
+        />
+      </SettingRow>
+
+      <SectionTitle>絵文字</SectionTitle>
+      <SettingRow label="絵文字スタイル" description="Unicode絵文字の表示スタイル">
+        <SelectField
+          value={settings.emojiStyle}
+          onChange={(v) => onChange({ ...settings, emojiStyle: v as EmojiStyle })}
+          options={[
+            { value: 'default', label: 'デフォルト' },
+            { value: 'twemoji', label: 'Twemoji' },
+            { value: 'blobmoji', label: 'Blobmoji' },
+          ]}
         />
       </SettingRow>
 
