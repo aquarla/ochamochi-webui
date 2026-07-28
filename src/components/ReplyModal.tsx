@@ -130,7 +130,7 @@ export function ReplyModal({ status, instanceUrl, accessToken, accountKey, onClo
             initialCwText={status.spoiler_text || undefined}
             onComposed={onComposed}
             onCancel={onClose}
-            defaultVisibility={defaultVisibility}
+            defaultVisibility={defaultVisibility ?? status.visibility}
           />
         </div>
       </div>

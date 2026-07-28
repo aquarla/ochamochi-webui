@@ -300,7 +300,6 @@ export function ConversationsColumn({ column, instanceUrl, accessToken, accountK
           instanceUrl={instanceUrl}
           accessToken={accessToken}
           accountKey={accountKey}
-          defaultVisibility="direct"
           onClose={() => setReplyStatus(null)}
           onComposed={() => { setReplyStatus(null); load() }}
         />
