@@ -59,6 +59,13 @@ function loadVisibility(accountKey?: string): Visibility {
   return (localStorage.getItem(visibilityStorageKey(accountKey)) as Visibility | null) ?? 'public'
 }
 
+// カスタム絵文字ショートコードは投稿時に認識されるよう前後を半角空白で区切る（隣接文字が既に空白なら追加しない）
+function padCustomEmojiShortcode(shortcode: string, before: string, after: string): string {
+  const leading = before && !/\s$/.test(before) ? ' ' : ''
+  const trailing = after && !/^\s/.test(after) ? ' ' : ''
+  return `${leading}${shortcode}${trailing}`
+}
+
 export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, inReplyToId, initialText, initialCwText, onCancel, inline, editStatus, onEdited, defaultVisibility }: ComposeFormProps) {
   const isEditMode = !!editStatus
   const noSaveVisibility = isEditMode || defaultVisibility !== undefined
@@ -352,10 +359,12 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
     const el = textareaRef.current
     if (!el) return
     const cursor = el.selectionStart ?? text.length
+    const before = text.slice(0, emojiTriggerStart)
+    const after = text.slice(cursor)
     const shortcode = suggestion.kind === 'custom'
-      ? `:${suggestion.emoji.shortcode}:`
+      ? padCustomEmojiShortcode(`:${suggestion.emoji.shortcode}:`, before, after)
       : suggestion.char
-    const next = text.slice(0, emojiTriggerStart) + shortcode + text.slice(cursor)
+    const next = before + shortcode + after
     setText(next)
     setEmojiSuggestions([])
     setEmojiTriggerStart(-1)
@@ -372,9 +381,13 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
     if (!el) return
     const start = el.selectionStart ?? text.length
     const end = el.selectionEnd ?? text.length
-    const next = text.slice(0, start) + emoji + text.slice(end)
+    const before = text.slice(0, start)
+    const after = text.slice(end)
+    const isCustomShortcode = /^:[^:\s]+:$/.test(emoji)
+    const insertText = isCustomShortcode ? padCustomEmojiShortcode(emoji, before, after) : emoji
+    const next = before + insertText + after
     setText(next)
-    const cursor = start + emoji.length
+    const cursor = start + insertText.length
     requestAnimationFrame(() => {
       el.focus()
       el.setSelectionRange(cursor, cursor)
