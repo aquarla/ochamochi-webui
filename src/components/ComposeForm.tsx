@@ -62,7 +62,7 @@ function loadVisibility(accountKey?: string): Visibility {
 // カスタム絵文字ショートコードは投稿時に認識されるよう前後を半角空白で区切る（隣接文字が既に空白なら追加しない）
 function padCustomEmojiShortcode(shortcode: string, before: string, after: string): string {
   const leading = before && !/\s$/.test(before) ? ' ' : ''
-  const trailing = after && !/^\s/.test(after) ? ' ' : ''
+  const trailing = !/^\s/.test(after) ? ' ' : ''
   return `${leading}${shortcode}${trailing}`
 }
 
