@@ -1,8 +1,10 @@
 export type FontSize = 'small' | 'medium' | 'large'
 export type ColumnWidth = 'narrow' | 'medium' | 'wide'
 export type EmojiStyle = 'default' | 'twemoji' | 'blobmoji'
+export type DefaultVisibilityMode = 'lastUsed' | 'public' | 'unlisted' | 'private' | 'direct'
 
 export interface AppSettings {
+  defaultVisibilityMode: DefaultVisibilityMode
   confirmFavourite: boolean
   confirmBoost: boolean
   notifyMention: boolean
@@ -21,6 +23,7 @@ export interface AppSettings {
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
+  defaultVisibilityMode: 'public',
   confirmFavourite: false,
   confirmBoost: false,
   notifyMention: true,

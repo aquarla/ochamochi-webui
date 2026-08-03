@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { MastodonClient } from '../services/mastodon'
 import { EmojiPicker, emojiCache, emojiFetching } from './EmojiPicker'
 import { UNICODE_EMOJI } from '../data/unicodeEmoji'
+import { loadSettings } from '../hooks/useSettings'
 import type { Status, CustomEmoji } from '../types'
 
 type EmojiSuggestion =
@@ -59,6 +60,11 @@ function loadVisibility(accountKey?: string): Visibility {
   return (localStorage.getItem(visibilityStorageKey(accountKey)) as Visibility | null) ?? 'public'
 }
 
+function getDefaultVisibility(accountKey?: string): Visibility {
+  const mode = loadSettings(accountKey).defaultVisibilityMode
+  return mode === 'lastUsed' ? loadVisibility(accountKey) : mode
+}
+
 // カスタム絵文字ショートコードは投稿時に認識されるよう前後を半角空白で区切る（隣接文字が既に空白なら追加しない）
 function padCustomEmojiShortcode(shortcode: string, before: string, after: string): string {
   const leading = before && !/\s$/.test(before) ? ' ' : ''
@@ -72,7 +78,7 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
 
   const [text, setText] = useState(initialText ?? '')
   const [visibility, setVisibility] = useState<Visibility>(() =>
-    isEditMode ? (editStatus.visibility as Visibility) : (defaultVisibility ?? loadVisibility(accountKey))
+    isEditMode ? (editStatus.visibility as Visibility) : (defaultVisibility ?? getDefaultVisibility(accountKey))
   )
   const [cwEnabled, setCwEnabled] = useState(isEditMode ? !!editStatus.spoiler_text : !!initialCwText)
   const [cwText, setCwText] = useState(initialCwText ?? '')
@@ -276,7 +282,7 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
 
   const handleVisibilityChange = (v: Visibility) => {
     setVisibility(v)
-    if (!noSaveVisibility) {
+    if (!noSaveVisibility && loadSettings(accountKey).defaultVisibilityMode === 'lastUsed') {
       localStorage.setItem(visibilityStorageKey(accountKey), v)
     }
   }

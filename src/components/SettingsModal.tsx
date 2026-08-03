@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { loadSettings, saveSettings } from '../hooks/useSettings'
-import type { AppSettings, EmojiStyle } from '../hooks/useSettings'
+import type { AppSettings, EmojiStyle, DefaultVisibilityMode } from '../hooks/useSettings'
 import { useTheme } from '../hooks/useTheme'
 import type { Theme } from '../hooks/useTheme'
 import { useWordFilters } from '../hooks/useWordFilters'
@@ -194,6 +194,19 @@ function GeneralSettings({
         </>
       )}
       <SectionTitle>動作</SectionTitle>
+      <SettingRow label="デフォルト公開範囲" description="新規投稿時に最初に選択される公開範囲">
+        <SelectField
+          value={settings.defaultVisibilityMode}
+          onChange={(v) => onChange({ ...settings, defaultVisibilityMode: v as DefaultVisibilityMode })}
+          options={[
+            { value: 'lastUsed', label: '前回の投稿に従う' },
+            { value: 'public', label: '公開' },
+            { value: 'unlisted', label: '未収載' },
+            { value: 'private', label: 'フォロワー限定' },
+            { value: 'direct', label: 'ダイレクト' },
+          ]}
+        />
+      </SettingRow>
       <SettingRow label="お気に入りの確認" description="お気に入り時に確認ダイアログを表示する">
         <ToggleSwitch
           checked={settings.confirmFavourite}
