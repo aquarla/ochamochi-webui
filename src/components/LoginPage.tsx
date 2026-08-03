@@ -66,7 +66,7 @@ export function LoginPage() {
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
       <div className="bg-gray-800 rounded-xl shadow-2xl p-8 w-full max-w-md">
-        <h1 className="text-2xl font-bold text-white mb-2 text-center">Mastodon Multi-Column</h1>
+        <h1 className="text-2xl font-bold text-white mb-2 text-center">Ochamochi Web for Mastodon</h1>
         <p className="text-gray-400 text-center mb-8 text-sm">
           サーバーのドメインを入力してログインしてください
         </p>
