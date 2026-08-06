@@ -50,10 +50,11 @@ interface StatusRowProps {
   onEditRequest?: (status: Status) => void
   onReplyRequest?: (status: Status) => void
   onUpdate?: (status: Status) => void
+  onReplyPosted?: () => void
   isOwnPost?: boolean
 }
 
-function StatusRow({ status, highlight, slim, showCard, showQuote, instanceUrl, accessToken, onOpenProfile, onOpenDetail, onDeleteRequest, onEditRequest, onReplyRequest, onUpdate, isOwnPost }: StatusRowProps) {
+function StatusRow({ status, highlight, slim, showCard, showQuote, instanceUrl, accessToken, onOpenProfile, onOpenDetail, onDeleteRequest, onEditRequest, onReplyRequest, onUpdate, onReplyPosted, isOwnPost }: StatusRowProps) {
   const hasCw = !!status.spoiler_text
   const [cwOpen, setCwOpen] = useState(!hasCw)
   const [showLinkMenu, setShowLinkMenu] = useState(false)
@@ -401,7 +402,7 @@ function StatusRow({ status, highlight, slim, showCard, showQuote, instanceUrl, 
         instanceUrl={instanceUrl}
         accessToken={accessToken}
         onClose={() => setReplyOpen(false)}
-        onComposed={() => setReplyOpen(false)}
+        onComposed={() => { setReplyOpen(false); onReplyPosted?.() }}
       />
     )}
     </>
@@ -420,6 +421,14 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey
   const [nestedDetailStatus, setNestedDetailStatus] = useState<Status | null>(null)
   const showCard = loadSettings(accountKey).showPreviewCard
   const showQuote = loadSettings(accountKey).showQuote
+
+  const refreshContext = () => {
+    const client = new MastodonClient(instanceUrl, accessToken)
+    client
+      .getStatusContext(status.id)
+      .then(setContext)
+      .catch(() => {})
+  }
 
   useEffect(() => {
     const client = new MastodonClient(instanceUrl, accessToken)
@@ -528,6 +537,7 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey
                   onEditRequest={setEditTarget}
                   onReplyRequest={onReply}
                   onUpdate={(updated) => setContext((prev) => prev ? { ...prev, ancestors: prev.ancestors.map((a) => a.id === updated.id ? updated : a) } : null)}
+                  onReplyPosted={refreshContext}
                   isOwnPost={!!currentAccountId && s.account.id === currentAccountId}
                 />
               ))}
@@ -545,6 +555,7 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey
                 onEditRequest={setEditTarget}
                 onReplyRequest={onReply}
                 onUpdate={(updated) => { setMainStatus(updated); onUpdate?.(updated) }}
+                onReplyPosted={refreshContext}
                 isOwnPost={!!currentAccountId && mainStatus.account.id === currentAccountId}
               />
 
@@ -563,6 +574,7 @@ export function StatusDetailModal({ status, instanceUrl, accessToken, accountKey
                   onEditRequest={setEditTarget}
                   onReplyRequest={onReply}
                   onUpdate={(updated) => setContext((prev) => prev ? { ...prev, descendants: prev.descendants.map((d) => d.id === updated.id ? updated : d) } : null)}
+                  onReplyPosted={refreshContext}
                   isOwnPost={!!currentAccountId && s.account.id === currentAccountId}
                 />
               ))}
