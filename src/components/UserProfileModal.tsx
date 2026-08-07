@@ -52,6 +52,7 @@ export function UserProfileModal({
   const [initialLoading, setInitialLoading] = useState(true)
   const [relationship, setRelationship] = useState<Relationship | null>(null)
   const [followLoading, setFollowLoading] = useState(false)
+  const [notifyLoading, setNotifyLoading] = useState(false)
 
   // List view state
   const [view, setView] = useState<ModalView>('profile')
@@ -208,6 +209,20 @@ export function UserProfileModal({
       // ignore
     } finally {
       setFollowLoading(false)
+    }
+  }
+
+  const handleToggleNotify = async () => {
+    if (!relationship || notifyLoading) return
+    setNotifyLoading(true)
+    try {
+      const c = new MastodonClient(instanceUrl, accessToken)
+      const updated = await c.followAccount(account.id, { notify: !relationship.notifying })
+      setRelationship(updated)
+    } catch {
+      // ignore
+    } finally {
+      setNotifyLoading(false)
     }
   }
 
@@ -584,6 +599,24 @@ export function UserProfileModal({
                           className="text-xs font-medium px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {followLoading ? '...' : account.locked ? 'フォローリクエストを送る' : 'フォローする'}
+                        </button>
+                      )}
+
+                      {/* Notify toggle */}
+                      {relationship.following && (
+                        <button
+                          onClick={handleToggleNotify}
+                          disabled={notifyLoading}
+                          className={`p-1.5 rounded-lg border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                            relationship.notifying
+                              ? 'border-blue-500 text-blue-400 bg-blue-950/40'
+                              : 'border-gray-600 text-gray-400 hover:border-gray-500 hover:text-gray-300'
+                          }`}
+                          title={relationship.notifying ? '投稿通知をオフにする' : '投稿通知をオンにする'}
+                        >
+                          <svg className="w-3.5 h-3.5" fill={relationship.notifying ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                          </svg>
                         </button>
                       )}
 

@@ -39,6 +39,7 @@ export function useBackgroundNotifications(
 
           // 通知種別フィルター（アクティブアカウントと同じ基準）
           if (notification.type === 'mention' && !settings.notifyMention) return
+          if (notification.type === 'status' && !settings.notifyStatus) return
           if ((notification.type === 'follow' || notification.type === 'follow_request') && !settings.notifyFollow) return
           if (notification.type === 'reblog' && !settings.notifyReblog) return
           if (notification.type === 'favourite' && !settings.notifyFavourite) return
@@ -57,6 +58,7 @@ export function useBackgroundNotifications(
             const name = notification.account.display_name || notification.account.username
             const titles: Partial<Record<MastodonNotification['type'], string>> = {
               mention: `${name} があなたにメンションしました`,
+              status: `${name} が投稿しました`,
               follow: `${name} があなたをフォローしました`,
               follow_request: `${name} がフォローリクエストを送りました`,
               reblog: `${name} があなたの投稿をブーストしました`,

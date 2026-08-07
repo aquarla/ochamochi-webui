@@ -29,6 +29,7 @@ const TYPE_META: Record<
   { label: string; color: string }
 > = {
   mention:        { label: 'メンション', color: 'text-blue-400' },
+  status:         { label: '投稿',       color: 'text-cyan-400' },
   reblog:         { label: 'ブースト',   color: 'text-green-400' },
   favourite:      { label: 'お気に入り', color: 'text-yellow-400' },
   follow:         { label: 'フォロー',   color: 'text-purple-400' },

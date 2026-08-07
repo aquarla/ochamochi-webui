@@ -8,6 +8,7 @@ export interface AppSettings {
   confirmFavourite: boolean
   confirmBoost: boolean
   notifyMention: boolean
+  notifyStatus: boolean
   notifyFollow: boolean
   notifyReblog: boolean
   notifyFavourite: boolean
@@ -27,6 +28,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   confirmFavourite: false,
   confirmBoost: false,
   notifyMention: true,
+  notifyStatus: true,
   notifyFollow: true,
   notifyReblog: true,
   notifyFavourite: true,

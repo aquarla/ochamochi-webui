@@ -39,6 +39,7 @@ export interface Relationship {
   followed_by: boolean
   muting: boolean
   blocking: boolean
+  notifying: boolean
 }
 
 export interface MediaAttachment {
@@ -160,6 +161,7 @@ export interface ScheduledStatus {
 
 export type NotificationType =
   | 'mention'
+  | 'status'
   | 'reblog'
   | 'favourite'
   | 'follow'

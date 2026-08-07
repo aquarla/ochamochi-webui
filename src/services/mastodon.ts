@@ -199,8 +199,11 @@ export class MastodonClient {
     return this.request<Account[]>(`/api/v1/accounts/${id}/following?${qs}`)
   }
 
-  async followAccount(id: string): Promise<Relationship> {
-    return this.request<Relationship>(`/api/v1/accounts/${id}/follow`, { method: 'POST' })
+  async followAccount(id: string, params: { reblogs?: boolean; notify?: boolean } = {}): Promise<Relationship> {
+    return this.request<Relationship>(`/api/v1/accounts/${id}/follow`, {
+      method: 'POST',
+      body: JSON.stringify(params),
+    })
   }
 
   async unfollowAccount(id: string): Promise<Relationship> {

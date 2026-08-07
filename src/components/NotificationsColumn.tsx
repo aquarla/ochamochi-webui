@@ -32,12 +32,14 @@ export function NotificationsColumn({ column, instanceUrl, accessToken, accountK
     if (!settings.desktopNotification) return
     if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return
     if (n.type === 'mention' && !settings.notifyMention) return
+    if (n.type === 'status' && !settings.notifyStatus) return
     if ((n.type === 'follow' || n.type === 'follow_request') && !settings.notifyFollow) return
     if (n.type === 'reblog' && !settings.notifyReblog) return
     if (n.type === 'favourite' && !settings.notifyFavourite) return
     const name = n.account.display_name || n.account.username
     const titles: Record<string, string> = {
       mention: `${name} があなたにメンションしました`,
+      status: `${name} が投稿しました`,
       follow: `${name} があなたをフォローしました`,
       follow_request: `${name} がフォローリクエストを送りました`,
       reblog: `${name} があなたの投稿をブーストしました`,
@@ -57,6 +59,7 @@ export function NotificationsColumn({ column, instanceUrl, accessToken, accountK
   const { filters: wordFilters } = useWordFilters(accountKey)
   const visibleNotifications = notifications.filter((n) => {
     if (n.type === 'mention') { if (!settings.notifyMention) return false }
+    else if (n.type === 'status') { if (!settings.notifyStatus) return false }
     else if (n.type === 'follow' || n.type === 'follow_request') { if (!settings.notifyFollow) return false }
     else if (n.type === 'reblog') { if (!settings.notifyReblog) return false }
     else if (n.type === 'favourite') { if (!settings.notifyFavourite) return false }

@@ -346,6 +346,9 @@ function NotificationsSettings({
       <SettingRow label="メンション" description="自分宛ての返信・メンション">
         <ToggleSwitch checked={settings.notifyMention} onChange={(v) => onChange({ ...settings, notifyMention: v })} />
       </SettingRow>
+      <SettingRow label="投稿通知" description="通知をオンにしたアカウントが投稿したとき">
+        <ToggleSwitch checked={settings.notifyStatus} onChange={(v) => onChange({ ...settings, notifyStatus: v })} />
+      </SettingRow>
       <SettingRow label="新しいフォロワー" description="フォローされたとき">
         <ToggleSwitch checked={settings.notifyFollow} onChange={(v) => onChange({ ...settings, notifyFollow: v })} />
       </SettingRow>
