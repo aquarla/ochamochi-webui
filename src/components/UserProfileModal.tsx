@@ -53,6 +53,7 @@ export function UserProfileModal({
   const [relationship, setRelationship] = useState<Relationship | null>(null)
   const [followLoading, setFollowLoading] = useState(false)
   const [notifyLoading, setNotifyLoading] = useState(false)
+  const [reblogsLoading, setReblogsLoading] = useState(false)
 
   // List view state
   const [view, setView] = useState<ModalView>('profile')
@@ -223,6 +224,20 @@ export function UserProfileModal({
       // ignore
     } finally {
       setNotifyLoading(false)
+    }
+  }
+
+  const handleToggleShowReblogs = async () => {
+    if (!relationship || reblogsLoading) return
+    setReblogsLoading(true)
+    try {
+      const c = new MastodonClient(instanceUrl, accessToken)
+      const updated = await c.followAccount(account.id, { reblogs: !relationship.showing_reblogs })
+      setRelationship(updated)
+    } catch {
+      // ignore
+    } finally {
+      setReblogsLoading(false)
     }
   }
 
@@ -663,6 +678,16 @@ export function UserProfileModal({
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                               </svg>
                             </button>
+                            {relationship.following && (
+                              <button
+                                type="button"
+                                onClick={() => { setShowMenu(false); handleToggleShowReblogs() }}
+                                disabled={reblogsLoading}
+                                className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-600 hover:text-white transition-colors border-t border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {relationship.showing_reblogs ? 'このユーザーのブーストを非表示にする' : 'このユーザーのブーストを表示する'}
+                              </button>
+                            )}
                             {relationship.muting ? (
                               <button
                                 onClick={() => { setShowMenu(false); setShowUnmuteDialog(true) }}

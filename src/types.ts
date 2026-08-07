@@ -40,6 +40,7 @@ export interface Relationship {
   muting: boolean
   blocking: boolean
   notifying: boolean
+  showing_reblogs: boolean
 }
 
 export interface MediaAttachment {
