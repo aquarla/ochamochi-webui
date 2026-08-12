@@ -92,6 +92,7 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
 
   const displayStatus = status.reblog ?? status
   const isReblog = !!status.reblog
+  const canReblog = displayStatus.visibility === 'public' || displayStatus.visibility === 'unlisted'
   const hasCw = !!displayStatus.spoiler_text
   const [cwOpen, setCwOpen] = useState(false)
 
@@ -371,7 +372,7 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
   }
 
   const handleReblog = () => {
-    if (actionLoading) return
+    if (actionLoading || !canReblog) return
     if (!displayStatus.reblogged && loadSettings(accountKey).confirmBoost) {
       setShowBoostDialog(true)
       return
@@ -604,9 +605,9 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
 
             <button
               onClick={handleReblog}
-              disabled={actionLoading}
-              className={`flex items-center gap-1 text-xs hover:text-green-400 transition-colors ${displayStatus.reblogged ? 'text-green-400' : ''}`}
-              title="ブースト"
+              disabled={actionLoading || !canReblog}
+              className={`flex items-center gap-1 text-xs transition-colors ${displayStatus.reblogged ? 'text-green-400' : ''} ${canReblog ? 'hover:text-green-400' : 'opacity-40 cursor-not-allowed'}`}
+              title={canReblog ? 'ブースト' : 'この公開範囲の投稿はブーストできません'}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
