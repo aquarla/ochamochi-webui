@@ -82,6 +82,7 @@ export interface Status {
   card?: PreviewCard | null
   poll?: Poll | null
   quote?: { state: string; quoted_status: Status | null } | null
+  application?: { name: string; website: string | null } | null
 }
 
 export interface PollOption {

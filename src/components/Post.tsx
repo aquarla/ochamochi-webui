@@ -93,6 +93,7 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
   const displayStatus = status.reblog ?? status
   const isReblog = !!status.reblog
   const canReblog = displayStatus.visibility === 'public' || displayStatus.visibility === 'unlisted'
+  const isOchamochiClient = displayStatus.application?.name === 'Ochamochi Web' || displayStatus.application?.name === 'Ochamochi Android'
   const hasCw = !!displayStatus.spoiler_text
   const [cwOpen, setCwOpen] = useState(false)
 
@@ -381,7 +382,7 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
   }
 
   return (
-    <article className={`border-b border-gray-700 p-3${displayStatus.visibility === 'direct' ? ' bg-purple-900/20' : ''}`}>
+    <article className={`border-b border-gray-700 p-3${displayStatus.visibility === 'direct' ? ' bg-purple-900/20' : isOchamochiClient ? ' bg-amber-900/10' : ''}`}>
       {pinned && (
         <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
