@@ -66,7 +66,6 @@ function StatusRow({ status, highlight, slim, showCard, showQuote, instanceUrl, 
     setLocalStatus((s) => ({ ...s, ...partial }))
 
   const canReblog = localStatus.visibility === 'public' || localStatus.visibility === 'unlisted'
-  const isOchamochiClient = localStatus.application?.name === 'Ochamochi Web' || localStatus.application?.name === 'Ochamochi Android'
 
   const handleFavourite = async () => {
     if (actionLoading) return
@@ -157,7 +156,7 @@ function StatusRow({ status, highlight, slim, showCard, showQuote, instanceUrl, 
 
   return (
     <>
-    <div className={`flex gap-3 px-4 py-3 ${highlight ? 'bg-gray-750 border-l-2 border-blue-500' : `border-b border-gray-700/60${isOchamochiClient ? ' bg-amber-900/10' : ''}`}`}>
+    <div className={`flex gap-3 px-4 py-3 ${highlight ? 'bg-gray-750 border-l-2 border-blue-500' : 'border-b border-gray-700/60'}`}>
       <button
         onClick={() => onOpenProfile?.(status.account)}
         className={`flex-shrink-0 rounded-full ${onOpenProfile ? 'cursor-pointer hover:opacity-80 transition-opacity' : 'cursor-default'}`}
