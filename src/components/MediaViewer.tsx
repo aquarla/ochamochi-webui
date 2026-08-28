@@ -26,7 +26,7 @@ export function MediaViewer({ attachments, initialIndex, onClose }: MediaViewerP
   return (
     <div
       className="fixed inset-0 bg-black/90 flex flex-col items-center justify-center z-[60]"
-      onClick={onClose}
+      onClick={(e) => { e.stopPropagation(); onClose() }}
     >
       {/* Header */}
       <div
