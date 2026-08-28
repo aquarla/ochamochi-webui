@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { MastodonClient } from '../services/mastodon'
 import { emojifyText, emojifyHtml } from '../utils/emojify'
 import { Post } from './Post'
+import { MediaViewer } from './MediaViewer'
 import type { Account, Relationship, Status, MediaAttachment } from '../types'
 import type { StoredAccountEntry } from '../services/auth'
 
@@ -82,6 +83,7 @@ export function UserProfileModal({
   const [blockLoading, setBlockLoading] = useState(false)
   const [showUnmuteDialog, setShowUnmuteDialog] = useState(false)
   const [showUnblockDialog, setShowUnblockDialog] = useState(false)
+  const [avatarViewerOpen, setAvatarViewerOpen] = useState(false)
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const listScrollRef = useRef<HTMLDivElement>(null)
@@ -564,7 +566,8 @@ export function UserProfileModal({
                     <img
                       src={account.avatar_static}
                       alt={account.display_name || account.username}
-                      className="w-16 h-16 rounded-full border-4 border-gray-800 bg-gray-700 mb-2"
+                      className="w-16 h-16 rounded-full border-4 border-gray-800 bg-gray-700 mb-2 cursor-pointer"
+                      onClick={() => setAvatarViewerOpen(true)}
                     />
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -1045,6 +1048,21 @@ export function UserProfileModal({
           </div>
         )}
       </div>
+
+      {avatarViewerOpen && (
+        <MediaViewer
+          attachments={[{
+            id: 'avatar',
+            type: 'image',
+            url: account.avatar,
+            preview_url: account.avatar_static,
+            description: account.display_name || account.username,
+            meta: {},
+          }]}
+          initialIndex={0}
+          onClose={() => setAvatarViewerOpen(false)}
+        />
+      )}
     </div>
   )
 }
