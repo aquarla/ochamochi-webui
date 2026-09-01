@@ -26,7 +26,7 @@ export function AddAccountModal({ onClose }: AddAccountModalProps) {
       })
       sessionStorage.setItem('mastodon_adding_account', '1')
       const authUrl = buildAuthUrl(normalizedUrl, app.client_id)
-      window.location.href = authUrl
+      window.location.replace(authUrl)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'ログインに失敗しました')
       setLoading(false)
