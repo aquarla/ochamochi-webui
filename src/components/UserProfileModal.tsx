@@ -83,6 +83,7 @@ export function UserProfileModal({
   const [blockLoading, setBlockLoading] = useState(false)
   const [showUnmuteDialog, setShowUnmuteDialog] = useState(false)
   const [showUnblockDialog, setShowUnblockDialog] = useState(false)
+  const [unblockLoading, setUnblockLoading] = useState(false)
   const [avatarViewerOpen, setAvatarViewerOpen] = useState(false)
 
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -289,7 +290,8 @@ export function UserProfileModal({
   }
 
   const handleUnblock = async () => {
-    if (showUnblockDialog) return
+    if (unblockLoading) return
+    setUnblockLoading(true)
     try {
       const c = new MastodonClient(instanceUrl, accessToken)
       const updated = await c.unblockAccount(account.id)
@@ -297,6 +299,8 @@ export function UserProfileModal({
       setShowUnblockDialog(false)
     } catch {
       // ignore
+    } finally {
+      setUnblockLoading(false)
     }
   }
 
@@ -937,7 +941,13 @@ export function UserProfileModal({
               </div>
               <div className="flex justify-end gap-2">
                 <button onClick={() => setShowUnblockDialog(false)} className="text-gray-400 hover:text-white text-sm px-3 py-1.5 rounded transition-colors">キャンセル</button>
-                <button onClick={handleUnblock} className="bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-3 py-1.5 rounded transition-colors">ブロックを解除</button>
+                <button
+                  onClick={handleUnblock}
+                  disabled={unblockLoading}
+                  className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm font-medium px-3 py-1.5 rounded transition-colors"
+                >
+                  {unblockLoading ? '解除中...' : 'ブロックを解除'}
+                </button>
               </div>
             </div>
           </div>
