@@ -382,6 +382,7 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
           onClose={() => setShowSelfProfile(false)}
           accounts={auth.accounts}
           onOpenDetail={setSelfProfileDetailStatus}
+          onOpenProfile={setUrlAccount}
         />
       )}
 
@@ -434,6 +435,7 @@ export function Layout({ auth, columns, onColumnsChange }: LayoutProps) {
           accounts={auth.accounts}
           onClose={() => setUrlAccount(null)}
           onOpenDetail={(s) => { setUrlAccount(null); setUrlStatus(s) }}
+          onOpenProfile={setUrlAccount}
         />
       )}
 
