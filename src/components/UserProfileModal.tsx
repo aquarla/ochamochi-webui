@@ -96,6 +96,8 @@ export function UserProfileModal({
     let cancelled = false
     const c = new MastodonClient(instanceUrl, accessToken)
 
+    setView('profile')
+
     Promise.all([
       c.getAccountById(initialAccount.id),
       isSelf ? Promise.resolve(null) : c.getRelationship(initialAccount.id),
@@ -477,11 +479,15 @@ export function UserProfileModal({
                     <img
                       src={acc.avatar_static}
                       alt=""
-                      className="w-10 h-10 rounded-full bg-gray-700 flex-shrink-0"
+                      onClick={() => onOpenProfile?.(acc)}
+                      className={`w-10 h-10 rounded-full bg-gray-700 flex-shrink-0 ${onOpenProfile ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
                     />
-                    <div className="flex-1 min-w-0">
+                    <div
+                      className={`flex-1 min-w-0 ${onOpenProfile ? 'cursor-pointer' : ''}`}
+                      onClick={() => onOpenProfile?.(acc)}
+                    >
                       <p
-                        className="text-white text-sm font-medium truncate"
+                        className={`text-white text-sm font-medium truncate ${onOpenProfile ? 'hover:underline' : ''}`}
                         dangerouslySetInnerHTML={{ __html: emojifyText(acc.display_name || acc.username, acc.emojis) }}
                       />
                       <p className="text-gray-400 text-xs truncate">@{acc.acct}</p>
