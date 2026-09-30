@@ -8,6 +8,11 @@ import type { WordFilter } from '../types'
 import { loadNotestockToken, saveNotestockToken } from '../store/notestockToken'
 import { fetchInstanceVersion } from '../services/mastodon'
 import { exportData, importData } from '../store/dataPortability'
+import { LANGUAGES } from '../data/languages'
+
+const languageOptions = [...LANGUAGES]
+  .sort((a, b) => a.name.localeCompare(b.name))
+  .map((l) => ({ value: l.code, label: `${l.nativeName} (${l.name})` }))
 
 interface SettingsModalProps {
   onClose: () => void
@@ -205,6 +210,13 @@ function GeneralSettings({
             { value: 'private', label: 'フォロワー限定' },
             { value: 'direct', label: 'ダイレクト' },
           ]}
+        />
+      </SettingRow>
+      <SettingRow label="デフォルト投稿言語" description="新規投稿時に最初に選択される言語">
+        <SelectField
+          value={settings.defaultLanguage}
+          onChange={(v) => onChange({ ...settings, defaultLanguage: v })}
+          options={languageOptions}
         />
       </SettingRow>
       <SettingRow label="お気に入りの確認" description="お気に入り時に確認ダイアログを表示する">

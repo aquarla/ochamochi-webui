@@ -114,6 +114,7 @@ export class MastodonClient {
     spoiler_text?: string
     media_ids?: string[]
     scheduled_at?: string
+    language?: string
     poll?: {
       options: string[]
       expires_in: number
@@ -245,6 +246,7 @@ export class MastodonClient {
     sensitive?: boolean
     spoiler_text?: string
     media_ids?: string[]
+    language?: string
   }): Promise<Status> {
     return this.request<Status>(`/api/v1/statuses/${id}`, {
       method: 'PUT',

@@ -5,6 +5,7 @@ export type DefaultVisibilityMode = 'lastUsed' | 'public' | 'unlisted' | 'privat
 
 export interface AppSettings {
   defaultVisibilityMode: DefaultVisibilityMode
+  defaultLanguage: string
   confirmFavourite: boolean
   confirmBoost: boolean
   notifyMention: boolean
@@ -25,6 +26,7 @@ export interface AppSettings {
 
 const DEFAULT_SETTINGS: AppSettings = {
   defaultVisibilityMode: 'public',
+  defaultLanguage: 'ja',
   confirmFavourite: false,
   confirmBoost: false,
   notifyMention: true,

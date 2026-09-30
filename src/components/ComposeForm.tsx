@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { MastodonClient } from '../services/mastodon'
 import { EmojiPicker, emojiCache, emojiFetching } from './EmojiPicker'
+import { LanguageDropdown } from './LanguageDropdown'
 import { UNICODE_EMOJI } from '../data/unicodeEmoji'
 import { loadSettings } from '../hooks/useSettings'
 import type { Status, CustomEmoji } from '../types'
@@ -33,6 +34,8 @@ interface ComposeFormProps {
 
 const MAX_CHARS = 500
 const VISIBILITY_KEY = 'mastodon_visibility'
+const RECENT_LANGUAGES_KEY = 'mastodon_recent_languages'
+const MAX_RECENT_LANGUAGES = 5
 
 function getMinDatetime(): string {
   const d = new Date(Date.now() + 5 * 60 * 1000)
@@ -65,6 +68,20 @@ function getDefaultVisibility(accountKey?: string): Visibility {
   return mode === 'lastUsed' ? loadVisibility(accountKey) : mode
 }
 
+function recentLanguagesStorageKey(accountKey?: string): string {
+  return accountKey ? `${RECENT_LANGUAGES_KEY}_${accountKey}` : RECENT_LANGUAGES_KEY
+}
+
+function loadRecentLanguages(accountKey?: string): string[] {
+  try {
+    const raw = localStorage.getItem(recentLanguagesStorageKey(accountKey))
+    const parsed: unknown = raw ? JSON.parse(raw) : []
+    return Array.isArray(parsed) ? parsed.filter((c): c is string => typeof c === 'string') : []
+  } catch {
+    return []
+  }
+}
+
 // カスタム絵文字ショートコードは投稿時に認識されるよう前後を半角空白で区切る（隣接文字が既に空白なら追加しない）
 function padCustomEmojiShortcode(shortcode: string, before: string, after: string): string {
   const leading = before && !/\s$/.test(before) ? ' ' : ''
@@ -80,6 +97,10 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
   const [visibility, setVisibility] = useState<Visibility>(() =>
     isEditMode ? (editStatus.visibility as Visibility) : (defaultVisibility ?? getDefaultVisibility(accountKey))
   )
+  const [language, setLanguage] = useState(() =>
+    isEditMode ? (editStatus.language ?? loadSettings(accountKey).defaultLanguage) : loadSettings(accountKey).defaultLanguage
+  )
+  const [recentLanguages, setRecentLanguages] = useState(() => loadRecentLanguages(accountKey))
   const [cwEnabled, setCwEnabled] = useState(isEditMode ? !!editStatus.spoiler_text : !!initialCwText)
   const [cwText, setCwText] = useState(initialCwText ?? '')
   const [loading, setLoading] = useState(false)
@@ -200,6 +221,7 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
           spoiler_text: cwEnabled && cwText ? cwText : '',
           sensitive: cwEnabled,
           media_ids: attachments.map((a) => a.mediaId),
+          language,
         })
         attachments.filter((a) => !a.isExisting).forEach((a) => URL.revokeObjectURL(a.previewUrl))
         onEdited?.(updated)
@@ -213,6 +235,7 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
           sensitive: cwEnabled,
           media_ids: attachments.length > 0 ? attachments.map((a) => a.mediaId) : undefined,
           scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : undefined,
+          language,
           poll: pollEnabled ? {
             options: pollOptions.map((o) => o.trim()).filter(Boolean),
             expires_in: pollExpiresIn,
@@ -228,6 +251,7 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
         setPollEnabled(false)
         setPollOptions(['', ''])
         setPollMultiple(false)
+        setLanguage(loadSettings(accountKey).defaultLanguage)
         onComposed?.()
       }
     } catch (e) {
@@ -286,6 +310,13 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
       handleSubmit(e as unknown as React.FormEvent)
     }
+  }
+
+  const handleLanguageChange = (code: string) => {
+    setLanguage(code)
+    const next = [code, ...recentLanguages.filter((c) => c !== code)].slice(0, MAX_RECENT_LANGUAGES)
+    setRecentLanguages(next)
+    localStorage.setItem(recentLanguagesStorageKey(accountKey), JSON.stringify(next))
   }
 
   const handleVisibilityChange = (v: Visibility) => {
@@ -770,6 +801,13 @@ export function ComposeForm({ instanceUrl, accessToken, accountKey, onComposed, 
             <option value="private">フォロワー限定</option>
             <option value="direct">ダイレクト</option>
           </select>
+
+          <LanguageDropdown
+            value={language}
+            recent={recentLanguages}
+            onChange={handleLanguageChange}
+            disabled={loading || sourceLoading}
+          />
         </div>
 
         <div className="flex items-center gap-2 ml-auto">
