@@ -10,6 +10,7 @@ import { PollView } from './PollView'
 import type { StoredAccountEntry } from '../services/auth'
 import { loadSettings } from '../hooks/useSettings'
 import { QuotePost } from './QuotePost'
+import { BoosterName } from './BoosterName'
 
 interface PostProps {
   status: Status
@@ -396,11 +397,7 @@ export function Post({ status, instanceUrl, accessToken, accountKey, onUpdate, o
           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
             <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zm0 8a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zm6-6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zm0 8a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
           </svg>
-          <button
-            onClick={() => onOpenProfile?.(status.account)}
-            className={`max-w-[12rem] truncate inline-block align-bottom ${onOpenProfile ? 'hover:text-gray-300 transition-colors' : 'cursor-default'}`}
-            dangerouslySetInnerHTML={{ __html: emojifyText(status.account.display_name || status.account.username, status.account.emojis) }}
-          /> がブースト
+          <BoosterName account={status.account} onOpenProfile={onOpenProfile} /> がブースト
         </p>
       )}
 
